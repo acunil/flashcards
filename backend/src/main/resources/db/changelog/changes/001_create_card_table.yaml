@@ -64,3 +64,16 @@ databaseChangeLog:
               - column:
                   name: back
                   value: "auf Wiedersehen"
+  - changeSet:
+      id: 001_insert_extra_card
+      author: lucian
+      changes:
+        - insert:
+            tableName: card
+            columns:
+              - column:
+                  name: front
+                  value: "Horse"
+              - column:
+                  name: back
+                  value: "Pferd"
