@@ -16,6 +16,10 @@ public class Card {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    @Column(columnDefinition = "German vocab")
     private String front;
+
+    @Column(columnDefinition = "English translation")
     private String back;
 }

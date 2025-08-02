@@ -1,6 +1,5 @@
 package com.example.flashcards_backend.service;
 
-import com.example.flashcards_backend.dto.DuplicateEntry;
 import com.example.flashcards_backend.dto.UploadResponse;
 import com.example.flashcards_backend.model.Card;
 import com.example.flashcards_backend.repository.CardRepository;
@@ -35,11 +34,11 @@ public class CsvUploadServiceImpl implements CsvUploadService {
 
             Map<Boolean, List<CSVRecord>> byDup = partitionByDuplicate(valid);
 
-            List<DuplicateEntry> duplicates = buildDuplicates(byDup.get(true));
+            List<Card> duplicates = buildCards(byDup.get(true));
             List<Card> toSave = buildCards(byDup.get(false));
 
             duplicates.forEach(d ->
-                log.info("Duplicate, skipping: front='{}', back='{}'", d.front(), d.back())
+                log.info("Duplicate, skipping: front='{}', back='{}'", d.getFront(), d.getBack())
             );
 
             List<Card> saved = cardRepository.saveAll(toSave);
@@ -92,17 +91,8 @@ public class CsvUploadServiceImpl implements CsvUploadService {
             ));
     }
 
-    private List<DuplicateEntry> buildDuplicates(List<CSVRecord> dupes) {
-        return dupes.stream()
-            .map(r -> DuplicateEntry.builder()
-                .front(r.get(FRONT))
-                .back(r.get(BACK))
-                .build())
-            .toList();
-    }
-
-    private List<Card> buildCards(List<CSVRecord> news) {
-        return news.stream()
+    private List<Card> buildCards(List<CSVRecord> csvRecords) {
+        return csvRecords.stream()
             .map(r -> Card.builder()
                 .front(r.get(FRONT))
                 .back(r.get(BACK))
