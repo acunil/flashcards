@@ -4,14 +4,14 @@ import com.example.flashcards_backend.dto.UploadResponse;
 import com.example.flashcards_backend.model.Card;
 import com.example.flashcards_backend.repository.CardRepository;
 import nl.altindag.log.LogCaptor;
-import org.apache.commons.csv.CSVRecord;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
@@ -21,7 +21,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.*;
 
-@ExtendWith(MockitoExtension.class)
+@ExtendWith(SpringExtension.class)
 class CsvUploadServiceImplTest {
 
     @Mock
@@ -32,6 +32,9 @@ class CsvUploadServiceImplTest {
 
     private LogCaptor logCaptor;
 
+    @Captor
+    private ArgumentCaptor<List<Card>> cardListCaptor;
+
     @BeforeEach
     void setUp() {
         logCaptor = LogCaptor.forClass(CsvUploadServiceImpl.class);
@@ -40,32 +43,31 @@ class CsvUploadServiceImplTest {
 
     @Test
     void uploadCsv_filtersInvalidPartitionsDuplicatesAndSavesValid() throws Exception {
-        String csv = "front,back\n" +
-            ",b1\n" +
-            "f2,\n" +
-            "f3,b3\n" +
-            "f4,b4\n";
+        String csv = """
+            front,back
+            ,b1
+            f2,
+            f3,b3
+            f4,b4
+            """;
         InputStream is = new ByteArrayInputStream(csv.getBytes(StandardCharsets.UTF_8));
 
         when(cardRepository.existsByFrontAndBack("f3", "b3")).thenReturn(false);
         when(cardRepository.existsByFrontAndBack("f4", "b4")).thenReturn(true);
 
-        ArgumentCaptor<List<Card>> saveCaptor = ArgumentCaptor.forClass(List.class);
         Card savedCard = Card.builder().front("f3").back("b3").build();
-        when(cardRepository.saveAll(saveCaptor.capture())).thenReturn(List.of(savedCard));
+        when(cardRepository.saveAll(cardListCaptor.capture())).thenReturn(List.of(savedCard));
 
         UploadResponse uploadResponse = service.uploadCsv(is);
 
-        List<String> warnLogs = logCaptor.getWarnLogs();
-        assertThat(warnLogs).hasSize(2)
+        assertThat(logCaptor.getWarnLogs()).hasSize(2)
             .allSatisfy(msg -> assertThat(msg).startsWith("Skipping invalid row:"));
 
-        List<String> infoLogs = logCaptor.getInfoLogs();
-        assertThat(infoLogs)
+        assertThat(logCaptor.getInfoLogs())
             .singleElement()
             .isEqualTo("Duplicate, skipping: front='f4', back='b4'");
 
-        List<Card> toSaveCaptured = saveCaptor.getValue();
+        List<Card> toSaveCaptured = cardListCaptor.getValue();
         assertThat(toSaveCaptured).containsExactly(Card.builder().front("f3").back("b3").build());
 
         assertThat(uploadResponse.saved()).containsExactly(savedCard);
@@ -74,19 +76,18 @@ class CsvUploadServiceImplTest {
 
     @Test
     void uploadCsv_ioExceptionIsLoggedAndRethrown() throws Exception {
-        InputStream badStream = new InputStream() {
+        try (InputStream badStream = new InputStream() {
             @Override
             public int read() throws IOException {
                 throw new IOException("fail");
             }
-        };
+        }) {
+            assertThatThrownBy(() -> service.uploadCsv(badStream))
+                .isInstanceOf(IOException.class)
+                .hasMessageContaining("fail");
+        }
 
-        assertThatThrownBy(() -> service.uploadCsv(badStream))
-            .isInstanceOf(IOException.class)
-            .hasMessageContaining("fail");
-
-        List<String> errorLogs = logCaptor.getErrorLogs();
-        assertThat(errorLogs)
+        assertThat(logCaptor.getErrorLogs())
             .singleElement()
             .isEqualTo("CSV processing error");
     }
