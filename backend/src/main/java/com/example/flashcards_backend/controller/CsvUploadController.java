@@ -1,6 +1,6 @@
 package com.example.flashcards_backend.controller;
 
-import com.example.flashcards_backend.dto.UploadResponse;
+import com.example.flashcards_backend.dto.CsvUploadResponseDto;
 import com.example.flashcards_backend.service.CsvUploadServiceImpl;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -23,14 +23,14 @@ public class CsvUploadController {
     private final CsvUploadServiceImpl csvUploadService;
 
     @PostMapping(value = "/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<UploadResponse> uploadCsv(@RequestParam MultipartFile file) {
+    public ResponseEntity<CsvUploadResponseDto> uploadCsv(@RequestParam MultipartFile file) {
         if (file.isEmpty()) {
             log.error("CSV upload failed: no file provided");
             return ResponseEntity.badRequest().build();
         }
 
         try (InputStream is = file.getInputStream()) {
-            UploadResponse response = csvUploadService.uploadCsv(is);
+            CsvUploadResponseDto response = csvUploadService.uploadCsv(is);
             return ResponseEntity.ok(response);
         } catch (Exception e) {
             log.error("Error importing CSV", e);

@@ -1,6 +1,6 @@
 package com.example.flashcards_backend.integration;
 
-import com.example.flashcards_backend.dto.UploadResponse;
+import com.example.flashcards_backend.dto.CsvUploadResponseDto;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -23,17 +23,17 @@ class CsvUploadIntegrationTest {
     private TestRestTemplate restTemplate;
 
     @Test
-    void uploadCsv_fileOnClasspath_returns200() throws Exception {
+    void uploadCsv_fileOnClasspath_returns200() {
         String url = "http://localhost:" + port + "/api/upload";
         ClassPathResource resource = new ClassPathResource("csv/vocab_upload_1.csv");
 
         MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
         body.add("file", resource);
 
-        ResponseEntity<UploadResponse> response = restTemplate.postForEntity(
+        ResponseEntity<CsvUploadResponseDto> response = restTemplate.postForEntity(
             url,
             new HttpEntity<>(body, createMultipartHeaders()),
-            UploadResponse.class
+            CsvUploadResponseDto.class
         );
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);

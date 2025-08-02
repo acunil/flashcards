@@ -1,10 +1,10 @@
 package com.example.flashcards_backend.service;
 
-import com.example.flashcards_backend.dto.UploadResponse;
+import com.example.flashcards_backend.dto.CsvUploadResponseDto;
 
 import java.io.IOException;
 import java.io.InputStream;
 
 public interface CsvUploadService {
-    UploadResponse uploadCsv(InputStream csvStream) throws IOException;
+    CsvUploadResponseDto uploadCsv(InputStream csvStream) throws IOException;
 }

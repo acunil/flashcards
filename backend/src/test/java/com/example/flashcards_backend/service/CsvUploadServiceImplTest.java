@@ -1,6 +1,6 @@
 package com.example.flashcards_backend.service;
 
-import com.example.flashcards_backend.dto.UploadResponse;
+import com.example.flashcards_backend.dto.CsvUploadResponseDto;
 import com.example.flashcards_backend.model.Card;
 import com.example.flashcards_backend.repository.CardRepository;
 import nl.altindag.log.LogCaptor;
@@ -58,7 +58,7 @@ class CsvUploadServiceImplTest {
         Card savedCard = Card.builder().front("f3").back("b3").build();
         when(cardRepository.saveAll(cardListCaptor.capture())).thenReturn(List.of(savedCard));
 
-        UploadResponse uploadResponse = service.uploadCsv(is);
+        CsvUploadResponseDto csvUploadResponseDTO = service.uploadCsv(is);
 
         assertThat(logCaptor.getWarnLogs()).hasSize(2)
             .allSatisfy(msg -> assertThat(msg).startsWith("Skipping invalid row:"));
@@ -70,8 +70,8 @@ class CsvUploadServiceImplTest {
         List<Card> toSaveCaptured = cardListCaptor.getValue();
         assertThat(toSaveCaptured).containsExactly(Card.builder().front("f3").back("b3").build());
 
-        assertThat(uploadResponse.saved()).containsExactly(savedCard);
-        assertThat(uploadResponse.duplicates()).containsExactly(Card.builder().front("f4").back("b4").build());
+        assertThat(csvUploadResponseDTO.saved()).containsExactly(savedCard);
+        assertThat(csvUploadResponseDTO.duplicates()).containsExactly(Card.builder().front("f4").back("b4").build());
     }
 
     @Test
