@@ -5,6 +5,7 @@ databaseChangeLog:
       changes:
         - createTable:
             tableName: card_history
+            ifNotExists: true
             columns:
               - column:
                   name: id

@@ -1,22 +1,32 @@
 package com.example.flashcards_backend.model;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
 import lombok.Data;
 
-import java.util.Date;
+import java.time.LocalDateTime;
 
 @Entity
+@Table(name = "card_history")
 @Data
 public class CardHistory {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private int id;
-    private int cardId;
+    private Long id;
+
+    @ManyToOne
+    @JoinColumn(name = "card_id", nullable = false)
+    private Card card;
+
+    @Column(name = "avg_rating")
     private double avgRating;
-    private int viewCount;
-    private Date lastViewed;
-    private int lastRating;
+
+    @Column(name = "view_count")
+    private Integer viewCount;
+
+    @Column(name = "last_viewed")
+    private LocalDateTime lastViewed;
+
+    @Column(name = "last_rating")
+    private Integer lastRating;
+
 }
