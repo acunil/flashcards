@@ -1,0 +1,34 @@
+databaseChangeLog:
+  - changeSet:
+      id: 002_create_card_history_table
+      author: lucian
+      changes:
+        - createTable:
+            tableName: card_history
+            columns:
+              - column:
+                  name: id
+                  type: bigint
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: card_id
+                  type: bigint
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_card_history_card
+                    references: card(id)
+              - column:
+                  name: avg_rating
+                  type: double
+              - column:
+                  name: view_count
+                  type: integer
+              - column:
+                  name: last_viewed
+                  type: timestamp
+              - column:
+                  name: last_rating
+                  type: integer

@@ -1,16 +1,7 @@
 databaseChangeLog:
   - changeSet:
-      id: 000_drop_card_table
-      author: lucian
-      runAlways: true
-      changes:
-        - dropTable:
-            tableName: card
-            ifExists: true
-  - changeSet:
       id: 001_create_card_table
       author: lucian
-      runAlways: true
       changes:
         - createTable:
             tableName: card
@@ -35,7 +26,6 @@ databaseChangeLog:
   - changeSet:
       id: 001_insert_initial_cards
       author: lucian
-      runAlways: true
       changes:
         - insert:
             tableName: card
