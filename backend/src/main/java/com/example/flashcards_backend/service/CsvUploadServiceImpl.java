@@ -1,6 +1,5 @@
 package com.example.flashcards_backend.service;
 
-import com.example.flashcards_backend.dto.DuplicateEntry;
 import com.example.flashcards_backend.dto.UploadResponse;
 import com.example.flashcards_backend.model.Card;
 import com.example.flashcards_backend.repository.CardRepository;
