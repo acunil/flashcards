@@ -1,0 +1,94 @@
+package com.example.flashcards_backend.service;
+
+import com.example.flashcards_backend.dto.UploadResponse;
+import com.example.flashcards_backend.model.Card;
+import com.example.flashcards_backend.repository.CardRepository;
+import nl.altindag.log.LogCaptor;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
+
+import java.io.*;
+import java.nio.charset.StandardCharsets;
+import java.util.List;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Mockito.*;
+
+@ExtendWith(SpringExtension.class)
+class CsvUploadServiceImplTest {
+
+    @Mock
+    private CardRepository cardRepository;
+
+    @InjectMocks
+    private CsvUploadServiceImpl service;
+
+    private LogCaptor logCaptor;
+
+    @Captor
+    private ArgumentCaptor<List<Card>> cardListCaptor;
+
+    @BeforeEach
+    void setUp() {
+        logCaptor = LogCaptor.forClass(CsvUploadServiceImpl.class);
+        logCaptor.clearLogs();
+    }
+
+    @Test
+    void uploadCsv_filtersInvalidPartitionsDuplicatesAndSavesValid() throws Exception {
+        String csv = """
+            front,back
+            ,b1
+            f2,
+            f3,b3
+            f4,b4
+            """;
+        InputStream is = new ByteArrayInputStream(csv.getBytes(StandardCharsets.UTF_8));
+
+        when(cardRepository.existsByFrontAndBack("f3", "b3")).thenReturn(false);
+        when(cardRepository.existsByFrontAndBack("f4", "b4")).thenReturn(true);
+
+        Card savedCard = Card.builder().front("f3").back("b3").build();
+        when(cardRepository.saveAll(cardListCaptor.capture())).thenReturn(List.of(savedCard));
+
+        UploadResponse uploadResponse = service.uploadCsv(is);
+
+        assertThat(logCaptor.getWarnLogs()).hasSize(2)
+            .allSatisfy(msg -> assertThat(msg).startsWith("Skipping invalid row:"));
+
+        assertThat(logCaptor.getInfoLogs())
+            .singleElement()
+            .isEqualTo("Duplicate, skipping: front='f4', back='b4'");
+
+        List<Card> toSaveCaptured = cardListCaptor.getValue();
+        assertThat(toSaveCaptured).containsExactly(Card.builder().front("f3").back("b3").build());
+
+        assertThat(uploadResponse.saved()).containsExactly(savedCard);
+        assertThat(uploadResponse.duplicates()).containsExactly(Card.builder().front("f4").back("b4").build());
+    }
+
+    @Test
+    void uploadCsv_ioExceptionIsLoggedAndRethrown() throws Exception {
+        try (InputStream badStream = new InputStream() {
+            @Override
+            public int read() throws IOException {
+                throw new IOException("fail");
+            }
+        }) {
+            assertThatThrownBy(() -> service.uploadCsv(badStream))
+                .isInstanceOf(IOException.class)
+                .hasMessageContaining("fail");
+        }
+
+        assertThat(logCaptor.getErrorLogs())
+            .singleElement()
+            .isEqualTo("CSV processing error");
+    }
+}

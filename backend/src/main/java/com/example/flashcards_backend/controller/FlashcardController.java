@@ -1,17 +1,13 @@
 package com.example.flashcards_backend.controller;
 
-
 import com.example.flashcards_backend.model.Card;
 import com.example.flashcards_backend.repository.CardRepository;
-import lombok.Value;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 @RestController
+@RequestMapping("/api")
 public class FlashcardController {
 
     private final CardRepository cardRepository;
@@ -20,12 +16,12 @@ public class FlashcardController {
         this.cardRepository = cardRepository;
     }
 
-    @GetMapping("/api/cards")
+    @GetMapping("/cards")
     public List<Card> getCards() {
         return cardRepository.findAll();
     }
 
-    @PostMapping("/api/cards")
+    @PostMapping("/cards")
     public Card addCard(@RequestBody Card card) {
         return cardRepository.save(card);
     }
