@@ -19,8 +19,8 @@ const useCards = (hardMode: boolean = false) => {
         setLoading(true);
 
         const url = hardMode
-          ? `${BASE_URL}/minAvgRating?threshold=4`
-          : BASE_URL;
+          ? `${BASE_URL}/minAvgRating?threshold=4&shuffled=true`
+          : `${BASE_URL}?shuffled=true`;
         const response = await fetch(url);
         if (!response.ok) {
           throw new Error("Failed to fetch cards");
