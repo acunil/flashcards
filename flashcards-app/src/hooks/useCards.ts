@@ -6,9 +6,9 @@ export type Card = {
   back: string;
 };
 
-const url = "http://localhost:8080/api/cards";
+const BASE_URL = "http://localhost:8080/api/cards";
 
-const useCards = () => {
+const useCards = (hardMode: boolean = false) => {
   const [cards, setCards] = useState<Card[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -17,6 +17,10 @@ const useCards = () => {
     const fetchCards = async () => {
       try {
         setLoading(true);
+
+        const url = hardMode
+          ? `${BASE_URL}/minAvgRating?threshold=4`
+          : BASE_URL;
         const response = await fetch(url);
         if (!response.ok) {
           throw new Error("Failed to fetch cards");
@@ -35,7 +39,7 @@ const useCards = () => {
     };
 
     fetchCards();
-  }, []);
+  }, [hardMode]);
 
   return { cards, loading, error };
 };
