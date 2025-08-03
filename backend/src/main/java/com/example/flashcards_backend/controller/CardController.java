@@ -58,6 +58,7 @@ public class CardController {
         return ResponseEntity.noContent().build();
     }
 
+    @CrossOrigin("http://localhost:5173")
     @PostMapping("/{id}/rate")
     public ResponseEntity<Void> rate(
         @PathVariable Long id,
