@@ -43,8 +43,8 @@ public class CardService {
     }
 
     @Transactional
-    public void vote(Long cardId, int rating) {
-        getById(cardId);
-        cardHistoryService.recordVote(cardId, rating);
+    public void rate(Long cardId, int rating) {
+        getById(cardId); // validate card exists
+        cardHistoryService.recordRating(cardId, rating);
     }
 }

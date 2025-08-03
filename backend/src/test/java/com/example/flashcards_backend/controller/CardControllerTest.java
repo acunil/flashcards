@@ -128,19 +128,19 @@ class CardControllerTest {
     }
 
     @Test
-    void vote_validIdAndRating_returnsNoContent() throws Exception {
-        mockMvc.perform(post(ENDPOINT + "/7/vote")
+    void rate_validIdAndRating_returnsNoContent() throws Exception {
+        mockMvc.perform(post(ENDPOINT + "/7/rate")
                 .param("rating", "5")
                 .contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isNoContent());
-        verify(cardService).vote(7L, 5);
+        verify(cardService).rate(7L, 5);
     }
 
     @Test
-    void vote_missingCard_returnsNotFoundWithMessage() throws Exception {
+    void rate_missingCard_returnsNotFoundWithMessage() throws Exception {
         doThrow(new CardNotFoundException(55L))
-            .when(cardService).vote(55L, 2);
-        mockMvc.perform(post(ENDPOINT + "/55/vote")
+            .when(cardService).rate(55L, 2);
+        mockMvc.perform(post(ENDPOINT + "/55/rate")
                 .param("rating", "2")
                 .contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isNotFound())

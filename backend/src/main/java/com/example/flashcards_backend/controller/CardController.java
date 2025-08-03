@@ -58,12 +58,12 @@ public class CardController {
         return ResponseEntity.noContent().build();
     }
 
-    @PostMapping("/{id}/vote")
-    public ResponseEntity<Void> vote(
+    @PostMapping("/{id}/rate")
+    public ResponseEntity<Void> rate(
         @PathVariable Long id,
         @RequestParam @Min(1) @Max(5) int rating
     ) {
-        cardService.vote(id, rating);
+        cardService.rate(id, rating);
         return ResponseEntity.noContent().build();
     }
 

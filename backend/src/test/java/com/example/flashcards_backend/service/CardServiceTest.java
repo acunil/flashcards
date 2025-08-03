@@ -85,16 +85,16 @@ class CardServiceTest {
     }
 
     @Test
-    void vote_existingCard_callsCardHistoryService() {
+    void rate_existingCard_callsCardHistoryService() {
         when(cardRepository.findById(10L)).thenReturn(Optional.of(new Card()));
-        cardService.vote(10L, 3);
-        verify(cardHistoryService).recordVote(10L, 3);
+        cardService.rate(10L, 3);
+        verify(cardHistoryService).recordRating(10L, 3);
     }
 
     @Test
-    void vote_missingCard_throwsException() {
+    void rate_missingCard_throwsException() {
         when(cardRepository.findById(99L)).thenReturn(Optional.empty());
-        assertThatThrownBy(() -> cardService.vote(99L, 4))
+        assertThatThrownBy(() -> cardService.rate(99L, 4))
             .isInstanceOf(CardNotFoundException.class)
             .extracting("message")
             .isEqualTo("Card not found with id: 99");
