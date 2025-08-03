@@ -117,22 +117,6 @@
 				</dependencies>
 			</plugin>
 		</plugins>
-		<resources>
-			<resource>
-				<directory>src/main/filtered-resources</directory>
-				<filtering>true</filtering>
-				<includes>
-					<include>liquibase.properties</include>
-				</includes>
-			</resource>
-			<resource>
-				<directory>src/main/resources</directory>
-			</resource>
-		</resources>
-
-		<filters>
-			<filter>src/main/filtered-resources/env.properties</filter>
-		</filters>
 	</build>
 
 </project>
