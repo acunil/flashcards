@@ -16,6 +16,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.*;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @ExtendWith(SpringExtension.class)
@@ -85,15 +86,23 @@ class CardServiceTest {
     void testCreateCard() {
         String newFront = "New Front";
         String newBack = "New Back";
-        Card newCard = new Card(null, newFront, newBack);
         long newId = 4L;
-        when(cardRepository.save(newCard)).thenReturn(new Card(newId, newFront, newBack));
+        when(cardRepository.createIfUnique(newFront, newBack))
+            .thenReturn(Map.of(
+                "id",    newId,
+                "front", newFront,
+                "back",  newBack
+            ));
 
         CardRequest request = new CardRequest(newFront, newBack);
+
         Card createdCard = cardService.create(request);
         assertThat(createdCard.getId()).isNotNull().isEqualTo(newId);
         assertThat(createdCard.getFront()).isEqualTo(newFront);
         assertThat(createdCard.getBack()).isEqualTo(newBack);
+
+        verify(cardRepository).createIfUnique(newFront, newBack);
+        verifyNoMoreInteractions(cardRepository);
     }
 
     @Test
