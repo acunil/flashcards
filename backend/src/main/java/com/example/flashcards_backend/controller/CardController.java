@@ -21,18 +21,19 @@ import java.util.List;
 @RequestMapping("/api/cards")
 @Validated
 @AllArgsConstructor
-@CrossOrigin("http://localhost:5173")
 public class CardController {
 
     private final CardService cardService;
 
     @GetMapping
-    public ResponseEntity<List<CardResponse>> getAll() {
-        List<CardResponse> cardResponses = cardService.getAll()
-            .stream()
+    public List<CardResponse> getAll(
+        @RequestParam(name = "shuffled", defaultValue = "false") boolean shuffled
+    ) {
+        var cards = cardService.getAll(shuffled);
+
+        return cards.stream()
             .map(CardResponse::fromEntity)
             .toList();
-        return ResponseEntity.ok(cardResponses);
     }
 
     @GetMapping("/{id}")
@@ -70,9 +71,12 @@ public class CardController {
     @GetMapping
     @RequestMapping("/minAvgRating")
     public ResponseEntity<List<CardResponse>> getByMinAvgRating(
-        @RequestParam @Min(1) @Max(5) double threshold
+        @RequestParam @Min(1) @Max(5) double threshold,
+        @RequestParam(name = "shuffled", defaultValue = "false") boolean shuffled
     ) {
-        List<CardResponse> cardResponses = cardService.getByMinAvgRating(threshold)
+        var cards = cardService.getByMinAvgRating(threshold, shuffled);
+
+        List<CardResponse> cardResponses = cards
             .stream()
             .map(CardResponse::fromEntity)
             .toList();
@@ -82,9 +86,12 @@ public class CardController {
     @GetMapping
     @RequestMapping("/maxAvgRating")
     public ResponseEntity<List<CardResponse>> getByMaxAvgRating(
-        @RequestParam @Min(1) @Max(5) double threshold
+        @RequestParam @Min(1) @Max(5) double threshold,
+        @RequestParam(name = "shuffled", defaultValue = "false") boolean shuffled
     ) {
-        List<CardResponse> cardResponses = cardService.getByMaxAvgRating(threshold)
+        var cards = cardService.getByMaxAvgRating(threshold, shuffled);
+
+        List<CardResponse> cardResponses = cards
             .stream()
             .map(CardResponse::fromEntity)
             .toList();

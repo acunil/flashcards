@@ -8,6 +8,8 @@ import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import static com.example.flashcards_backend.utility.CardUtils.shuffleCards;
+
 import java.util.List;
 
 @Service
@@ -18,6 +20,13 @@ public class CardService {
 
     public List<Card> getAll() {
         return cardRepository.findAll();
+    }
+
+    public List<Card> getAll(boolean shuffled) {
+        var cards = getAll();
+        return shuffled
+               ? shuffleCards(cards)
+               : cards;
     }
 
     public Card getById(Long id) {
@@ -52,7 +61,21 @@ public class CardService {
         return cardRepository.findByMinAvgRating(threshold);
     }
 
+    public List<Card> getByMinAvgRating(double threshold, boolean shuffled) {
+        var cards = getByMinAvgRating(threshold);
+        return shuffled
+               ? shuffleCards(cards)
+               : cards;
+    }
+
     public List<Card> getByMaxAvgRating(double threshold) {
         return cardRepository.findByMaxAvgRating(threshold);
+    }
+
+    public List<Card> getByMaxAvgRating(double threshold, boolean shuffled) {
+        var cards = getByMaxAvgRating(threshold);
+        return shuffled
+               ? shuffleCards(cards)
+               : cards;
     }
 }
