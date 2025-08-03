@@ -1,6 +1,6 @@
 package com.example.flashcards_backend.service;
 
-import com.example.flashcards_backend.dto.UploadResponse;
+import com.example.flashcards_backend.dto.CsvUploadResponseDto;
 import com.example.flashcards_backend.model.Card;
 import com.example.flashcards_backend.repository.CardRepository;
 import lombok.RequiredArgsConstructor;
@@ -25,7 +25,7 @@ public class CsvUploadServiceImpl implements CsvUploadService {
     private final CardRepository cardRepository;
 
     @Override
-    public UploadResponse uploadCsv(InputStream csvStream) throws IOException {
+    public CsvUploadResponseDto uploadCsv(InputStream csvStream) throws IOException {
         try (Reader reader = new BufferedReader(new InputStreamReader(csvStream, StandardCharsets.UTF_8))) {
             List<CSVRecord> all = parseAllRecords(reader);
 
@@ -43,7 +43,7 @@ public class CsvUploadServiceImpl implements CsvUploadService {
 
             List<Card> saved = cardRepository.saveAll(toSave);
 
-            return UploadResponse.builder()
+            return CsvUploadResponseDto.builder()
                 .saved(saved)
                 .duplicates(duplicates)
                 .build();

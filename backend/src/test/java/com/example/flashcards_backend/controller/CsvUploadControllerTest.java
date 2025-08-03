@@ -1,6 +1,6 @@
 package com.example.flashcards_backend.controller;
 
-import com.example.flashcards_backend.dto.UploadResponse;
+import com.example.flashcards_backend.dto.CsvUploadResponseDto;
 import com.example.flashcards_backend.service.CsvUploadServiceImpl;
 import nl.altindag.log.LogCaptor;
 import org.junit.jupiter.api.BeforeEach;
@@ -70,7 +70,7 @@ class CsvUploadControllerTest {
     @Test
     void uploadCsv_validFile_returnsOkWithResponseBody() throws Exception {
         MockMultipartFile file = new MockMultipartFile("file", "test.csv", "text/csv", "a,b".getBytes());
-        UploadResponse response = UploadResponse.builder()
+        CsvUploadResponseDto response = CsvUploadResponseDto.builder()
             .saved(List.of())
             .duplicates(List.of())
             .build();
