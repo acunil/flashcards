@@ -21,12 +21,12 @@ import java.util.List;
 @RequestMapping("/api/cards")
 @Validated
 @AllArgsConstructor
+@CrossOrigin("http://localhost:5173")
 public class CardController {
 
     private final CardService cardService;
 
     @GetMapping
-    @CrossOrigin("http://localhost:5173")
     public ResponseEntity<List<CardResponse>> getAll() {
         List<CardResponse> cardResponses = cardService.getAll()
             .stream()
@@ -58,7 +58,6 @@ public class CardController {
         return ResponseEntity.noContent().build();
     }
 
-    @CrossOrigin("http://localhost:5173")
     @PostMapping("/{id}/rate")
     public ResponseEntity<Void> rate(
         @PathVariable Long id,
