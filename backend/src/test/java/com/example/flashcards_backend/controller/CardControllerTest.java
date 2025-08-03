@@ -1,6 +1,6 @@
 package com.example.flashcards_backend.controller;
 
-import com.example.flashcards_backend.dto.CardDto;
+import com.example.flashcards_backend.dto.CardRequest;
 import com.example.flashcards_backend.exception.CardNotFoundException;
 import com.example.flashcards_backend.model.Card;
 import com.example.flashcards_backend.service.CardService;
@@ -37,7 +37,7 @@ class CardControllerTest {
     }
 
     @Test
-    void getAll_returnsListOfCardDto() throws Exception {
+    void getAll_returnsListOfCardResponse() throws Exception {
         Card c1 = Card.builder().id(1L).front("f1").back("b1").build();
         Card c2 = Card.builder().id(2L).front("f2").back("b2").build();
         when(cardService.getAll()).thenReturn(List.of(c1, c2));
@@ -54,7 +54,7 @@ class CardControllerTest {
     }
 
     @Test
-    void getById_existingId_returnsCardDto() throws Exception {
+    void getById_existingId_returnsCardResponse() throws Exception {
         Card c = Card.builder().id(1L).front("front").back("back").build();
         when(cardService.getById(1L)).thenReturn(c);
 
@@ -105,7 +105,7 @@ class CardControllerTest {
                 .content(json))
             .andExpect(status().isNoContent());
 
-        verify(cardService).update(5L, new CardDto(null, "newF", "newB"));
+        verify(cardService).update(5L, new CardRequest("newF", "newB"));
     }
 
     @Test

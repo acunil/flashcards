@@ -1,6 +1,6 @@
 package com.example.flashcards_backend.service;
 
-import com.example.flashcards_backend.dto.CardDto;
+import com.example.flashcards_backend.dto.CardRequest;
 import com.example.flashcards_backend.exception.CardNotFoundException;
 import com.example.flashcards_backend.model.Card;
 import com.example.flashcards_backend.repository.CardRepository;
@@ -24,19 +24,19 @@ public class CardService {
             .orElseThrow(() -> new CardNotFoundException(id));
     }
 
-    public Card create(CardDto dto) {
+    public Card create(CardRequest request) {
         Card toSave = Card.builder()
-            .front(dto.front())
-            .back(dto.back())
+            .front(request.front())
+            .back(request.back())
             .build();
         return cardRepository.save(toSave);
     }
 
     @Transactional
-    public void update(Long id, CardDto dto) {
+    public void update(Long id, CardRequest request) {
         Card existing = cardRepository.findById(id)
             .orElseThrow(() -> new CardNotFoundException(id));
-        existing.setFront(dto.front());
-        existing.setBack(dto.back());
+        existing.setFront(request.front());
+        existing.setBack(request.back());
     }
 }

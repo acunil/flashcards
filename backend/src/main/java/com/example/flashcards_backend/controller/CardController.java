@@ -1,6 +1,7 @@
 package com.example.flashcards_backend.controller;
 
-import com.example.flashcards_backend.dto.CardDto;
+import com.example.flashcards_backend.dto.CardRequest;
+import com.example.flashcards_backend.dto.CardResponse;
 import com.example.flashcards_backend.exception.CardNotFoundException;
 import com.example.flashcards_backend.model.Card;
 import com.example.flashcards_backend.service.CardService;
@@ -22,34 +23,34 @@ public class CardController {
     private final CardService cardService;
 
     @GetMapping
-    public ResponseEntity<List<CardDto>> getAll() {
-        List<CardDto> cardDtos = cardService.getAll()
+    public ResponseEntity<List<CardResponse>> getAll() {
+        List<CardResponse> cardResponses = cardService.getAll()
             .stream()
-            .map(CardDto::fromEntity)
+            .map(CardResponse::fromEntity)
             .toList();
-        return ResponseEntity.ok(cardDtos);
+        return ResponseEntity.ok(cardResponses);
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<CardDto> getById(@PathVariable Long id) {
+    public ResponseEntity<CardResponse> getById(@PathVariable Long id) {
         Card card = cardService.getById(id); // throws CardNotFoundException if missing
-        return ResponseEntity.ok(CardDto.fromEntity(card));
+        return ResponseEntity.ok(CardResponse.fromEntity(card));
     }
 
     @PostMapping
-    public ResponseEntity<CardDto> create(@Valid @RequestBody CardDto dto) {
-        Card created = cardService.create(dto);
+    public ResponseEntity<CardResponse> create(@Valid @RequestBody CardRequest request) {
+        Card created = cardService.create(request);
         return ResponseEntity
             .created(URI.create("/api/cards/" + created.getId()))
-            .body(CardDto.fromEntity(created));
+            .body(CardResponse.fromEntity(created));
     }
 
     @PutMapping("/{id}")
     public ResponseEntity<Void> update(
         @PathVariable Long id,
-        @Valid @RequestBody CardDto dto
+        @Valid @RequestBody CardRequest request
     ) {
-        cardService.update(id, dto); // throws CardNotFoundException if missing
+        cardService.update(id, request); // throws CardNotFoundException if missing
         return ResponseEntity.noContent().build();
     }
 
