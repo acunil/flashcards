@@ -49,9 +49,11 @@ const HomeButtons = () => {
         <button
           key={label}
           onClick={() => navigate(path)}
-          className={`flex justify-between items-center text-black py-3 px-4 w-50 rounded shadow-lg cursor-pointer hover:bg-gray-200 border-black border-2 ${buttonClassName}`}
+          className={`relative flex items-center text-black py-3 px-4 w-50 rounded shadow-lg cursor-pointer hover:bg-gray-200 border-black border-2 ${buttonClassName}`}
         >
-          <span className="mx-auto font-medium">{label}</span>
+          <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 font-medium">
+            {label}
+          </span>
           <Icon size={20} className="ml-auto" weight="regular" />
         </button>
       ))}
