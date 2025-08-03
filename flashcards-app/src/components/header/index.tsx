@@ -22,7 +22,7 @@ const Header = ({
   const [showDeckNames, setShowDeckNames] = useState("Hide");
 
   return (
-    <header className="flex justify-between items-center px-4 py-3 border-b shadow-sm">
+    <header className="relative h-16 flex justify-between items-center px-4 py-3 border-b shadow-sm">
       {isHomePage ? (
         <div className="p-1">
           <p className="">📚 flashcards</p>
@@ -49,8 +49,9 @@ const Header = ({
           />
         </div>
       )}
+      {/* Dropdown positioned absolutely, outside normal header flow */}
       {showDropdown && (
-        <div className="absolute right-4 top-9 mt-4 w-100 bg-white border-2 rounded z-10 text-sm p-3 space-y-2">
+        <div className="absolute right-4 top-full mt-2 w-100 bg-white border-2 rounded z-10 text-sm p-3 space-y-2">
           <div className="flex items-center justify-between">
             <label>Card display:</label>
             <Toggle
