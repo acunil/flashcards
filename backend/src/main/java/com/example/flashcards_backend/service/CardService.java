@@ -1,0 +1,42 @@
+package com.example.flashcards_backend.service;
+
+import com.example.flashcards_backend.dto.CardRequest;
+import com.example.flashcards_backend.exception.CardNotFoundException;
+import com.example.flashcards_backend.model.Card;
+import com.example.flashcards_backend.repository.CardRepository;
+import jakarta.transaction.Transactional;
+import lombok.AllArgsConstructor;
+import org.springframework.stereotype.Service;
+
+import java.util.List;
+
+@Service
+@AllArgsConstructor
+public class CardService {
+    private final CardRepository cardRepository;
+
+    public List<Card> getAll() {
+        return cardRepository.findAll();
+    }
+
+    public Card getById(Long id) {
+        return cardRepository.findById(id)
+            .orElseThrow(() -> new CardNotFoundException(id));
+    }
+
+    public Card create(CardRequest request) {
+        Card toSave = Card.builder()
+            .front(request.front())
+            .back(request.back())
+            .build();
+        return cardRepository.save(toSave);
+    }
+
+    @Transactional
+    public void update(Long id, CardRequest request) {
+        Card existing = cardRepository.findById(id)
+            .orElseThrow(() -> new CardNotFoundException(id));
+        existing.setFront(request.front());
+        existing.setBack(request.back());
+    }
+}
