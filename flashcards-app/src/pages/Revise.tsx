@@ -34,7 +34,11 @@ const Revise = ({ hardMode = false }: ReviseProps) => {
 
   return (
     <div className={`min-h-screen ${hardMode ? "bg-pink-300" : "bg-pink-200"}`}>
-      <Header cardDisplay={cardDisplay} setCardDisplay={setCardDisplay} />
+      <Header
+        cardDisplay={cardDisplay}
+        setCardDisplay={setCardDisplay}
+        isRevising={true}
+      />
       <main className="flex flex-col items-center gap-6 p-6">
         {loading && <p>Loading cards...</p>}
         {error && <p className="text-red-600">{error}</p>}

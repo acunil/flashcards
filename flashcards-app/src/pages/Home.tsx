@@ -4,7 +4,7 @@ import HomeButtons from "../components/homeButtons";
 const Home = () => {
   return (
     <>
-      <Header />
+      <Header isHomePage={true} />
       <div className="min-h-screen flex justify-center">
         <HomeButtons />
       </div>
