@@ -44,10 +44,17 @@ public class CardController {
 
     @PostMapping
     public ResponseEntity<CardResponse> create(@Valid @RequestBody CardRequest request) {
-        Card created = cardService.create(request);
+        var cardCreationResult = cardService.create(request);
+        CardResponse response = CardResponse
+            .builder()
+            .id(cardCreationResult.card().getId())
+            .front(cardCreationResult.card().getFront())
+            .back(cardCreationResult.card().getBack())
+            .alreadyExisted(cardCreationResult.alreadyExisted())
+            .build();
         return ResponseEntity
-            .created(URI.create("/api/cards/" + created.getId()))
-            .body(CardResponse.fromEntity(created));
+            .created(URI.create("/api/cards/" + response.id()))
+            .body(response);
     }
 
     @PutMapping("/{id}")

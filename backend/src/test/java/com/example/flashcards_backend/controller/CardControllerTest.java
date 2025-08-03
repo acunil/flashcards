@@ -3,6 +3,7 @@ package com.example.flashcards_backend.controller;
 import com.example.flashcards_backend.dto.CardRequest;
 import com.example.flashcards_backend.exception.CardNotFoundException;
 import com.example.flashcards_backend.model.Card;
+import com.example.flashcards_backend.model.CardCreationResult;
 import com.example.flashcards_backend.service.CardService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -101,7 +102,8 @@ class CardControllerTest {
     @Test
     void create_validDto_returnsCreatedWithLocationAndBody() throws Exception {
         Card created = Card.builder().id(10L).front("f").back("b").build();
-        when(cardService.create(any())).thenReturn(created);
+        when(cardService.create(any(CardRequest.class)))
+            .thenReturn(new CardCreationResult(created, false));
 
         String json = """
             {"id":null,"front":"f","back":"b"}

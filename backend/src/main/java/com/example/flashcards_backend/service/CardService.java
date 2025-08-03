@@ -3,6 +3,7 @@ package com.example.flashcards_backend.service;
 import com.example.flashcards_backend.dto.CardRequest;
 import com.example.flashcards_backend.exception.CardNotFoundException;
 import com.example.flashcards_backend.model.Card;
+import com.example.flashcards_backend.model.CardCreationResult;
 import com.example.flashcards_backend.repository.CardRepository;
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
@@ -36,17 +37,19 @@ public class CardService {
     }
 
     @Transactional
-    public Card create(CardRequest request) {
+    public CardCreationResult create(CardRequest request) {
         Map<String, Object> row = cardRepository.createIfUnique(
             request.front(),
             request.back()
         );
 
-        return Card.builder()
+        Card card = Card.builder()
             .id((Long) row.get("id"))
             .front((String) row.get("front"))
             .back((String) row.get("back"))
             .build();
+        Boolean alreadyExisted = (Boolean) row.get("alreadyExisted");
+        return new CardCreationResult(card, alreadyExisted);
     }
 
     @Transactional

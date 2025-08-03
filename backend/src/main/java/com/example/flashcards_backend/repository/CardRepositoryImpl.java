@@ -17,18 +17,11 @@ public class CardRepositoryImpl implements CardRepositoryCustom {
     public Map<String, Object> createIfUnique(String front, String back) {
         // Use a CTE to attempt the insert and fall back to selecting the existing row
         String sql = """
-            WITH inserted AS (
-                INSERT INTO card (front, back)
-                VALUES (:front, :back)
-                ON CONFLICT (front, back) DO NOTHING
-                RETURNING id, front, back
-            )
-            SELECT id, front, back FROM inserted
-            UNION ALL
-            SELECT id, front, back FROM card
-            WHERE front = :front AND back = :back
-            AND NOT EXISTS (SELECT 1 FROM inserted)
-            """;
+        INSERT INTO card (front, back)
+        VALUES (:front, :back)
+        ON CONFLICT (front, back) DO UPDATE SET front = EXCLUDED.front
+        RETURNING id, front, back, (xmax != 0) AS already_existed
+        """;
 
         Query query = entityManager.createNativeQuery(sql);
         query.setParameter("front", front);
@@ -40,6 +33,7 @@ public class CardRepositoryImpl implements CardRepositoryCustom {
         map.put("id", result[0]);
         map.put("front", result[1]);
         map.put("back", result[2]);
+        map.put("alreadyExisted", result[3]);
         return map;
     }
 }
