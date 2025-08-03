@@ -19,8 +19,8 @@ class CardHistoryServiceTest {
     private CardHistoryService historyService;
 
     @Test
-    void recordVote_invokesProcedureWithParameters() {
-        historyService.recordVote(42L, 5);
-        verify(historyRepo).recordCardVote(42L, 5);
+    void recordRating_invokesProcedureWithParameters() {
+        historyService.recordRating(42L, 5);
+        verify(historyRepo).recordCardRating(42L, 5);
     }
 }

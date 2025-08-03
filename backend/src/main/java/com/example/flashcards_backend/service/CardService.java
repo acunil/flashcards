@@ -43,8 +43,16 @@ public class CardService {
     }
 
     @Transactional
-    public void vote(Long cardId, int rating) {
-        getById(cardId);
-        cardHistoryService.recordVote(cardId, rating);
+    public void rate(Long cardId, int rating) {
+        getById(cardId); // validate card exists
+        cardHistoryService.recordRating(cardId, rating);
+    }
+
+    public List<Card> getByMinAvgRating(double threshold) {
+        return cardRepository.findByMinAvgRating(threshold);
+    }
+
+    public List<Card> getByMaxAvgRating(double threshold) {
+        return cardRepository.findByMaxAvgRating(threshold);
     }
 }

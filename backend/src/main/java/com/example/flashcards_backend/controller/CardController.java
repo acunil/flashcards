@@ -58,13 +58,37 @@ public class CardController {
         return ResponseEntity.noContent().build();
     }
 
-    @PostMapping("/{id}/vote")
-    public ResponseEntity<Void> vote(
+    @PostMapping("/{id}/rate")
+    public ResponseEntity<Void> rate(
         @PathVariable Long id,
         @RequestParam @Min(1) @Max(5) int rating
     ) {
-        cardService.vote(id, rating);
+        cardService.rate(id, rating);
         return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping
+    @RequestMapping("/minAvgRating")
+    public ResponseEntity<List<CardResponse>> getByMinAvgRating(
+        @RequestParam @Min(1) @Max(5) double threshold
+    ) {
+        List<CardResponse> cardResponses = cardService.getByMinAvgRating(threshold)
+            .stream()
+            .map(CardResponse::fromEntity)
+            .toList();
+        return ResponseEntity.ok(cardResponses);
+    }
+
+    @GetMapping
+    @RequestMapping("/maxAvgRating")
+    public ResponseEntity<List<CardResponse>> getByMaxAvgRating(
+        @RequestParam @Min(1) @Max(5) double threshold
+    ) {
+        List<CardResponse> cardResponses = cardService.getByMaxAvgRating(threshold)
+            .stream()
+            .map(CardResponse::fromEntity)
+            .toList();
+        return ResponseEntity.ok(cardResponses);
     }
 
     @ExceptionHandler(CardNotFoundException.class)

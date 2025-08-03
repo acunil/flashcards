@@ -8,8 +8,8 @@ import org.springframework.data.repository.query.Param;
 
 public interface CardHistoryRepository extends JpaRepository<CardHistory, Long> {
 
-    @Procedure(procedureName = "record_card_vote")
-    void recordCardVote(
+    @Procedure(procedureName = "record_card_rating")
+    void recordCardRating(
         @Param("p_card_id") Long cardId,
         @Param("p_rating")  Integer rating
     );

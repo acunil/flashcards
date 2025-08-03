@@ -19,7 +19,7 @@ curl -X POST http://localhost:8080/api/cards -H "Content-Type: application/json"
 This is already active in the Neon database.
 
 ```sql
-CREATE PROCEDURE record_card_vote(
+CREATE PROCEDURE record_card_rating(
   IN p_card_id INT,
   IN p_rating INT
 )

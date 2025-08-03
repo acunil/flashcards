@@ -8,10 +8,10 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 @AllArgsConstructor
 public class CardHistoryService {
-    private final CardHistoryRepository historyRepo;
+    private final CardHistoryRepository cardHistoryRepository;
 
     @Transactional
-    public void recordVote(Long cardId, int rating) {
-        historyRepo.recordCardVote(cardId, rating);
+    public void recordRating(Long cardId, int rating) {
+        cardHistoryRepository.recordCardRating(cardId, rating);
     }
 }
