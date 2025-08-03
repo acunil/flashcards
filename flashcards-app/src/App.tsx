@@ -3,9 +3,15 @@ import { AppRoutes } from "./routes/routes";
 
 function App() {
   return (
-    <BrowserRouter>
-      <AppRoutes />
-    </BrowserRouter>
+    <div className="min-h-screen">
+      {" "}
+      {/* full width background */}
+      <div className="mx-auto overflow-visible">
+        <BrowserRouter>
+          <AppRoutes />
+        </BrowserRouter>
+      </div>
+    </div>
   );
 }
 
