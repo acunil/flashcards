@@ -1,14 +1,14 @@
 import { useState } from "react";
-import DifficultyButtons from "../components/difficultyButtons";
-import FlipCard from "../components/filpCard";
+import DifficultyButtons from "../components/difficultyButtons"; // we'll export levels from DifficultyButtons
 import Header from "../components/header";
 import useCards from "../hooks/useCards";
 import useRateCard from "../hooks/useRateCard";
+import CardCarousel from "../components/cardCarousel";
+import { levels } from "../components/difficultyButtons/levels";
 
 interface ReviseProps {
   hardMode?: boolean;
 }
-
 const Revise = ({ hardMode = false }: ReviseProps) => {
   const { cards, loading, error } = useCards(hardMode);
   const { rateCard } = useRateCard();
@@ -17,16 +17,24 @@ const Revise = ({ hardMode = false }: ReviseProps) => {
     "Front"
   );
 
+  // Map card id -> color
+  const [cardColors, setCardColors] = useState<Record<string, string>>({});
   const handleDifficultySelect = (rating: number) => {
     if (cards.length === 0) return;
 
     const currentCard = cards[currentIndex];
     rateCard(currentCard.id, rating);
 
-    handleNext();
-  };
+    const level = levels.find((l) => l.rating === rating);
+    const newColor = level ? level.buttonClassName : "bg-white";
 
-  const handleNext = () => {
+    // Set the color for the *current* card before moving forward
+    setCardColors((prevColors) => ({
+      ...prevColors,
+      [currentCard.id]: newColor,
+    }));
+
+    // Then move to next card
     setCurrentIndex((prevIndex) =>
       prevIndex < cards.length - 1 ? prevIndex + 1 : 0
     );
@@ -44,7 +52,13 @@ const Revise = ({ hardMode = false }: ReviseProps) => {
         {error && <p className="text-red-600">{error}</p>}
         {!loading && !error && cards.length > 0 && (
           <>
-            <FlipCard card={cards[currentIndex]} displayMode={cardDisplay} />
+            <CardCarousel
+              cards={cards}
+              showDecks={false}
+              currentIndex={currentIndex}
+              setCurrentIndex={setCurrentIndex}
+              cardColors={cardColors} // pass the colors map here
+            />
             <DifficultyButtons onSelectDifficulty={handleDifficultySelect} />
           </>
         )}
