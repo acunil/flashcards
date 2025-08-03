@@ -8,6 +8,8 @@ import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import static java.util.Collections.shuffle;
+
 import java.util.List;
 
 @Service
@@ -18,6 +20,18 @@ public class CardService {
 
     public List<Card> getAll() {
         return cardRepository.findAll();
+    }
+
+    public List<Card> getAll(boolean shuffled) {
+        return shuffled
+               ? getAllShuffled()
+               : getAll();
+    }
+
+    private List<Card> getAllShuffled() {
+        List<Card> cards = getAll();
+        shuffle(cards);
+        return cards;
     }
 
     public Card getById(Long id) {
@@ -52,7 +66,31 @@ public class CardService {
         return cardRepository.findByMinAvgRating(threshold);
     }
 
+    public List<Card> getByMinAvgRating(double threshold, boolean shuffled) {
+        return shuffled
+               ? getByMinAvgRatingShuffled(threshold)
+               : getByMinAvgRating(threshold);
+    }
+
+    private List<Card> getByMinAvgRatingShuffled(double threshold) {
+        List<Card> cards = getByMinAvgRating(threshold);
+        shuffle(cards);
+        return cards;
+    }
+
     public List<Card> getByMaxAvgRating(double threshold) {
         return cardRepository.findByMaxAvgRating(threshold);
+    }
+
+    public List<Card> getByMaxAvgRating(double threshold, boolean shuffled) {
+        return shuffled
+               ? getByMaxAvgRatingShuffled(threshold)
+               : getByMaxAvgRating(threshold);
+    }
+
+    private List<Card> getByMaxAvgRatingShuffled(double threshold) {
+        List<Card> cards = getByMaxAvgRating(threshold);
+        shuffle(cards);
+        return cards;
     }
 }

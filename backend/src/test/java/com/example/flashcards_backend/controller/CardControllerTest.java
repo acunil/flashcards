@@ -43,7 +43,7 @@ class CardControllerTest {
     void getAll_returnsListOfCardResponse() throws Exception {
         Card c1 = Card.builder().id(1L).front("f1").back("b1").build();
         Card c2 = Card.builder().id(2L).front("f2").back("b2").build();
-        when(cardService.getAll()).thenReturn(List.of(c1, c2));
+        when(cardService.getAll(false)).thenReturn(List.of(c1, c2));
 
         mockMvc.perform(get(ENDPOINT))
             .andExpect(status().isOk())
@@ -151,7 +151,7 @@ class CardControllerTest {
     void getByMinAvgRating_validThreshold_returnsListOfCardResponse() throws Exception {
         Card c1 = Card.builder().id(1L).front("f1").back("b1").build();
         Card c2 = Card.builder().id(2L).front("f2").back("b2").build();
-        when(cardService.getByMinAvgRating(3.0))
+        when(cardService.getByMinAvgRating(3.0, false))
             .thenReturn(List.of(c1, c2));
         mockMvc.perform(get(ENDPOINT + "/minAvgRating")
                 .param("threshold", "3.0"))
@@ -169,7 +169,7 @@ class CardControllerTest {
     void getByMaxAvgRating_validThreshold_returnsListOfCardResponse() throws Exception {
         Card c1 = Card.builder().id(1L).front("f1").back("b1").build();
         Card c2 = Card.builder().id(2L).front("f2").back("b2").build();
-        when(cardService.getByMaxAvgRating(3.0))
+        when(cardService.getByMaxAvgRating(3.0, false))
             .thenReturn(List.of(c1, c2));
         mockMvc.perform(get(ENDPOINT + "/maxAvgRating")
                 .param("threshold", "3.0"))
