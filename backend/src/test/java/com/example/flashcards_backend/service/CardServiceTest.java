@@ -3,6 +3,7 @@ package com.example.flashcards_backend.service;
 import com.example.flashcards_backend.dto.CardRequest;
 import com.example.flashcards_backend.exception.CardNotFoundException;
 import com.example.flashcards_backend.model.Card;
+import com.example.flashcards_backend.model.CardCreationResult;
 import com.example.flashcards_backend.repository.CardRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -91,15 +92,17 @@ class CardServiceTest {
             .thenReturn(Map.of(
                 "id",    newId,
                 "front", newFront,
-                "back",  newBack
+                "back",  newBack,
+                "alreadyExisted", false
             ));
 
         CardRequest request = new CardRequest(newFront, newBack);
 
-        Card createdCard = cardService.create(request);
-        assertThat(createdCard.getId()).isNotNull().isEqualTo(newId);
-        assertThat(createdCard.getFront()).isEqualTo(newFront);
-        assertThat(createdCard.getBack()).isEqualTo(newBack);
+        CardCreationResult cardCreationResult = cardService.create(request);
+        assertThat(cardCreationResult.card().getId()).isNotNull().isEqualTo(newId);
+        assertThat(cardCreationResult.card().getFront()).isEqualTo(newFront);
+        assertThat(cardCreationResult.card().getBack()).isEqualTo(newBack);
+        assertThat(cardCreationResult.alreadyExisted()).isFalse();
 
         verify(cardRepository).createIfUnique(newFront, newBack);
         verifyNoMoreInteractions(cardRepository);
