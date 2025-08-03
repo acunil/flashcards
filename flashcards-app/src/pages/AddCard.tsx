@@ -30,9 +30,7 @@ const AddCard = () => {
   };
 
   return (
-    <>
-      <Header />
-
+    <div className="bg-yellow-200">
       {/* Toast message */}
       {showToast && (
         <div className="fixed top-9 left-1/2 -translate-x-1/2 bg-green-200 border-2 border-black px-4 py-2 rounded shadow transition-opacity">
@@ -40,6 +38,7 @@ const AddCard = () => {
         </div>
       )}
 
+      <Header />
       <div className="min-h-screen bg-yellow-200 flex justify-center items-start pt-10">
         <div className="bg-white p-6 rounded shadow-md w-full max-w-md space-y-4 border-2 border-black">
           <h1 className="text-xl font-bold text-center">add a new card</h1>
@@ -78,7 +77,7 @@ const AddCard = () => {
           </div>
         </div>
       </div>
-    </>
+    </div>
   );
 };
 
