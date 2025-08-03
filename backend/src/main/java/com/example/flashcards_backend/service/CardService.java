@@ -8,7 +8,7 @@ import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 
-import static java.util.Collections.shuffle;
+import static com.example.flashcards_backend.utility.CardUtils.shuffleCards;
 
 import java.util.List;
 
@@ -23,15 +23,10 @@ public class CardService {
     }
 
     public List<Card> getAll(boolean shuffled) {
+        var cards = getAll();
         return shuffled
-               ? getAllShuffled()
-               : getAll();
-    }
-
-    private List<Card> getAllShuffled() {
-        List<Card> cards = getAll();
-        shuffle(cards);
-        return cards;
+               ? shuffleCards(cards)
+               : cards;
     }
 
     public Card getById(Long id) {
@@ -67,15 +62,10 @@ public class CardService {
     }
 
     public List<Card> getByMinAvgRating(double threshold, boolean shuffled) {
+        var cards = getByMinAvgRating(threshold);
         return shuffled
-               ? getByMinAvgRatingShuffled(threshold)
-               : getByMinAvgRating(threshold);
-    }
-
-    private List<Card> getByMinAvgRatingShuffled(double threshold) {
-        List<Card> cards = getByMinAvgRating(threshold);
-        shuffle(cards);
-        return cards;
+               ? shuffleCards(cards)
+               : cards;
     }
 
     public List<Card> getByMaxAvgRating(double threshold) {
@@ -83,14 +73,9 @@ public class CardService {
     }
 
     public List<Card> getByMaxAvgRating(double threshold, boolean shuffled) {
+        var cards = getByMaxAvgRating(threshold);
         return shuffled
-               ? getByMaxAvgRatingShuffled(threshold)
-               : getByMaxAvgRating(threshold);
-    }
-
-    private List<Card> getByMaxAvgRatingShuffled(double threshold) {
-        List<Card> cards = getByMaxAvgRating(threshold);
-        shuffle(cards);
-        return cards;
+               ? shuffleCards(cards)
+               : cards;
     }
 }
