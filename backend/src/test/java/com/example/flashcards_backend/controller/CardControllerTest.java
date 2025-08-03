@@ -146,4 +146,40 @@ class CardControllerTest {
             .andExpect(status().isNotFound())
             .andExpect(content().string("Card not found with id: 55"));
     }
+
+    @Test
+    void getByMinAvgRating_validThreshold_returnsListOfCardResponse() throws Exception {
+        Card c1 = Card.builder().id(1L).front("f1").back("b1").build();
+        Card c2 = Card.builder().id(2L).front("f2").back("b2").build();
+        when(cardService.getByMinAvgRating(3.0))
+            .thenReturn(List.of(c1, c2));
+        mockMvc.perform(get(ENDPOINT + "/minAvgRating")
+                .param("threshold", "3.0"))
+            .andExpect(status().isOk())
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+            .andExpect(jsonPath("$[0].id").value(1))
+            .andExpect(jsonPath("$[0].front").value("f1"))
+            .andExpect(jsonPath("$[0].back").value("b1"))
+            .andExpect(jsonPath("$[1].id").value(2))
+            .andExpect(jsonPath("$[1].front").value("f2"))
+            .andExpect(jsonPath("$[1].back").value("b2"));
+    }
+
+    @Test
+    void getByMaxAvgRating_validThreshold_returnsListOfCardResponse() throws Exception {
+        Card c1 = Card.builder().id(1L).front("f1").back("b1").build();
+        Card c2 = Card.builder().id(2L).front("f2").back("b2").build();
+        when(cardService.getByMaxAvgRating(3.0))
+            .thenReturn(List.of(c1, c2));
+        mockMvc.perform(get(ENDPOINT + "/maxAvgRating")
+                .param("threshold", "3.0"))
+            .andExpect(status().isOk())
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+            .andExpect(jsonPath("$[0].id").value(1))
+            .andExpect(jsonPath("$[0].front").value("f1"))
+            .andExpect(jsonPath("$[0].back").value("b1"))
+            .andExpect(jsonPath("$[1].id").value(2))
+            .andExpect(jsonPath("$[1].front").value("f2"))
+            .andExpect(jsonPath("$[1].back").value("b2"));
+    }
 }

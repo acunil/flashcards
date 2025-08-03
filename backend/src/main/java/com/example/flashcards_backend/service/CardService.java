@@ -47,4 +47,12 @@ public class CardService {
         getById(cardId); // validate card exists
         cardHistoryService.recordRating(cardId, rating);
     }
+
+    public List<Card> getByMinAvgRating(double threshold) {
+        return cardRepository.findByMinAvgRating(threshold);
+    }
+
+    public List<Card> getByMaxAvgRating(double threshold) {
+        return cardRepository.findByMaxAvgRating(threshold);
+    }
 }

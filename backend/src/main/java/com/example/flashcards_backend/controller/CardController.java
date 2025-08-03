@@ -67,6 +67,30 @@ public class CardController {
         return ResponseEntity.noContent().build();
     }
 
+    @GetMapping
+    @RequestMapping("/minAvgRating")
+    public ResponseEntity<List<CardResponse>> getByMinAvgRating(
+        @RequestParam @Min(1) @Max(5) double threshold
+    ) {
+        List<CardResponse> cardResponses = cardService.getByMinAvgRating(threshold)
+            .stream()
+            .map(CardResponse::fromEntity)
+            .toList();
+        return ResponseEntity.ok(cardResponses);
+    }
+
+    @GetMapping
+    @RequestMapping("/maxAvgRating")
+    public ResponseEntity<List<CardResponse>> getByMaxAvgRating(
+        @RequestParam @Min(1) @Max(5) double threshold
+    ) {
+        List<CardResponse> cardResponses = cardService.getByMaxAvgRating(threshold)
+            .stream()
+            .map(CardResponse::fromEntity)
+            .toList();
+        return ResponseEntity.ok(cardResponses);
+    }
+
     @ExceptionHandler(CardNotFoundException.class)
     public ResponseEntity<String> handleNotFound(CardNotFoundException ex) {
         return ResponseEntity
