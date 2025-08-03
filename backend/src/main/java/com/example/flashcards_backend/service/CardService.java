@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 import static com.example.flashcards_backend.utility.CardUtils.shuffleCards;
 
 import java.util.List;
+import java.util.Map;
 
 @Service
 @AllArgsConstructor
@@ -36,11 +37,16 @@ public class CardService {
 
     @Transactional
     public Card create(CardRequest request) {
-        Card toSave = Card.builder()
-            .front(request.front())
-            .back(request.back())
+        Map<String, Object> row = cardRepository.createIfUnique(
+            request.front(),
+            request.back()
+        );
+
+        return Card.builder()
+            .id((Long) row.get("id"))
+            .front((String) row.get("front"))
+            .back((String) row.get("back"))
             .build();
-        return cardRepository.save(toSave);
     }
 
     @Transactional
