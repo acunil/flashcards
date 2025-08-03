@@ -8,22 +8,32 @@ export interface Card {
 
 interface FlipCardProps {
   card: Card;
+  displayMode?: "Front" | "Back" | "Any";
   sideLabelFront?: string;
   sideLabelBack?: string;
+  decks?: string;
+  showDecks?: boolean;
 }
 
 const FlipCard = ({
   card,
+  displayMode = "Front",
   sideLabelFront = "front",
   sideLabelBack = "back",
+  showDecks = false,
+  decks,
 }: FlipCardProps) => {
   const [flipped, setFlipped] = useState(false);
   const [internalCard, setInternalCard] = useState(card);
 
   useEffect(() => {
     if (card.id !== internalCard.id) {
+      let defaultFlipped = false;
+
+      if (displayMode === "Back") defaultFlipped = true;
+      if (displayMode === "Any") defaultFlipped = Math.random() < 0.5;
       // Start flip reset
-      setFlipped(false);
+      setFlipped(defaultFlipped);
 
       // Wait for flip reset animation to finish before updating content
       const timeout = setTimeout(() => {
@@ -32,7 +42,7 @@ const FlipCard = ({
 
       return () => clearTimeout(timeout);
     }
-  }, [card, internalCard.id]);
+  }, [card, displayMode, internalCard.id]);
 
   return (
     <div
@@ -55,6 +65,11 @@ const FlipCard = ({
             <div className="flex items-center justify-center h-full text-center px-2">
               {internalCard.front}
             </div>
+            {showDecks && decks && (
+              <span className="absolute bottom-2 right-2 text-xs text-gray-400">
+                {decks}
+              </span>
+            )}
           </div>
 
           {/* Back Side */}
@@ -65,6 +80,11 @@ const FlipCard = ({
             <div className="flex items-center justify-center h-full text-center px-2">
               {internalCard.back}
             </div>
+            {showDecks && decks && (
+              <span className="absolute bottom-2 right-2 text-xs text-gray-400">
+                {decks}
+              </span>
+            )}
           </div>
         </div>
       </div>
