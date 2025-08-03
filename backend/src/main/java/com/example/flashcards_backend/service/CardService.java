@@ -4,6 +4,7 @@ import com.example.flashcards_backend.dto.CardDto;
 import com.example.flashcards_backend.exception.CardNotFoundException;
 import com.example.flashcards_backend.model.Card;
 import com.example.flashcards_backend.repository.CardRepository;
+import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -31,6 +32,7 @@ public class CardService {
         return cardRepository.save(toSave);
     }
 
+    @Transactional
     public void update(Long id, CardDto dto) {
         Card existing = cardRepository.findById(id)
             .orElseThrow(() -> new CardNotFoundException(id));
