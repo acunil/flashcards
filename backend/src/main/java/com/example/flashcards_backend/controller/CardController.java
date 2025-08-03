@@ -26,6 +26,7 @@ public class CardController {
     private final CardService cardService;
 
     @GetMapping
+    @CrossOrigin("http://localhost:5174")
     public ResponseEntity<List<CardResponse>> getAll() {
         List<CardResponse> cardResponses = cardService.getAll()
             .stream()
