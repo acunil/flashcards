@@ -20,7 +20,7 @@ This is already active in the Neon database.
 
 ```sql
 CREATE PROCEDURE record_card_rating(
-  IN p_card_id INT,
+  IN p_card_id BIGINT,
   IN p_rating INT
 )
 LANGUAGE plpgsql
