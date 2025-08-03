@@ -9,8 +9,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.MediaType;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
@@ -20,9 +20,10 @@ import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@ExtendWith(MockitoExtension.class)
+@ExtendWith(SpringExtension.class)
 class CardControllerTest {
 
+    public static final String ENDPOINT = "/api/cards";
     @Mock
     private CardService cardService;
 
@@ -33,7 +34,9 @@ class CardControllerTest {
 
     @BeforeEach
     void setUp() {
-        mockMvc = MockMvcBuilders.standaloneSetup(controller).build();
+        mockMvc = MockMvcBuilders.standaloneSetup(controller)
+            .setControllerAdvice(controller)
+            .build();
     }
 
     @Test
@@ -42,7 +45,7 @@ class CardControllerTest {
         Card c2 = Card.builder().id(2L).front("f2").back("b2").build();
         when(cardService.getAll()).thenReturn(List.of(c1, c2));
 
-        mockMvc.perform(get("/api/cards"))
+        mockMvc.perform(get(ENDPOINT))
             .andExpect(status().isOk())
             .andExpect(content().contentType(MediaType.APPLICATION_JSON))
             .andExpect(jsonPath("$[0].id").value(1))
@@ -58,7 +61,7 @@ class CardControllerTest {
         Card c = Card.builder().id(1L).front("front").back("back").build();
         when(cardService.getById(1L)).thenReturn(c);
 
-        mockMvc.perform(get("/api/cards/1"))
+        mockMvc.perform(get(ENDPOINT + "/1"))
             .andExpect(status().isOk())
             .andExpect(content().contentType(MediaType.APPLICATION_JSON))
             .andExpect(jsonPath("$.id").value(1))
@@ -70,7 +73,7 @@ class CardControllerTest {
     void getById_missingId_returnsNotFound() throws Exception {
         when(cardService.getById(99L)).thenThrow(new CardNotFoundException(99L));
 
-        mockMvc.perform(get("/api/cards/99"))
+        mockMvc.perform(get(ENDPOINT + "/99"))
             .andExpect(status().isNotFound())
             .andExpect(content().string("Card not found with id: 99"));
     }
@@ -84,7 +87,7 @@ class CardControllerTest {
             {"id":null,"front":"f","back":"b"}
             """;
 
-        mockMvc.perform(post("/api/cards")
+        mockMvc.perform(post(ENDPOINT)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(json))
             .andExpect(status().isCreated())
@@ -101,7 +104,7 @@ class CardControllerTest {
             {"id":null,"front":"newF","back":"newB"}
             """;
 
-        mockMvc.perform(put("/api/cards/5")
+        mockMvc.perform(put(ENDPOINT + "/5")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(json))
             .andExpect(status().isNoContent());
@@ -117,10 +120,30 @@ class CardControllerTest {
             {"id":null,"front":"x","back":"y"}
             """;
 
-        mockMvc.perform(put("/api/cards/7")
+        mockMvc.perform(put(ENDPOINT + "/7")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(json))
             .andExpect(status().isNotFound())
             .andExpect(content().string("Card not found with id: 7"));
+    }
+
+    @Test
+    void vote_validIdAndRating_returnsNoContent() throws Exception {
+        mockMvc.perform(post(ENDPOINT + "/7/vote")
+                .param("rating", "5")
+                .contentType(MediaType.APPLICATION_JSON))
+            .andExpect(status().isNoContent());
+        verify(cardService).vote(7L, 5);
+    }
+
+    @Test
+    void vote_missingCard_returnsNotFoundWithMessage() throws Exception {
+        doThrow(new CardNotFoundException(55L))
+            .when(cardService).vote(55L, 2);
+        mockMvc.perform(post(ENDPOINT + "/55/vote")
+                .param("rating", "2")
+                .contentType(MediaType.APPLICATION_JSON))
+            .andExpect(status().isNotFound())
+            .andExpect(content().string("Card not found with id: 55"));
     }
 }

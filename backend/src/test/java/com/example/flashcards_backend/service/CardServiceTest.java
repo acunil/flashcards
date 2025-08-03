@@ -1,6 +1,7 @@
 package com.example.flashcards_backend.service;
 
 import com.example.flashcards_backend.dto.CardRequest;
+import com.example.flashcards_backend.exception.CardNotFoundException;
 import com.example.flashcards_backend.model.Card;
 import com.example.flashcards_backend.repository.CardRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -10,7 +11,8 @@ import org.mockito.Mock;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.when;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Mockito.*;
 
 import java.util.List;
 import java.util.Optional;
@@ -27,9 +29,12 @@ class CardServiceTest {
     @Mock
     private CardRepository cardRepository;
 
+    @Mock
+    private CardHistoryService cardHistoryService;
+
     @BeforeEach
     void setUp() {
-        cardService = new CardService(cardRepository);
+        cardService = new CardService(cardRepository, cardHistoryService);
 
         card1 = new Card(CARD_1_ID, "Front 1", "Back 1");
         card2 = new Card(CARD_2_ID, "Front 2", "Back 2");
@@ -77,6 +82,23 @@ class CardServiceTest {
         Card updatedCard = cardService.getById(CARD_1_ID);
         assertThat(updatedCard.getFront()).isEqualTo("Updated Front");
         assertThat(updatedCard.getBack()).isEqualTo("Updated Back");
+    }
+
+    @Test
+    void vote_existingCard_callsCardHistoryService() {
+        when(cardRepository.findById(10L)).thenReturn(Optional.of(new Card()));
+        cardService.vote(10L, 3);
+        verify(cardHistoryService).recordVote(10L, 3);
+    }
+
+    @Test
+    void vote_missingCard_throwsException() {
+        when(cardRepository.findById(99L)).thenReturn(Optional.empty());
+        assertThatThrownBy(() -> cardService.vote(99L, 4))
+            .isInstanceOf(CardNotFoundException.class)
+            .extracting("message")
+            .isEqualTo("Card not found with id: 99");
+        verifyNoInteractions(cardHistoryService);
     }
 
 }

@@ -3,6 +3,48 @@ Flash cards app for subject revision
 
 ## Curl commands
 
-`curl http://localhost:8080/api/cards`
+Get all cards:
 
-`curl -X POST http://localhost:8080/api/cards -H "Content-Type: application/json" -d '{"front":"Hello","back":"Hola"}'`
+```bash
+curl http://localhost:8080/api/cards
+```
+Add a new card:
+```bashbash
+curl -X POST http://localhost:8080/api/cards -H "Content-Type: application/json" -d '{"front":"nett","back":"nice"}'
+``` 
+
+
+## Stored Procedure
+
+This is already active in the Neon database.
+
+```sql
+CREATE PROCEDURE record_card_vote(
+  IN p_card_id INT,
+  IN p_rating INT
+)
+LANGUAGE plpgsql
+AS $$
+BEGIN
+  UPDATE card_history
+  SET
+    view_count  = view_count + 1,
+    last_viewed = NOW(),
+    last_rating = p_rating,
+    avg_rating  = ((avg_rating * (view_count::numeric)) + p_rating) 
+                  / (view_count + 1)
+  WHERE card_id = p_card_id;
+  
+  IF NOT FOUND THEN
+    INSERT INTO card_history(card_id, avg_rating, view_count, last_viewed, last_rating)
+    VALUES (p_card_id, p_rating, 1, NOW(), p_rating);
+  END IF;
+END;
+$$;
+```
+
+To view the stored procedure, you can use the following command in the Neon database:
+
+```sql
+\df+ record_card_vote
+```

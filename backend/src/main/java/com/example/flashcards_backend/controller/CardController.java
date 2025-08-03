@@ -5,6 +5,8 @@ import com.example.flashcards_backend.dto.CardResponse;
 import com.example.flashcards_backend.exception.CardNotFoundException;
 import com.example.flashcards_backend.model.Card;
 import com.example.flashcards_backend.service.CardService;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -52,6 +54,15 @@ public class CardController {
         @Valid @RequestBody CardRequest request
     ) {
         cardService.update(id, request); // throws CardNotFoundException if missing
+        return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/{id}/vote")
+    public ResponseEntity<Void> vote(
+        @PathVariable Long id,
+        @RequestParam @Min(1) @Max(5) int rating
+    ) {
+        cardService.vote(id, rating);
         return ResponseEntity.noContent().build();
     }
 

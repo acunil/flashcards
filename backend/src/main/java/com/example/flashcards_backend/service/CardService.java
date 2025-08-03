@@ -14,6 +14,7 @@ import java.util.List;
 @AllArgsConstructor
 public class CardService {
     private final CardRepository cardRepository;
+    private final CardHistoryService cardHistoryService;
 
     public List<Card> getAll() {
         return cardRepository.findAll();
@@ -24,6 +25,7 @@ public class CardService {
             .orElseThrow(() -> new CardNotFoundException(id));
     }
 
+    @Transactional
     public Card create(CardRequest request) {
         Card toSave = Card.builder()
             .front(request.front())
@@ -38,5 +40,11 @@ public class CardService {
             .orElseThrow(() -> new CardNotFoundException(id));
         existing.setFront(request.front());
         existing.setBack(request.back());
+    }
+
+    @Transactional
+    public void vote(Long cardId, int rating) {
+        getById(cardId);
+        cardHistoryService.recordVote(cardId, rating);
     }
 }
