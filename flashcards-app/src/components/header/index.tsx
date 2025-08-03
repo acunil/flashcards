@@ -4,8 +4,8 @@ import { useNavigate } from "react-router-dom";
 import Toggle from "../toggle";
 
 interface HeaderProps {
-  cardDisplay: "Front" | "Back" | "Any";
-  setCardDisplay: (val: "Front" | "Back" | "Any") => void;
+  cardDisplay?: "Front" | "Back" | "Any";
+  setCardDisplay?: (val: "Front" | "Back" | "Any") => void;
 }
 
 const Header = ({ cardDisplay, setCardDisplay }: HeaderProps) => {

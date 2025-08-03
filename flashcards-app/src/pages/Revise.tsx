@@ -5,8 +5,12 @@ import Header from "../components/header";
 import useCards from "../hooks/useCards";
 import useRateCard from "../hooks/useRateCard";
 
-const Revise = () => {
-  const { cards, loading, error } = useCards();
+interface ReviseProps {
+  hardMode?: boolean;
+}
+
+const Revise = ({ hardMode = false }: ReviseProps) => {
+  const { cards, loading, error } = useCards(hardMode);
   const { rateCard } = useRateCard();
   const [currentIndex, setCurrentIndex] = useState(0);
   const [cardDisplay, setCardDisplay] = useState<"Front" | "Back" | "Any">(
@@ -29,7 +33,7 @@ const Revise = () => {
   };
 
   return (
-    <div className="min-h-screen bg-pink-200">
+    <div className={`min-h-screen ${hardMode ? "bg-pink-300" : "bg-pink-200"}`}>
       <Header cardDisplay={cardDisplay} setCardDisplay={setCardDisplay} />
       <main className="flex flex-col items-center gap-6 p-6">
         {loading && <p>Loading cards...</p>}
