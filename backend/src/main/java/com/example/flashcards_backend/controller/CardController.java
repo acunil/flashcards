@@ -17,7 +17,6 @@ import jakarta.validation.Valid;
 import java.net.URI;
 import java.util.List;
 
-@CrossOrigin("http://localhost:5173")
 @RestController
 @RequestMapping("/api/cards")
 @Validated
