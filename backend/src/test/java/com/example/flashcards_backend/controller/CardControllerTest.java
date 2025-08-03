@@ -71,7 +71,8 @@ class CardControllerTest {
         when(cardService.getById(99L)).thenThrow(new CardNotFoundException(99L));
 
         mockMvc.perform(get("/api/cards/99"))
-            .andExpect(status().isNotFound());
+            .andExpect(status().isNotFound())
+            .andExpect(content().string("Card not found with id: 99"));
     }
 
     @Test
@@ -119,6 +120,7 @@ class CardControllerTest {
         mockMvc.perform(put("/api/cards/7")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(json))
-            .andExpect(status().isNotFound());
+            .andExpect(status().isNotFound())
+            .andExpect(content().string("Card not found with id: 7"));
     }
 }

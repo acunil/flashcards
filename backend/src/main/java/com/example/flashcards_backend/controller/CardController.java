@@ -6,6 +6,7 @@ import com.example.flashcards_backend.exception.CardNotFoundException;
 import com.example.flashcards_backend.model.Card;
 import com.example.flashcards_backend.service.CardService;
 import lombok.AllArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -55,7 +56,9 @@ public class CardController {
     }
 
     @ExceptionHandler(CardNotFoundException.class)
-    public ResponseEntity<Void> handleNotFound(CardNotFoundException ex) {
-        return ResponseEntity.notFound().build();
+    public ResponseEntity<String> handleNotFound(CardNotFoundException ex) {
+        return ResponseEntity
+            .status(HttpStatus.NOT_FOUND)
+            .body(ex.getMessage());
     }
 }
