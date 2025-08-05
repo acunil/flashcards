@@ -43,9 +43,21 @@ class CardServiceTest {
     void setUp() {
         cardService = new CardService(cardRepository, cardHistoryService);
 
-        card1 = new Card(CARD_1_ID, "Front 1", "Back 1");
-        card2 = new Card(CARD_2_ID, "Front 2", "Back 2");
-        card3 = new Card(CARD_3_ID, "Front 3", "Back 3");
+        card1 = Card.builder()
+            .id(CARD_1_ID)
+            .front("Front 1")
+            .back("Back 1")
+            .build();
+        card2 = Card.builder()
+            .id(CARD_2_ID)
+            .front("Front 2")
+            .back("Back 2")
+            .build();
+        card3 = Card.builder()
+            .id(CARD_3_ID)
+            .front("Front 3")
+            .back("Back 3")
+            .build();
         originalCards = List.of(card1, card2, card3);
 
         when(cardRepository.findById(CARD_1_ID)).thenReturn(Optional.of(card1));

@@ -12,9 +12,9 @@ class CardUtilsTest {
      @Test
      void testShuffleCards() {
         var original = List.of(
-            new Card(1L, "Front 1", "Back 1"),
-            new Card(2L, "Front 2", "Back 2"),
-            new Card(3L, "Front 3", "Back 3")
+            Card.builder().id(1L).build(),
+            Card.builder().id(2L).build(),
+            Card.builder().id(3L).build()
         );
 
          assertEventuallyReorders(
