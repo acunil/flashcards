@@ -49,33 +49,30 @@ class CardServiceTest {
         deck1 = Deck.builder()
             .id(1L)
             .name("Deck 1")
-            .card(card1)
-            .card(card2)
             .build();
         deck2 = Deck.builder()
             .id(2L)
             .name("Deck 2")
-            .card(card1)
             .build();
-
         card1 = Card.builder()
             .id(CARD_1_ID)
             .front("Front 1")
             .back("Back 1")
-//            .deck(deck1)
-//            .deck(deck2)
             .build();
         card2 = Card.builder()
             .id(CARD_2_ID)
             .front("Front 2")
             .back("Back 2")
-//            .deck(deck1)
             .build();
         card3 = Card.builder()
             .id(CARD_3_ID)
             .front("Front 3")
             .back("Back 3")
             .build();
+        card1.addDecks(Set.of(deck1, deck2));
+        card2.addDecks(Set.of(deck1));
+        deck1.addCards(Set.of(card1, card2));
+        deck2.addCards(Set.of(card1));
         originalCards = List.of(card1, card2, card3);
 
         when(cardRepository.findById(CARD_1_ID)).thenReturn(Optional.of(card1));
