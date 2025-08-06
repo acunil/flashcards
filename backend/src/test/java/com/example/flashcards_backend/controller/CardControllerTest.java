@@ -123,7 +123,7 @@ class CardControllerTest {
     @Test
     void update_existingId_returnsNoContent() throws Exception {
         String json = """
-            {"id":null,"front":"newF","back":"newB"}
+            {"id":null,"front":"newF","back":"newB","decks":null}
             """;
 
         mockMvc.perform(put(ENDPOINT + "/5")
@@ -131,7 +131,7 @@ class CardControllerTest {
                 .content(json))
             .andExpect(status().isNoContent());
 
-        verify(cardService).updateCard(5L, new CardRequest("newF", "newB"));
+        verify(cardService).updateCard(5L, new CardRequest("newF", "newB", null));
     }
 
     @Test

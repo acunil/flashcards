@@ -4,6 +4,7 @@ import com.example.flashcards_backend.dto.CardRequest;
 import com.example.flashcards_backend.exception.CardNotFoundException;
 import com.example.flashcards_backend.model.Card;
 import com.example.flashcards_backend.model.CardCreationResult;
+import com.example.flashcards_backend.model.Deck;
 import com.example.flashcards_backend.repository.CardRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -16,9 +17,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.*;
 
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 
 @ExtendWith(SpringExtension.class)
 class CardServiceTest {
@@ -32,6 +31,8 @@ class CardServiceTest {
     private Card card2;
     private Card card3;
     private List<Card> originalCards;
+    private Deck deck1;
+    private Deck deck2;
 
     @Mock
     private CardRepository cardRepository;
@@ -39,19 +40,36 @@ class CardServiceTest {
     @Mock
     private CardHistoryService cardHistoryService;
 
+    @Mock
+    private DeckService deckService;
+
     @BeforeEach
     void setUp() {
-        cardService = new CardService(cardRepository, cardHistoryService);
+        cardService = new CardService(cardRepository, cardHistoryService, deckService);
+        deck1 = Deck.builder()
+            .id(1L)
+            .name("Deck 1")
+            .card(card1)
+            .card(card2)
+            .build();
+        deck2 = Deck.builder()
+            .id(2L)
+            .name("Deck 2")
+            .card(card1)
+            .build();
 
         card1 = Card.builder()
             .id(CARD_1_ID)
             .front("Front 1")
             .back("Back 1")
+//            .deck(deck1)
+//            .deck(deck2)
             .build();
         card2 = Card.builder()
             .id(CARD_2_ID)
             .front("Front 2")
             .back("Back 2")
+//            .deck(deck1)
             .build();
         card3 = Card.builder()
             .id(CARD_3_ID)
@@ -108,7 +126,7 @@ class CardServiceTest {
                 "alreadyExisted", false
             ));
 
-        CardRequest request = new CardRequest(newFront, newBack);
+        CardRequest request = CardRequest.of(newFront, newBack);
 
         CardCreationResult cardCreationResult = cardService.createCard(request);
         assertThat(cardCreationResult.card().getId()).isNotNull().isEqualTo(newId);
@@ -122,12 +140,13 @@ class CardServiceTest {
 
     @Test
     void testUpdateCardCard() {
-        CardRequest request = new CardRequest("Updated Front", "Updated Back");
+        CardRequest request = CardRequest.of("Updated Front", "Updated Back");
         cardService.updateCard(CARD_1_ID, request);
 
         Card updatedCard = cardService.getCardById(CARD_1_ID);
         assertThat(updatedCard.getFront()).isEqualTo("Updated Front");
         assertThat(updatedCard.getBack()).isEqualTo("Updated Back");
+        assertThat(updatedCard.getDecks()).isEmpty();
     }
 
     @Test

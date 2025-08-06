@@ -103,7 +103,7 @@ public class CardService {
     public void updateCard(Long id, CardRequest request) {
         // Completely replace the card's front and back text and set its decks based on the request.
         updateCardText(id, request);
-        setDecks(id, new DeckNamesDto(getDeckNames(request)));
+        setDecks(id, DeckNamesDto.of(getDeckNames(request)));
     }
 
     @Transactional

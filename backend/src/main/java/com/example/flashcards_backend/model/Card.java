@@ -29,6 +29,7 @@ public class Card {
     @ManyToMany(mappedBy = "cards")
     @EqualsAndHashCode.Exclude
     @ToString.Exclude
+    @Singular
     private Set<Deck> decks = new HashSet<>();
 
     public void addDeck(Deck deck) {
@@ -42,7 +43,7 @@ public class Card {
     }
 
     public void removeAllDecks() {
-        for (Deck deck : new HashSet<>(decks)) {
+        for (Deck deck : decks) {
             removeDeck(deck);
         }
     }

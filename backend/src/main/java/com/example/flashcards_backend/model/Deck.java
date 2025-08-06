@@ -31,6 +31,7 @@ public class Deck {
     )
     @EqualsAndHashCode.Exclude
     @ToString.Exclude
+    @Singular
     private Set<Card> cards = new HashSet<>();
 
     public void addCard(Card card) {

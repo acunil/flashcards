@@ -9,4 +9,8 @@ public record CardRequest(
     @NotBlank @Size(min = 1, max = 200) String front,
     @NotBlank @Size(min = 1, max = 200) String back,
     Set<String> decks
-) { }
+) {
+    public static CardRequest of(String front, String back) {
+        return new CardRequest(front, back, null);
+    }
+}
