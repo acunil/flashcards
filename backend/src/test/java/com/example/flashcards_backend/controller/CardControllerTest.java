@@ -100,7 +100,7 @@ class CardControllerTest {
     }
 
     @Test
-    void create_validDto_returnsCreatedWithLocationAndBody() throws Exception {
+    void create_Card_validDto_returnsCreatedWithLocationAndBody() throws Exception {
         Card created = Card.builder().id(10L).front("f").back("b").build();
         when(cardService.createCard(any(CardRequest.class)))
             .thenReturn(new CardCreationResult(created, false));

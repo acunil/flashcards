@@ -1,6 +1,7 @@
 package com.example.flashcards_backend.controller;
 
 import com.example.flashcards_backend.dto.CreateDeckRequest;
+import com.example.flashcards_backend.dto.DeckNamesDto;
 import com.example.flashcards_backend.dto.DeckResponse;
 import com.example.flashcards_backend.dto.UpdateDeckRequest;
 import com.example.flashcards_backend.exception.DeckNotFoundException;
@@ -69,8 +70,8 @@ public class DeckController {
     }
 
     @GetMapping("/cards")
-    public ResponseEntity<Set<DeckResponse>> getDecksByNames(@RequestParam Set<String> names) {
-        Set<Deck> decks = deckService.getOrCreateDecksByNames(names);
+    public ResponseEntity<Set<DeckResponse>> getDecksByNames(@RequestParam DeckNamesDto deckNamesDto) {
+        Set<Deck> decks = deckService.getOrCreateDecksByNames(deckNamesDto);
         Set<DeckResponse> response = decks.stream()
             .map(DeckResponse::fromEntity)
             .collect(Collectors.toSet());

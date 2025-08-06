@@ -1,16 +1,17 @@
 package com.example.flashcards_backend.dto;
 
-import com.example.flashcards_backend.model.Card;
 import com.example.flashcards_backend.model.Deck;
 
-import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
-public record DeckResponse(Long id, String name, List<Long> cardIds) {
+public record DeckResponse(Long id, String name, Set<CardResponse> cardResponses) {
     public static DeckResponse fromEntity(Deck deck) {
         return new DeckResponse(
             deck.getId(),
             deck.getName(),
-            deck.getCards().stream().map(Card::getId).toList()
-        );
+            deck.getCards().stream()
+                .map(CardResponse::fromEntity)
+                .collect(Collectors.toSet()));
     }
 }

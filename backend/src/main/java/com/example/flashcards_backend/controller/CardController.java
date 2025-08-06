@@ -2,6 +2,7 @@ package com.example.flashcards_backend.controller;
 
 import com.example.flashcards_backend.dto.CardRequest;
 import com.example.flashcards_backend.dto.CardResponse;
+import com.example.flashcards_backend.dto.CreateCardResponse;
 import com.example.flashcards_backend.exception.CardNotFoundException;
 import com.example.flashcards_backend.model.Card;
 import com.example.flashcards_backend.service.CardService;
@@ -46,9 +47,9 @@ public class CardController {
     }
 
     @PostMapping
-    public ResponseEntity<CardResponse> create(@Valid @RequestBody CardRequest request) {
+    public ResponseEntity<CreateCardResponse> createCard(@Valid @RequestBody CardRequest request) {
         var cardCreationResult = cardService.createCard(request);
-        CardResponse response = CardResponse
+        CreateCardResponse response = CreateCardResponse
             .builder()
             .id(cardCreationResult.card().getId())
             .front(cardCreationResult.card().getFront())
