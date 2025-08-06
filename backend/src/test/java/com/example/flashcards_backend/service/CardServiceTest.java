@@ -1,6 +1,7 @@
 package com.example.flashcards_backend.service;
 
 import com.example.flashcards_backend.dto.CardRequest;
+import com.example.flashcards_backend.dto.DeckNamesDto;
 import com.example.flashcards_backend.exception.CardNotFoundException;
 import com.example.flashcards_backend.model.Card;
 import com.example.flashcards_backend.model.CardCreationResult;
@@ -41,11 +42,11 @@ class CardServiceTest {
     private CardHistoryService cardHistoryService;
 
     @Mock
-    private DeckService deckService;
+    private CardDeckService cardDeckService;
 
     @BeforeEach
     void setUp() {
-        cardService = new CardService(cardRepository, cardHistoryService, deckService);
+        cardService = new CardService(cardRepository, cardHistoryService, cardDeckService);
         deck1 = Deck.builder()
             .id(1L)
             .name("Deck 1")
@@ -137,13 +138,20 @@ class CardServiceTest {
 
     @Test
     void testUpdateCardCard() {
+        // Mock setDecks to do nothing, as we are not testing that here.
+        doNothing().when(cardDeckService).setDecks(anyLong(), any());
+
+        // request contains empty decks
         CardRequest request = CardRequest.of("Updated Front", "Updated Back");
         cardService.updateCard(CARD_1_ID, request);
 
         Card updatedCard = cardService.getCardById(CARD_1_ID);
         assertThat(updatedCard.getFront()).isEqualTo("Updated Front");
         assertThat(updatedCard.getBack()).isEqualTo("Updated Back");
-        assertThat(updatedCard.getDecks()).isEmpty();
+
+        // expect empty decks sent to cardDeckService
+        DeckNamesDto expectedDeckNamesDto = DeckNamesDto.of(Set.of());
+        verify(cardDeckService).setDecks(CARD_1_ID, expectedDeckNamesDto);
     }
 
     @Test

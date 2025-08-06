@@ -5,11 +5,8 @@ import com.example.flashcards_backend.dto.DeckNamesDto;
 import com.example.flashcards_backend.exception.CardNotFoundException;
 import com.example.flashcards_backend.model.Card;
 import com.example.flashcards_backend.model.CardCreationResult;
-import com.example.flashcards_backend.model.Deck;
 import com.example.flashcards_backend.repository.CardRepository;
 import jakarta.transaction.Transactional;
-import jakarta.validation.constraints.NotEmpty;
-import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -22,7 +19,7 @@ import java.util.*;
 public class CardService {
     private final CardRepository cardRepository;
     private final CardHistoryService cardHistoryService;
-    private final DeckService deckService;
+    private final CardDeckService cardDeckService;
 
     public List<Card> getAllCards() {
         return cardRepository.findAll();
@@ -103,7 +100,7 @@ public class CardService {
     public void updateCard(Long id, CardRequest request) {
         // Completely replace the card's front and back text and set its decks based on the request.
         updateCardText(id, request);
-        setDecks(id, DeckNamesDto.of(getDeckNames(request)));
+        cardDeckService.setDecks(id, DeckNamesDto.of(getDeckNames(request)));
     }
 
     @Transactional
@@ -119,19 +116,4 @@ public class CardService {
         cardHistoryService.recordRating(cardId, rating);
     }
 
-    @Transactional
-    public void setDecks(Long cardId, DeckNamesDto deckNamesDto) {
-        Card card = getCardById(cardId);
-        card.removeAllDecks();
-        Set<Deck> newDecks = deckService.getOrCreateDecksByNames(deckNamesDto);
-        card.addDecks(newDecks);
-    }
-
-    @Transactional
-    public void removeDeckFromAllCards(Long deckId) {
-        List<Card> cards = cardRepository.findByDeckId(deckId);
-        for (Card card : cards) {
-            card.removeDeck(card.getDeckById(deckId));
-        }
-    }
 }

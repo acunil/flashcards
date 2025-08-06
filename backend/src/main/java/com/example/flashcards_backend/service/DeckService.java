@@ -5,6 +5,7 @@ import com.example.flashcards_backend.dto.DeckNamesDto;
 import com.example.flashcards_backend.exception.DeckNotFoundException;
 import com.example.flashcards_backend.model.Card;
 import com.example.flashcards_backend.model.Deck;
+import com.example.flashcards_backend.repository.CardRepository;
 import com.example.flashcards_backend.repository.DeckRepository;
 import jakarta.transaction.Transactional;
 import jakarta.validation.constraints.NotBlank;
@@ -21,7 +22,8 @@ import java.util.*;
 public class DeckService {
 
     private final DeckRepository deckRepository;
-    private final CardService cardService;
+    private final CardDeckService cardDeckService;
+    private final CardRepository cardRepository;
 
     public Set<Deck> getAll() {
         return Set.copyOf(deckRepository.findAll());
@@ -82,7 +84,7 @@ public class DeckService {
     @Transactional
     public void deleteDeck(Long id) {
         removeAllCardsFromDeck(id);
-        cardService.removeDeckFromAllCards(id);
+        cardDeckService.removeDeckFromAllCards(id);
         deckRepository.deleteById(id);
     }
 
@@ -120,7 +122,7 @@ public class DeckService {
     /* Private Helpers */
 
     private Set<Card> getCards(CreateDeckRequest request) {
-        return cardService.getCardsByIds(request.cardIds());
+        return getCardsByIds(request.cardIds());
     }
 
     private static Set<Card> getCardsInDeckAndSelection(Set<Long> cardIds, Deck deck) {
@@ -139,6 +141,10 @@ public class DeckService {
         Set<Long> newCardIds = cardIds.stream()
             .filter(deck::hasNotCard)
             .collect(toSet());
-        return cardService.getCardsByIds(newCardIds);
+        return getCardsByIds(newCardIds);
+    }
+
+    private Set<Card> getCardsByIds(Set<Long> ids) {
+        return new HashSet<>(cardRepository.findAllById(ids));
     }
 }
