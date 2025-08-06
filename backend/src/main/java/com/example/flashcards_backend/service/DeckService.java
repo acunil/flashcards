@@ -32,6 +32,11 @@ public class DeckService {
             .orElseThrow(() -> new DeckNotFoundException(id));
     }
 
+    public Deck getDeckByName(String name) {
+        return deckRepository.findByName(name)
+            .orElseThrow(() -> new DeckNotFoundException(name));
+    }
+
     public Set<Deck> getDecksByCardId(Long cardId) {
         return deckRepository.findDecksByCardId(cardId);
     }
@@ -66,10 +71,15 @@ public class DeckService {
     @Transactional
     public Deck renameDeck(Long id, @NotBlank @NotNull String name) {
         Deck deck = getDeckById(id);
+        // check that name is unique in database
+        if (deckRepository.existsByName(name.trim())) {
+            throw new IllegalArgumentException("Deck name must be unique: " + name);
+        }
         deck.setName(name.trim());
         return deck;
     }
 
+    @Transactional
     public void deleteDeck(Long id) {
         removeAllCardsFromDeck(id);
         cardService.removeDeckFromAllCards(id);
@@ -79,14 +89,14 @@ public class DeckService {
     @Transactional
     public Deck addCardsToDeck(Long deckId, Set<Long> cardIds) {
         Deck deck = getDeckById(deckId);
-        deck.addCards(getCardsNotCurrentlyInDeck(cardIds, deck));
+        deck.addCards(getCardsInSelectionNotInDeck(cardIds, deck));
         return deck;
     }
 
     @Transactional
     public Deck removeCardsFromDeck(Long deckId, Set<Long> cardIds) {
         Deck deck = getDeckById(deckId);
-        deck.removeCards(getCardsToRemove(cardIds, deck));
+        deck.removeCards(getCardsInDeckAndSelection(cardIds, deck));
         return deck;
     }
 
@@ -100,8 +110,8 @@ public class DeckService {
     public Deck updateDeckCards(Long deckId, Set<Long> cardIds) {
         // Overwrite the deck's cards with the new set of cards.
         Deck deck = getDeckById(deckId);
-        Set<Card> cardsToAdd = getCardsNotCurrentlyInDeck(cardIds, deck);
-        Set<Card> cardsToRemove = getCardsCurrentlyInDeckNotInSelection(cardIds, deck);
+        Set<Card> cardsToAdd = getCardsInSelectionNotInDeck(cardIds, deck);
+        Set<Card> cardsToRemove = getCardsInDeckNotInSelection(cardIds, deck);
         deck.addCards(cardsToAdd);
         deck.removeCards(cardsToRemove);
         return deck;
@@ -113,25 +123,22 @@ public class DeckService {
         return cardService.getCardsByIds(request.cardIds());
     }
 
-    private static Set<Card> getCardsToRemove(Set<Long> cardIds, Deck deck) {
-        return deck.getCards()
-            .stream()
-            .map(Card::getId)
-            .filter(cardIds::contains)
-            .map(deck::getCardById)
+    private static Set<Card> getCardsInDeckAndSelection(Set<Long> cardIds, Deck deck) {
+        return deck.getCards().stream()
+            .filter(card -> cardIds.contains(card.getId()))
             .collect(toSet());
     }
 
-    private static Set<Card> getCardsCurrentlyInDeckNotInSelection(Set<Long> cardIds, Deck deck) {
+    private static Set<Card> getCardsInDeckNotInSelection(Set<Long> cardIds, Deck deck) {
         return deck.getCards().stream()
             .filter(card -> !cardIds.contains(card.getId()))
             .collect(toSet());
     }
 
-    private Set<Card> getCardsNotCurrentlyInDeck(Set<Long> cardIds, Deck deck) {
-        return cardIds.stream()
+    private Set<Card> getCardsInSelectionNotInDeck(Set<Long> cardIds, Deck deck) {
+        Set<Long> newCardIds = cardIds.stream()
             .filter(deck::hasNotCard)
-            .map(cardService::getCardById)
             .collect(toSet());
+        return cardService.getCardsByIds(newCardIds);
     }
 }

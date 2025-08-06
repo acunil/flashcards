@@ -5,6 +5,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.util.Optional;
 import java.util.Set;
 
 public interface DeckRepository extends JpaRepository<Deck, Long> {
@@ -12,4 +13,8 @@ public interface DeckRepository extends JpaRepository<Deck, Long> {
     Set<Deck> findDecksByCardId(@Param("cardId") Long cardId);
 
     Set<Deck> findByNameIn(Set<String> names);
+
+    boolean existsByName(String trim);
+
+    Optional<Deck> findByName(String name);
 }

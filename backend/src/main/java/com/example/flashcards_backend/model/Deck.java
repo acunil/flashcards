@@ -6,6 +6,7 @@ import lombok.*;
 
 import java.util.HashSet;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Entity
 @Data
@@ -79,5 +80,11 @@ public class Deck {
             .filter(card -> card.getId().equals(cardId))
             .findFirst()
             .orElseThrow(() -> new IllegalArgumentException("Card with ID " + cardId + " not found in this deck"));
+    }
+
+    public Set<Long> getCardIds() {
+        return cards.stream()
+            .map(Card::getId)
+            .collect(Collectors.toSet());
     }
 }

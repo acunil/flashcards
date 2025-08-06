@@ -127,6 +127,7 @@ public class CardService {
         card.addDecks(newDecks);
     }
 
+    @Transactional
     public void removeDeckFromAllCards(Long deckId) {
         List<Card> cards = cardRepository.findByDeckId(deckId);
         for (Card card : cards) {
