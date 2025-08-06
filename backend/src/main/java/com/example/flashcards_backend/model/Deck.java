@@ -38,4 +38,46 @@ public class Deck {
             card.getDecks().add(this); // Ensure bidirectional relationship
         }
     }
+
+    public void addCards(Set<Card> newCards) {
+        if (newCards != null) {
+            for (Card card : newCards) {
+                addCard(card);
+            }
+        }
+    }
+
+    public void removeCard(Card card) {
+        if (card != null && hasCard(card)) {
+            cards.remove(card);
+            card.getDecks().remove(this); // Ensure bidirectional relationship
+        }
+    }
+
+    public void removeCards(Set<Card> cardsToRemove) {
+        if (cardsToRemove != null) {
+            for (Card card : cardsToRemove) {
+                removeCard(card);
+            }
+        }
+    }
+
+    public boolean hasCard(Card card) {
+        return cards.contains(card);
+    }
+
+    public boolean hasNotCard(Card card) {
+        return !hasCard(card);
+    }
+
+    public boolean hasNotCard(Long cardId) {
+        return cards.stream().noneMatch(card -> card.getId().equals(cardId));
+    }
+
+    public Card getCardById(Long cardId) {
+        return cards.stream()
+            .filter(card -> card.getId().equals(cardId))
+            .findFirst()
+            .orElseThrow(() -> new IllegalArgumentException("Card with ID " + cardId + " not found in this deck"));
+    }
 }

@@ -1,26 +1,27 @@
 package com.example.flashcards_backend.service;
 
 import com.example.flashcards_backend.dto.CreateDeckRequest;
+import com.example.flashcards_backend.dto.DeckNamesDto;
 import com.example.flashcards_backend.exception.DeckNotFoundException;
 import com.example.flashcards_backend.model.Card;
 import com.example.flashcards_backend.model.Deck;
-import com.example.flashcards_backend.repository.CardRepository;
 import com.example.flashcards_backend.repository.DeckRepository;
+import jakarta.transaction.Transactional;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
+import static java.util.stream.Collectors.toSet;
 
-@AllArgsConstructor
+import java.util.*;
+
 @Service
+@AllArgsConstructor
 public class DeckService {
 
     private final DeckRepository deckRepository;
-    private final CardRepository cardRepository;
+    private final CardService cardService;
 
     public Set<Deck> getAll() {
         return Set.copyOf(deckRepository.findAll());
@@ -31,82 +32,106 @@ public class DeckService {
             .orElseThrow(() -> new DeckNotFoundException(id));
     }
 
-    public Deck createDeck(String name) {
-        Deck deck = Deck.builder().name(name.trim()).build();
-        if (deck.getName() == null || deck.getName().trim().isEmpty()) {
-            throw new IllegalArgumentException("Deck name cannot be null or blank");
-        }
-        return deckRepository.save(deck);
-    }
-
-    public Deck createDeck(CreateDeckRequest request) {
-        Deck deck = Deck.builder()
-            .name(request.name().trim())
-            .build();
-
-        Set<Long> uniqueCardIds = Arrays.stream(request.cardIds())
-            .collect(Collectors.toSet());
-
-        List<Card> cards = cardRepository.findAllById(uniqueCardIds);
-
-        Set<Long> fetchedCardIds = cards.stream()
-            .map(Card::getId)
-            .collect(Collectors.toSet());
-
-        Set<Long> invalidCardIds = uniqueCardIds.stream()
-            .filter(id -> !fetchedCardIds.contains(id))
-            .collect(Collectors.toSet());
-
-        if (!invalidCardIds.isEmpty()) {
-            String invalidIdsMessage = invalidCardIds.stream()
-                .map(String::valueOf)
-                .collect(Collectors.joining(", "));
-            throw new IllegalArgumentException("The following card IDs are invalid: " + invalidIdsMessage);
-        }
-        deck.setCards(new HashSet<>(cards));
-        return deckRepository.save(deck);
-    }
-
-    public Deck renameDeck(Long id, String name) {
-        if (name == null || name.trim().isEmpty()) {
-            throw new IllegalArgumentException("Deck name cannot be null or blank");
-        }
-        Deck existingDeck = deckRepository.findById(id)
-            .orElseThrow(() -> new IllegalArgumentException("Deck not found with id: " + id));
-        existingDeck.setName(name.trim());
-        return deckRepository.save(existingDeck);
-    }
-
-    public void deleteDeck(Long id) {
-        if (!deckRepository.existsById(id)) {
-            throw new IllegalArgumentException("Deck not found with id: " + id);
-        }
-        deckRepository.deleteById(id);
-    }
-
     public Set<Deck> getDecksByCardId(Long cardId) {
         return deckRepository.findDecksByCardId(cardId);
     }
 
+    @Transactional
+    public Set<Deck> getOrCreateDecksByNames(DeckNamesDto deckNamesDto) {
+        Set<Deck> existingDecks = deckRepository.findByNameIn(deckNamesDto.deckNames());
+        Set<String> existingNames = existingDecks.stream()
+            .map(Deck::getName)
+            .collect(toSet());
+        Set<String> newNames = deckNamesDto.deckNames().stream()
+            .filter(name -> !existingNames.contains(name))
+            .collect(toSet());
+        List<Deck> newDecks = newNames.stream()
+            .map(name -> Deck.builder().name(name).build())
+            .toList();
+        deckRepository.saveAll(newDecks);
+        Set<Deck> allDecks = new HashSet<>(existingDecks);
+        allDecks.addAll(newDecks);
+        return allDecks;
+    }
+
+    @Transactional
+    public Deck createDeck(CreateDeckRequest request) {
+        Deck deck = Deck.builder()
+            .name(request.name().trim())
+            .build();
+        deck.addCards(getCards(request));
+        return deck;
+    }
+
+    @Transactional
+    public Deck renameDeck(Long id, @NotBlank @NotNull String name) {
+        Deck deck = getDeckById(id);
+        deck.setName(name.trim());
+        return deck;
+    }
+
+    public void deleteDeck(Long id) {
+        removeAllCardsFromDeck(id);
+        cardService.removeDeckFromAllCards(id);
+        deckRepository.deleteById(id);
+    }
+
+    @Transactional
     public Deck addCardsToDeck(Long deckId, Set<Long> cardIds) {
         Deck deck = getDeckById(deckId);
-        Set<Long> existingCardIds = deck.getCards().stream()
+        deck.addCards(getCardsNotCurrentlyInDeck(cardIds, deck));
+        return deck;
+    }
+
+    @Transactional
+    public Deck removeCardsFromDeck(Long deckId, Set<Long> cardIds) {
+        Deck deck = getDeckById(deckId);
+        deck.removeCards(getCardsToRemove(cardIds, deck));
+        return deck;
+    }
+
+    @Transactional
+    public void removeAllCardsFromDeck(Long deckId) {
+        Deck deck = getDeckById(deckId);
+        deck.removeCards(deck.getCards());
+    }
+
+    @Transactional
+    public Deck updateDeckCards(Long deckId, Set<Long> cardIds) {
+        // Overwrite the deck's cards with the new set of cards.
+        Deck deck = getDeckById(deckId);
+        Set<Card> cardsToAdd = getCardsNotCurrentlyInDeck(cardIds, deck);
+        Set<Card> cardsToRemove = getCardsCurrentlyInDeckNotInSelection(cardIds, deck);
+        deck.addCards(cardsToAdd);
+        deck.removeCards(cardsToRemove);
+        return deck;
+    }
+
+    /* Private Helpers */
+
+    private Set<Card> getCards(CreateDeckRequest request) {
+        return cardService.getCardsByIds(request.cardIds());
+    }
+
+    private static Set<Card> getCardsToRemove(Set<Long> cardIds, Deck deck) {
+        return deck.getCards()
+            .stream()
             .map(Card::getId)
-            .collect(Collectors.toSet());
+            .filter(cardIds::contains)
+            .map(deck::getCardById)
+            .collect(toSet());
+    }
 
-        for (Long cardId : cardIds) {
-            if (!existingCardIds.contains(cardId)) {
-                deck.addCard(cardRepository.findById(cardId)
-                    .orElseThrow(() -> new IllegalArgumentException("Card not found with id: " + cardId)));
-            }
-        }
+    private static Set<Card> getCardsCurrentlyInDeckNotInSelection(Set<Long> cardIds, Deck deck) {
+        return deck.getCards().stream()
+            .filter(card -> !cardIds.contains(card.getId()))
+            .collect(toSet());
+    }
 
-        // use stream to filter out already existing cards, throwing an exception if any card is not found, and adding them to the deck
-
-        deck.setCards(deck.getCards().stream()
-            .filter(card -> cardIds.contains(card.getId()))
-            .collect(Collectors.toSet()));
-
-        return deckRepository.save(deck);
+    private Set<Card> getCardsNotCurrentlyInDeck(Set<Long> cardIds, Deck deck) {
+        return cardIds.stream()
+            .filter(deck::hasNotCard)
+            .map(cardService::getCardById)
+            .collect(toSet());
     }
 }

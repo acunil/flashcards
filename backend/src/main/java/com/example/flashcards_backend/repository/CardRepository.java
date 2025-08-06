@@ -15,4 +15,6 @@ public interface CardRepository extends JpaRepository<Card, Long>, CardRepositor
 
     @Query("SELECT c FROM Card c JOIN CardHistory h ON h.card = c WHERE h.avgRating <= :threshold")
     List<Card> findByMaxAvgRating(@Param("threshold") double threshold);
+
+    List<Card> findByDeckId(Long deckId);
 }

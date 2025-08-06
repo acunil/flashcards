@@ -14,7 +14,6 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.Set;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 @RestController
 @RequestMapping("/api/decks")
@@ -68,6 +67,17 @@ public class DeckController {
             .collect(Collectors.toSet());
         return ResponseEntity.ok(response);
     }
+
+    @GetMapping("/cards")
+    public ResponseEntity<Set<DeckResponse>> getDecksByNames(@RequestParam Set<String> names) {
+        Set<Deck> decks = deckService.getOrCreateDecksByNames(names);
+        Set<DeckResponse> response = decks.stream()
+            .map(DeckResponse::fromEntity)
+            .collect(Collectors.toSet());
+        return ResponseEntity.ok(response);
+    }
+
+    /*Exception Handlers*/
 
     @ExceptionHandler(DeckNotFoundException.class)
     public ResponseEntity<String> handleDeckNotFoundException(DeckNotFoundException ex) {

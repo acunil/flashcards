@@ -14,6 +14,9 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import jakarta.validation.Valid;
+
+import static com.example.flashcards_backend.utility.CardUtils.shuffleCards;
+
 import java.net.URI;
 import java.util.List;
 
@@ -29,7 +32,7 @@ public class CardController {
     public List<CardResponse> getAll(
         @RequestParam(name = "shuffled", defaultValue = "false") boolean shuffled
     ) {
-        var cards = cardService.getAll(shuffled);
+        var cards = cardService.getAllCards(shuffled);
 
         return cards.stream()
             .map(CardResponse::fromEntity)
@@ -38,13 +41,13 @@ public class CardController {
 
     @GetMapping("/{id}")
     public ResponseEntity<CardResponse> getById(@PathVariable Long id) {
-        Card card = cardService.getById(id); // throws CardNotFoundException if missing
+        Card card = cardService.getCardById(id); // throws CardNotFoundException if missing
         return ResponseEntity.ok(CardResponse.fromEntity(card));
     }
 
     @PostMapping
     public ResponseEntity<CardResponse> create(@Valid @RequestBody CardRequest request) {
-        var cardCreationResult = cardService.create(request);
+        var cardCreationResult = cardService.createCard(request);
         CardResponse response = CardResponse
             .builder()
             .id(cardCreationResult.card().getId())
@@ -62,7 +65,7 @@ public class CardController {
         @PathVariable Long id,
         @Valid @RequestBody CardRequest request
     ) {
-        cardService.update(id, request); // throws CardNotFoundException if missing
+        cardService.updateCard(id, request); // throws CardNotFoundException if missing
         return ResponseEntity.noContent().build();
     }
 
@@ -71,7 +74,7 @@ public class CardController {
         @PathVariable Long id,
         @RequestParam @Min(1) @Max(5) int rating
     ) {
-        cardService.rate(id, rating);
+        cardService.rateCard(id, rating);
         return ResponseEntity.noContent().build();
     }
 
@@ -81,7 +84,7 @@ public class CardController {
         @RequestParam @Min(1) @Max(5) double threshold,
         @RequestParam(name = "shuffled", defaultValue = "false") boolean shuffled
     ) {
-        var cards = cardService.getByMinAvgRating(threshold, shuffled);
+        var cards = cardService.getCardsByMinAvgRating(threshold, shuffled);
 
         List<CardResponse> cardResponses = cards
             .stream()
@@ -96,7 +99,7 @@ public class CardController {
         @RequestParam @Min(1) @Max(5) double threshold,
         @RequestParam(name = "shuffled", defaultValue = "false") boolean shuffled
     ) {
-        var cards = cardService.getByMaxAvgRating(threshold, shuffled);
+        var cards = cardService.getCardsByMaxAvgRating(threshold, shuffled);
 
         List<CardResponse> cardResponses = cards
             .stream()
@@ -104,6 +107,26 @@ public class CardController {
             .toList();
         return ResponseEntity.ok(cardResponses);
     }
+
+    @GetMapping
+    @RequestMapping("/deck/{deckId}")
+    public ResponseEntity<List<CardResponse>> getCardsByDeckId(
+        @PathVariable Long deckId,
+        @RequestParam(name = "shuffled", defaultValue = "false") boolean shuffled
+    ) {
+        var cards = cardService.getCardsByDeckId(deckId);
+        if (shuffled) {
+            cards = shuffleCards(cards);
+        }
+
+        List<CardResponse> cardResponses = cards
+            .stream()
+            .map(CardResponse::fromEntity)
+            .toList();
+        return ResponseEntity.ok(cardResponses);
+    }
+
+    /*Exception Handlers*/
 
     @ExceptionHandler(CardNotFoundException.class)
     public ResponseEntity<String> handleNotFound(CardNotFoundException ex) {

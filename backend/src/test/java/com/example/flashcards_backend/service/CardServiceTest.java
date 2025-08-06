@@ -67,36 +67,36 @@ class CardServiceTest {
     }
 
     @Test
-    void testGetAllCards() {
-         List<Card> cards = cardService.getAll();
+    void testGetAllCardsCards() {
+         List<Card> cards = cardService.getAllCards();
          assertThat(cards).containsExactly(card1, card2, card3);
     }
 
     @Test
-    void testGetAllCardsShuffledTrue() {
+    void testGetAllCardsCardsShuffledTrue() {
         assertEventuallyReorders(
-            () -> cardService.getAll(true),
+            () -> cardService.getAllCards(true),
             originalCards
         );
     }
 
     @Test
-    void testGetAllCardsShuffledFalse() {
-        List<Card> shuffledCards = cardService.getAll(false);
+    void testGetAllCardsCardsShuffledFalse() {
+        List<Card> shuffledCards = cardService.getAllCards(false);
         assertThat(shuffledCards).containsExactly(card1, card2, card3);
     }
 
     @Test
     void testGetCardById() {
-        Card foundCard = cardService.getById(CARD_1_ID);
+        Card foundCard = cardService.getCardById(CARD_1_ID);
         assertThat(foundCard).isEqualTo(card1);
 
-        Card otherCard = cardService.getById(CARD_2_ID);
+        Card otherCard = cardService.getCardById(CARD_2_ID);
         assertThat(otherCard).isEqualTo(card2);
     }
 
     @Test
-    void testCreateCard() {
+    void testCreateCardCard() {
         String newFront = "New Front";
         String newBack = "New Back";
         long newId = 4L;
@@ -110,7 +110,7 @@ class CardServiceTest {
 
         CardRequest request = new CardRequest(newFront, newBack);
 
-        CardCreationResult cardCreationResult = cardService.create(request);
+        CardCreationResult cardCreationResult = cardService.createCard(request);
         assertThat(cardCreationResult.card().getId()).isNotNull().isEqualTo(newId);
         assertThat(cardCreationResult.card().getFront()).isEqualTo(newFront);
         assertThat(cardCreationResult.card().getBack()).isEqualTo(newBack);
@@ -121,26 +121,26 @@ class CardServiceTest {
     }
 
     @Test
-    void testUpdateCard() {
+    void testUpdateCardCard() {
         CardRequest request = new CardRequest("Updated Front", "Updated Back");
-        cardService.update(CARD_1_ID, request);
+        cardService.updateCard(CARD_1_ID, request);
 
-        Card updatedCard = cardService.getById(CARD_1_ID);
+        Card updatedCard = cardService.getCardById(CARD_1_ID);
         assertThat(updatedCard.getFront()).isEqualTo("Updated Front");
         assertThat(updatedCard.getBack()).isEqualTo("Updated Back");
     }
 
     @Test
-    void rate_existingCard_callsCardHistoryService() {
+    void rate_Card_existingCard_callsCardHistoryService() {
         when(cardRepository.findById(10L)).thenReturn(Optional.of(new Card()));
-        cardService.rate(10L, 3);
+        cardService.rateCard(10L, 3);
         verify(cardHistoryService).recordRating(10L, 3);
     }
 
     @Test
-    void rate_missingCard_throwsException() {
+    void rate_Card_missingCard_throwsException() {
         when(cardRepository.findById(99L)).thenReturn(Optional.empty());
-        assertThatThrownBy(() -> cardService.rate(99L, 4))
+        assertThatThrownBy(() -> cardService.rateCard(99L, 4))
             .isInstanceOf(CardNotFoundException.class)
             .extracting("message")
             .isEqualTo("Card not found with id: 99");
@@ -148,57 +148,57 @@ class CardServiceTest {
     }
 
     @Test
-    void getByMinAvgRating_returnsCardsAboveThreshold() {
+    void getCardsByMinAvgRating_returnsCardsAboveThreshold() {
         when(cardRepository.findByMinAvgRating(THRESHOLD)).thenReturn(List.of(card1));
-        List<Card> result = cardService.getByMinAvgRating(THRESHOLD);
+        List<Card> result = cardService.getCardsByMinAvgRating(THRESHOLD);
         assertThat(result).containsExactly(card1);
     }
 
     @Test
-    void getByMinAvgRating_shuffledTrue_returnsCardsAboveThresholdEventuallyReordered() {
+    void getCardsByMinAvgRating_shuffledTrue_returnsCardsAboveThresholdEventuallyReordered() {
         when(cardRepository.findByMinAvgRating(THRESHOLD))
             .thenReturn(originalCards);
 
         assertEventuallyReorders(
-            () -> cardService.getByMinAvgRating(THRESHOLD, true),
+            () -> cardService.getCardsByMinAvgRating(THRESHOLD, true),
             originalCards
         );
     }
 
 
     @Test
-    void getByMinAvgRating_shuffledFalse_alwaysSameOrder() {
+    void getCardsByMinAvgRating_shuffledFalse_alwaysSameOrder() {
         when(cardRepository.findByMinAvgRating(THRESHOLD))
             .thenReturn(originalCards);
 
-        List<Card> result = cardService.getByMinAvgRating(THRESHOLD, false);
+        List<Card> result = cardService.getCardsByMinAvgRating(THRESHOLD, false);
         assertThat(result).isSameAs(originalCards);
     }
 
     @Test
-    void getByMaxAvgRating_returnsCardsBelowThreshold() {
+    void getCardsByMaxAvgRating_returnsCardsBelowThreshold() {
         when(cardRepository.findByMaxAvgRating(THRESHOLD)).thenReturn(List.of(card2));
-        List<Card> result = cardService.getByMaxAvgRating(THRESHOLD);
+        List<Card> result = cardService.getCardsByMaxAvgRating(THRESHOLD);
         assertThat(result).containsExactly(card2);
     }
 
     @Test
-    void getByMaxAvgRating_shuffledTrue_returnsCardsBelowThresholdEventuallyReordered() {
+    void getCardsByMaxAvgRating_shuffledTrue_returnsCardsBelowThresholdEventuallyReordered() {
         when(cardRepository.findByMaxAvgRating(THRESHOLD))
             .thenReturn(originalCards);
 
         assertEventuallyReorders(
-            () -> cardService.getByMaxAvgRating(THRESHOLD, true),
+            () -> cardService.getCardsByMaxAvgRating(THRESHOLD, true),
             originalCards
         );
     }
 
     @Test
-    void getByMaxAvgRating_shuffledFalse_alwaysSameOrder() {
+    void getCardsByMaxAvgRating_shuffledFalse_alwaysSameOrder() {
         when(cardRepository.findByMaxAvgRating(THRESHOLD))
             .thenReturn(originalCards);
 
-        List<Card> result = cardService.getByMaxAvgRating(THRESHOLD, false);
+        List<Card> result = cardService.getCardsByMaxAvgRating(THRESHOLD, false);
         assertThat(result).isSameAs(originalCards);
     }
 

@@ -1,43 +1,90 @@
 package com.example.flashcards_backend.service;
 
 import com.example.flashcards_backend.dto.CardRequest;
+import com.example.flashcards_backend.dto.DeckNamesDto;
 import com.example.flashcards_backend.exception.CardNotFoundException;
 import com.example.flashcards_backend.model.Card;
 import com.example.flashcards_backend.model.CardCreationResult;
+import com.example.flashcards_backend.model.Deck;
 import com.example.flashcards_backend.repository.CardRepository;
 import jakarta.transaction.Transactional;
+import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import static com.example.flashcards_backend.utility.CardUtils.shuffleCards;
 
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @Service
 @AllArgsConstructor
 public class CardService {
     private final CardRepository cardRepository;
     private final CardHistoryService cardHistoryService;
+    private final DeckService deckService;
 
-    public List<Card> getAll() {
+    public List<Card> getAllCards() {
         return cardRepository.findAll();
     }
 
-    public List<Card> getAll(boolean shuffled) {
-        var cards = getAll();
+    public List<Card> getAllCards(boolean shuffled) {
+        var cards = getAllCards();
         return shuffled
                ? shuffleCards(cards)
                : cards;
     }
 
-    public Card getById(Long id) {
+    public Card getCardById(Long id) {
         return cardRepository.findById(id)
             .orElseThrow(() -> new CardNotFoundException(id));
     }
 
+    public Set<Card> getCardsByIds(Set<Long> ids) {
+        return new HashSet<>(cardRepository.findAllById(ids));
+    }
+
+    private static Set<String> getDeckNames(CardRequest request) {
+        return request.decks() == null
+               ? Set.of()
+               : request.decks();
+    }
+
+    public List<Card> getCardsByMinAvgRating(double threshold) {
+        return cardRepository.findByMinAvgRating(threshold);
+    }
+
+    public List<Card> getCardsByMinAvgRating(double threshold, boolean shuffled) {
+        var cards = getCardsByMinAvgRating(threshold);
+        return shuffled
+               ? shuffleCards(cards)
+               : cards;
+    }
+
+    public List<Card> getCardsByMaxAvgRating(double threshold) {
+        return cardRepository.findByMaxAvgRating(threshold);
+    }
+
+    public List<Card> getCardsByMaxAvgRating(double threshold, boolean shuffled) {
+        var cards = getCardsByMaxAvgRating(threshold);
+        return shuffled
+               ? shuffleCards(cards)
+               : cards;
+    }
+
+    public List<Card> getCardsByDeckId(Long deckId) {
+        return cardRepository.findByDeckId(deckId);
+    }
+
+    public List<Card> getCardsByDeckId(Long deckId, boolean shuffled) {
+        var cards = getCardsByDeckId(deckId);
+        return shuffled
+               ? shuffleCards(cards)
+               : cards;
+    }
+
     @Transactional
-    public CardCreationResult create(CardRequest request) {
+    public CardCreationResult createCard(CardRequest request) {
         Map<String, Object> row = cardRepository.createIfUnique(
             request.front(),
             request.back()
@@ -53,38 +100,37 @@ public class CardService {
     }
 
     @Transactional
-    public void update(Long id, CardRequest request) {
-        Card existing = cardRepository.findById(id)
-            .orElseThrow(() -> new CardNotFoundException(id));
-        existing.setFront(request.front());
-        existing.setBack(request.back());
+    public void updateCard(Long id, CardRequest request) {
+        // Completely replace the card's front and back text and set its decks based on the request.
+        updateCardText(id, request);
+        setDecks(id, new DeckNamesDto(getDeckNames(request)));
     }
 
     @Transactional
-    public void rate(Long cardId, int rating) {
-        getById(cardId); // validate card exists
+    public void updateCardText(Long id, CardRequest request) {
+        Card card = getCardById(id);
+        card.setFront(request.front());
+        card.setBack(request.back());
+    }
+
+    @Transactional
+    public void rateCard(Long cardId, int rating) {
+        getCardById(cardId); // validate card exists
         cardHistoryService.recordRating(cardId, rating);
     }
 
-    public List<Card> getByMinAvgRating(double threshold) {
-        return cardRepository.findByMinAvgRating(threshold);
+    @Transactional
+    public void setDecks(Long cardId, DeckNamesDto deckNamesDto) {
+        Card card = getCardById(cardId);
+        card.removeAllDecks();
+        Set<Deck> newDecks = deckService.getOrCreateDecksByNames(deckNamesDto);
+        card.addDecks(newDecks);
     }
 
-    public List<Card> getByMinAvgRating(double threshold, boolean shuffled) {
-        var cards = getByMinAvgRating(threshold);
-        return shuffled
-               ? shuffleCards(cards)
-               : cards;
-    }
-
-    public List<Card> getByMaxAvgRating(double threshold) {
-        return cardRepository.findByMaxAvgRating(threshold);
-    }
-
-    public List<Card> getByMaxAvgRating(double threshold, boolean shuffled) {
-        var cards = getByMaxAvgRating(threshold);
-        return shuffled
-               ? shuffleCards(cards)
-               : cards;
+    public void removeDeckFromAllCards(Long deckId) {
+        List<Card> cards = cardRepository.findByDeckId(deckId);
+        for (Card card : cards) {
+            card.removeDeck(card.getDeckById(deckId));
+        }
     }
 }
