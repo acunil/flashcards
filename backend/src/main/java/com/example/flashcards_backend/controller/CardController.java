@@ -32,6 +32,7 @@ import java.util.List;
 @AllArgsConstructor
 public class CardController {
 
+    public static final String REQUEST_MAPPING = "/api/cards/";
     private final CardService cardService;
 
     @Operation(summary = "Get all cards", description = "Returns all cards. Optionally shuffled.")
@@ -46,9 +47,7 @@ public class CardController {
     ) {
         var cards = cardService.getAllCards(shuffled);
 
-        return cards.stream()
-            .map(CardResponse::fromEntity)
-            .toList();
+        return generateResponse(cards);
     }
 
     @Operation(summary = "Get card by ID", description = "Returns a card by its ID.")
@@ -82,7 +81,7 @@ public class CardController {
             .alreadyExisted(cardCreationResult.alreadyExisted())
             .build();
         return ResponseEntity
-            .created(URI.create("/api/cards/" + response.id()))
+            .created(URI.create(REQUEST_MAPPING + response.id()))
             .body(response);
     }
 
@@ -102,14 +101,14 @@ public class CardController {
         return ResponseEntity.noContent().build();
     }
 
-    @Operation(summary = "Delete card", description = "Deletes a card by its ID.")
+    @Operation(summary = "Rate card", description = "Rates a card by its ID.")
     @ApiResponses(value = {
-        @ApiResponse(responseCode = "204", description = "Card deleted",
+        @ApiResponse(responseCode = "204", description = "Card rated",
             content = @Content(mediaType = "application/json")),
         @ApiResponse(responseCode = "404", description = "Card not found",
             content = @Content(mediaType = "application/json"))
     })
-    @PostMapping("/{id}/rate")
+    @PutMapping("/{id}/rate")
     public ResponseEntity<Void> rate(
         @PathVariable Long id,
         @RequestParam @Min(1) @Max(5) int rating
@@ -126,19 +125,14 @@ public class CardController {
         @ApiResponse(responseCode = "400", description = "Bad request, invalid rating threshold",
             content = @Content(mediaType = "application/json"))
     })
-    @GetMapping
-    @RequestMapping("/minAvgRating")
+    @GetMapping("/minAvgRating")
     public ResponseEntity<List<CardResponse>> getByMinAvgRating(
         @RequestParam @Min(1) @Max(5) double threshold,
         @RequestParam(name = "shuffled", defaultValue = "false") boolean shuffled
     ) {
         var cards = cardService.getCardsByMinAvgRating(threshold, shuffled);
 
-        List<CardResponse> cardResponses = cards
-            .stream()
-            .map(CardResponse::fromEntity)
-            .toList();
-        return ResponseEntity.ok(cardResponses);
+        return ResponseEntity.ok(generateResponse(cards));
     }
 
     @Operation(summary = "Get cards by maximum average rating", description = "Returns cards with an average rating below a threshold.")
@@ -149,19 +143,14 @@ public class CardController {
         @ApiResponse(responseCode = "400", description = "Bad request, invalid rating threshold",
             content = @Content(mediaType = "application/json"))
     })
-    @GetMapping
-    @RequestMapping("/maxAvgRating")
+    @GetMapping("/maxAvgRating")
     public ResponseEntity<List<CardResponse>> getByMaxAvgRating(
         @RequestParam @Min(1) @Max(5) double threshold,
         @RequestParam(name = "shuffled", defaultValue = "false") boolean shuffled
     ) {
         var cards = cardService.getCardsByMaxAvgRating(threshold, shuffled);
 
-        List<CardResponse> cardResponses = cards
-            .stream()
-            .map(CardResponse::fromEntity)
-            .toList();
-        return ResponseEntity.ok(cardResponses);
+        return ResponseEntity.ok(generateResponse(cards));
     }
 
     @Operation(summary = "Get cards by deck ID", description = "Returns cards associated with a specific deck.")
@@ -172,8 +161,7 @@ public class CardController {
         @ApiResponse(responseCode = "404", description = "Deck not found",
             content = @Content(mediaType = "application/json"))
     })
-    @GetMapping
-    @RequestMapping("/deck/{deckId}")
+    @GetMapping("/deck/{deckId}")
     public ResponseEntity<List<CardResponse>> getCardsByDeckId(
         @PathVariable Long deckId,
         @RequestParam(name = "shuffled", defaultValue = "false") boolean shuffled
@@ -183,11 +171,16 @@ public class CardController {
             cards = shuffleCards(cards);
         }
 
-        List<CardResponse> cardResponses = cards
+        return ResponseEntity.ok(generateResponse(cards));
+    }
+
+    /* Helpers */
+
+    private static List<CardResponse> generateResponse(List<Card> cards) {
+        return cards
             .stream()
             .map(CardResponse::fromEntity)
             .toList();
-        return ResponseEntity.ok(cardResponses);
     }
 
     /*Exception Handlers*/

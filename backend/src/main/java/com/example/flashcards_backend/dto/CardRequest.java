@@ -8,7 +8,7 @@ import java.util.Set;
 public record CardRequest(
     @NotBlank @Size(min = 1, max = 200) String front,
     @NotBlank @Size(min = 1, max = 200) String back,
-    Set<String> decks
+    Set<@NotBlank @Size(min = 1, max = 50) String> decks
 ) {
     public static CardRequest of(String front, String back) {
         return new CardRequest(front, back, null);

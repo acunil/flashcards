@@ -3,7 +3,7 @@ package com.example.flashcards_backend.controller;
 import com.example.flashcards_backend.dto.CreateDeckRequest;
 import com.example.flashcards_backend.dto.DeckNamesDto;
 import com.example.flashcards_backend.dto.DeckResponse;
-import com.example.flashcards_backend.dto.UpdateDeckRequest;
+import com.example.flashcards_backend.dto.UpdateDeckNameRequest;
 import com.example.flashcards_backend.exception.DeckNotFoundException;
 import com.example.flashcards_backend.model.Deck;
 import com.example.flashcards_backend.service.DeckService;
@@ -38,10 +38,7 @@ public class DeckController {
     @GetMapping
     public ResponseEntity<Set<DeckResponse>> getAll() {
         Set<Deck> decks = deckService.getAll();
-        Set<DeckResponse> response = decks.stream()
-            .map(DeckResponse::fromEntity)
-            .collect(Collectors.toSet());
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(generateResponse(decks));
     }
 
     @Operation(summary = "Get deck by ID", description = "Returns a deck by its ID.")
@@ -55,8 +52,7 @@ public class DeckController {
     @GetMapping("/{id}")
     public ResponseEntity<DeckResponse> getDeckById(@PathVariable Long id) {
         Deck deck = deckService.getDeckById(id);
-        DeckResponse response = DeckResponse.fromEntity(deck);
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(generateResponse(deck));
     }
 
     @Operation(summary = "Create a new deck", description = "Creates a new deck.")
@@ -68,8 +64,7 @@ public class DeckController {
     @PostMapping("/create")
     public ResponseEntity<DeckResponse> createDeck(@RequestBody CreateDeckRequest request) {
         Deck createdDeck = deckService.createDeck(request);
-        DeckResponse response = DeckResponse.fromEntity(createdDeck);
-        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+        return ResponseEntity.status(HttpStatus.CREATED).body(generateResponse(createdDeck));
     }
 
     @Operation(summary = "Update deck name", description = "Renames a deck.")
@@ -81,10 +76,9 @@ public class DeckController {
             content = @Content(mediaType = "application/json"))
     })
     @PutMapping("/{id}")
-    public ResponseEntity<DeckResponse> updateDeck(@PathVariable Long id, @RequestBody UpdateDeckRequest request) {
+    public ResponseEntity<DeckResponse> updateDeckName(@PathVariable Long id, @RequestBody UpdateDeckNameRequest request) {
         Deck updatedDeck = deckService.renameDeck(id, request.newName());
-        DeckResponse response = DeckResponse.fromEntity(updatedDeck);
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(generateResponse(updatedDeck));
     }
 
     @Operation(summary = "Delete deck", description = "Deletes a deck by its ID.")
@@ -109,10 +103,7 @@ public class DeckController {
     @GetMapping("/card/{cardId}")
     public ResponseEntity<Set<DeckResponse>> getDecksByCardId(@PathVariable Long cardId) {
         Set<Deck> decks = deckService.getDecksByCardId(cardId);
-        Set<DeckResponse> response = decks.stream()
-            .map(DeckResponse::fromEntity)
-            .collect(Collectors.toSet());
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(generateResponse(decks));
     }
 
     @Operation(summary = "Get or create decks by names", description = "Returns or creates decks by their names.")
@@ -121,13 +112,22 @@ public class DeckController {
             content = @Content(mediaType = "application/json",
                 schema = @Schema(implementation = DeckResponse.class)))
     })
-    @GetMapping("/cards")
+    @PostMapping
     public ResponseEntity<Set<DeckResponse>> getDecksByNames(@RequestParam DeckNamesDto deckNamesDto) {
         Set<Deck> decks = deckService.getOrCreateDecksByNames(deckNamesDto);
-        Set<DeckResponse> response = decks.stream()
+        return ResponseEntity.ok(generateResponse(decks));
+    }
+
+    /* Helpers */
+
+    private static Set<DeckResponse> generateResponse(Set<Deck> decks) {
+        return decks.stream()
             .map(DeckResponse::fromEntity)
             .collect(Collectors.toSet());
-        return ResponseEntity.ok(response);
+    }
+
+    private static DeckResponse generateResponse(Deck updatedDeck) {
+        return DeckResponse.fromEntity(updatedDeck);
     }
 
     /*Exception Handlers*/
