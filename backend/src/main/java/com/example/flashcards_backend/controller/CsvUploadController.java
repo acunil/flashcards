@@ -38,7 +38,6 @@ public class CsvUploadController {
         @ApiResponse(responseCode = "500", description = "Internal server error, could not process CSV",
             content = @Content(mediaType = "application/json"))
     })
-
     @PostMapping(value = "/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<CsvUploadResponseDto> uploadCsv(@RequestParam MultipartFile file) {
         if (file.isEmpty()) {
