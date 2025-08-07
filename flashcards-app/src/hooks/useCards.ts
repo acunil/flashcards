@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 export type Card = {
   id: string;
@@ -12,9 +12,13 @@ const useCards = (hardMode: boolean = false) => {
   const [cards, setCards] = useState<Card[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const hasFetched = useRef(false);
 
   useEffect(() => {
     const fetchCards = async () => {
+      if (hasFetched.current) return;
+      hasFetched.current = true;
+
       try {
         setLoading(true);
 
