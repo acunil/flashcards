@@ -8,6 +8,7 @@ import com.example.flashcards_backend.model.CardCreationResult;
 import com.example.flashcards_backend.repository.CardRepository;
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
+import org.springframework.dao.DataAccessException;
 import org.springframework.stereotype.Service;
 
 import static com.example.flashcards_backend.utility.CardUtils.shuffleCards;
@@ -41,12 +42,6 @@ public class CardService {
         return new HashSet<>(cardRepository.findAllById(ids));
     }
 
-    private static Set<String> getDeckNames(CardRequest request) {
-        return request.decks() == null
-               ? Set.of()
-               : request.decks();
-    }
-
     public List<Card> getCardsByMinAvgRating(double threshold) {
         return cardRepository.findByMinAvgRating(threshold);
     }
@@ -64,17 +59,6 @@ public class CardService {
 
     public List<Card> getCardsByMaxAvgRating(double threshold, boolean shuffled) {
         var cards = getCardsByMaxAvgRating(threshold);
-        return shuffled
-               ? shuffleCards(cards)
-               : cards;
-    }
-
-    public List<Card> getCardsByDeckId(Long deckId) {
-        return cardRepository.findByDeckId(deckId);
-    }
-
-    public List<Card> getCardsByDeckId(Long deckId, boolean shuffled) {
-        var cards = getCardsByDeckId(deckId);
         return shuffled
                ? shuffleCards(cards)
                : cards;
@@ -99,21 +83,23 @@ public class CardService {
     @Transactional
     public void updateCard(Long id, CardRequest request) {
         // Completely replace the card's front and back text and set its decks based on the request.
-        updateCardText(id, request);
-        cardDeckService.setDecks(id, DeckNamesDto.of(getDeckNames(request)));
-    }
-
-    @Transactional
-    public void updateCardText(Long id, CardRequest request) {
         Card card = getCardById(id);
         card.setFront(request.front());
         card.setBack(request.back());
+        cardDeckService.setDecks(id, DeckNamesDto.of(getDeckNames(request)));
+        rateCard(id, request.rating());
     }
 
     @Transactional
-    public void rateCard(Long cardId, int rating) {
-        getCardById(cardId); // validate card exists
+    public void rateCard(Long cardId, int rating) throws CardNotFoundException, DataAccessException {
         cardHistoryService.recordRating(cardId, rating);
+    }
+
+    /* Helpers */
+    private static Set<String> getDeckNames(CardRequest request) {
+        return request.decks() == null
+               ? Set.of()
+               : request.decks();
     }
 
 }

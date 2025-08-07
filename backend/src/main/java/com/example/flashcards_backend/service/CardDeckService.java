@@ -33,7 +33,9 @@ public class CardDeckService {
 
     @Transactional
     public void removeDeckFromAllCards(Long deckId) {
-        List<Card> cards = cardRepository.findByDeckId(deckId);
+        Set<Card> cards = deckRepository.findById(deckId).filter( deck -> !deck.getCards().isEmpty())
+            .map(Deck::getCards)
+            .orElseThrow(() -> new IllegalArgumentException("Deck with id " + deckId + " not found or has no cards"));
         for (Card card : cards) {
             card.removeDeck(card.getDeckById(deckId));
         }

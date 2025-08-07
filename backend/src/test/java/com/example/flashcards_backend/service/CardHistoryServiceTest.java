@@ -9,6 +9,8 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import static org.mockito.Mockito.verify;
 
+import java.sql.SQLException;
+
 @ExtendWith(SpringExtension.class)
 class CardHistoryServiceTest {
 
@@ -19,7 +21,7 @@ class CardHistoryServiceTest {
     private CardHistoryService historyService;
 
     @Test
-    void recordRating_invokesProcedureWithParameters() {
+    void recordRating_invokesProcedureWithParameters() throws SQLException {
         historyService.recordRating(42L, 5);
         verify(historyRepo).recordCardRating(42L, 5);
     }

@@ -131,7 +131,7 @@ class CardControllerTest {
                 .content(json))
             .andExpect(status().isNoContent());
 
-        verify(cardService).updateCard(5L, new CardRequest("newF", "newB", null));
+        verify(cardService).updateCard(5L, CardRequest.of("newF", "newB"));
     }
 
     @Test

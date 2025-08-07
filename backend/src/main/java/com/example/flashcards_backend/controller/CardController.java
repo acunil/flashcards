@@ -13,15 +13,15 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
+import liquibase.exception.DatabaseException;
 import lombok.AllArgsConstructor;
+import org.springframework.dao.DataAccessException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import jakarta.validation.Valid;
-
-import static com.example.flashcards_backend.utility.CardUtils.shuffleCards;
 
 import java.net.URI;
 import java.util.List;
@@ -35,7 +35,8 @@ public class CardController {
     public static final String REQUEST_MAPPING = "/api/cards/";
     private final CardService cardService;
 
-    @Operation(summary = "Get all cards", description = "Returns all cards. Optionally shuffled.")
+    @Operation(summary = "Get all cards",
+        description = "Returns all cards. Optionally shuffled. Optionally filtered by average rating.")
     @ApiResponses(value = {
         @ApiResponse(responseCode = "200", description = "Successful operation",
             content = @Content(mediaType = "application/json",
@@ -43,8 +44,12 @@ public class CardController {
     })
     @GetMapping
     public List<CardResponse> getAll(
-        @RequestParam(name = "shuffled", defaultValue = "false") boolean shuffled
+        @RequestParam(name = "shuffled", defaultValue = "false") boolean shuffled,
+        @RequestParam(name = "minAvgRating", required = false) Double minAvgRating,
+        @RequestParam(name = "maxAvgRating", required = false) Double maxAvgRating
     ) {
+
+
         var cards = cardService.getAllCards(shuffled);
 
         return generateResponse(cards);
@@ -106,6 +111,8 @@ public class CardController {
         @ApiResponse(responseCode = "204", description = "Card rated",
             content = @Content(mediaType = "application/json")),
         @ApiResponse(responseCode = "404", description = "Card not found",
+            content = @Content(mediaType = "application/json")),
+        @ApiResponse(responseCode = "500", description = "Database error",
             content = @Content(mediaType = "application/json"))
     })
     @PutMapping("/{id}/rate")
@@ -113,7 +120,8 @@ public class CardController {
         @PathVariable Long id,
         @RequestParam @Min(1) @Max(5) int rating
     ) {
-        cardService.rateCard(id, rating);
+        cardService.rateCard(id, rating); // throws CardNotFoundException if missing
+                                          // throws DataAccessException if database error occurs
         return ResponseEntity.noContent().build();
     }
 
@@ -153,27 +161,6 @@ public class CardController {
         return ResponseEntity.ok(generateResponse(cards));
     }
 
-    @Operation(summary = "Get cards by deck ID", description = "Returns cards associated with a specific deck.")
-    @ApiResponses(value = {
-        @ApiResponse(responseCode = "200", description = "Successful operation",
-            content = @Content(mediaType = "application/json",
-                schema = @Schema(implementation = CardResponse.class))),
-        @ApiResponse(responseCode = "404", description = "Deck not found",
-            content = @Content(mediaType = "application/json"))
-    })
-    @GetMapping("/deck/{deckId}")
-    public ResponseEntity<List<CardResponse>> getCardsByDeckId(
-        @PathVariable Long deckId,
-        @RequestParam(name = "shuffled", defaultValue = "false") boolean shuffled
-    ) {
-        var cards = cardService.getCardsByDeckId(deckId);
-        if (shuffled) {
-            cards = shuffleCards(cards);
-        }
-
-        return ResponseEntity.ok(generateResponse(cards));
-    }
-
     /* Helpers */
 
     private static List<CardResponse> generateResponse(List<Card> cards) {
@@ -190,5 +177,19 @@ public class CardController {
         return ResponseEntity
             .status(HttpStatus.NOT_FOUND)
             .body(ex.getMessage());
+    }
+
+    @ExceptionHandler(DatabaseException.class)
+    public ResponseEntity<String> handleDatabaseException(DatabaseException ex) {
+        return ResponseEntity
+            .status(HttpStatus.INTERNAL_SERVER_ERROR)
+            .body("Database error occurred: " + ex.getMessage());
+    }
+
+    @ExceptionHandler(DataAccessException.class)
+    public ResponseEntity<String> handleDataAccessException(DataAccessException ex) {
+        return ResponseEntity
+            .status(HttpStatus.INTERNAL_SERVER_ERROR)
+            .body("Data access error occurred: " + ex.getMessage());
     }
 }

@@ -6,6 +6,7 @@ import com.example.flashcards_backend.exception.CardNotFoundException;
 import com.example.flashcards_backend.model.Card;
 import com.example.flashcards_backend.model.CardCreationResult;
 import com.example.flashcards_backend.model.Deck;
+import com.example.flashcards_backend.repository.CardHistoryRepository;
 import com.example.flashcards_backend.repository.CardRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -43,6 +44,9 @@ class CardServiceTest {
 
     @Mock
     private CardDeckService cardDeckService;
+
+    @Mock
+    CardHistoryRepository cardHistoryRepository;
 
     @BeforeEach
     void setUp() {
@@ -142,7 +146,7 @@ class CardServiceTest {
         doNothing().when(cardDeckService).setDecks(anyLong(), any());
 
         // request contains empty decks
-        CardRequest request = CardRequest.of("Updated Front", "Updated Back");
+        CardRequest request = CardRequest.of("Updated Front", "Updated Back", 5);
         cardService.updateCard(CARD_1_ID, request);
 
         Card updatedCard = cardService.getCardById(CARD_1_ID);
@@ -163,12 +167,11 @@ class CardServiceTest {
 
     @Test
     void rate_Card_missingCard_throwsException() {
-        when(cardRepository.findById(99L)).thenReturn(Optional.empty());
+        doThrow(new CardNotFoundException(99L)).when(cardHistoryService).recordRating(99L, 4);
         assertThatThrownBy(() -> cardService.rateCard(99L, 4))
             .isInstanceOf(CardNotFoundException.class)
             .extracting("message")
             .isEqualTo("Card not found with id: 99");
-        verifyNoInteractions(cardHistoryService);
     }
 
     @Test
