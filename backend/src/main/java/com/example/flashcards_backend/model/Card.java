@@ -32,6 +32,11 @@ public class Card {
     @Builder.Default
     private Set<Deck> decks = new HashSet<>();
 
+    @OneToMany(mappedBy = "card")
+    @EqualsAndHashCode.Exclude
+    @ToString.Exclude
+    private final Set<CardHistory> cardHistories = new HashSet<>();
+
     public void addDeck(Deck deck) {
         decks.add(deck);
         deck.getCards().add(this);
@@ -93,6 +98,10 @@ public class Card {
                 .filter(deck -> deck.getId().equals(deckId))
                 .findFirst()
                 .orElse(null);
+    }
+
+    public void addCardHistory(CardHistory cardHistory) {
+        cardHistory.setCard(this);
     }
 
 

@@ -29,4 +29,10 @@ public class CardHistory {
     @Column(name = "last_rating")
     private Integer lastRating;
 
+    public void setCard(Card card) {
+        this.card = card;
+        if (card != null) {
+            card.getCardHistories().add(this);
+        }
+    }
 }

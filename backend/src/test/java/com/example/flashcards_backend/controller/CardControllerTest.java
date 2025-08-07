@@ -4,6 +4,7 @@ import com.example.flashcards_backend.dto.CardRequest;
 import com.example.flashcards_backend.exception.CardNotFoundException;
 import com.example.flashcards_backend.model.Card;
 import com.example.flashcards_backend.model.CardCreationResult;
+import com.example.flashcards_backend.model.CardHistory;
 import com.example.flashcards_backend.service.CardService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -33,8 +34,16 @@ class CardControllerTest {
 
     private MockMvc mockMvc;
 
+    private Card c1;
+    private Card c2;
+
     @BeforeEach
     void setUp() {
+        c1 = Card.builder().id(1L).front("f1").back("b1").build();
+        c2 = Card.builder().id(2L).front("f2").back("b2").build();
+        c1.addCardHistory(new CardHistory());
+        c2.addCardHistory(new CardHistory());
+
         mockMvc = MockMvcBuilders.standaloneSetup(controller)
             .setControllerAdvice(controller)
             .build();
@@ -42,8 +51,6 @@ class CardControllerTest {
 
     @Test
     void getAll_returnsListOfCardResponse() throws Exception {
-        Card c1 = Card.builder().id(1L).front("f1").back("b1").build();
-        Card c2 = Card.builder().id(2L).front("f2").back("b2").build();
         when(cardService.getAllCards(false)).thenReturn(List.of(c1, c2));
 
         mockMvc.perform(get(ENDPOINT))
@@ -60,8 +67,6 @@ class CardControllerTest {
 
     @Test
     void getAll_shuffledTrue_returnsListOfCardResponse() throws Exception {
-        Card c1 = Card.builder().id(1L).front("f1").back("b1").build();
-        Card c2 = Card.builder().id(2L).front("f2").back("b2").build();
         when(cardService.getAllCards(true)).thenReturn(List.of(c1, c2));
 
         mockMvc.perform(get(ENDPOINT)
@@ -79,15 +84,14 @@ class CardControllerTest {
 
     @Test
     void getById_existingId_returnsCardResponse() throws Exception {
-        Card c = Card.builder().id(1L).front("front").back("back").build();
-        when(cardService.getCardById(1L)).thenReturn(c);
+        when(cardService.getCardById(1L)).thenReturn(c1);
 
         mockMvc.perform(get(ENDPOINT + "/1"))
             .andExpect(status().isOk())
             .andExpect(content().contentType(MediaType.APPLICATION_JSON))
             .andExpect(jsonPath("$.id").value(1))
-            .andExpect(jsonPath("$.front").value("front"))
-            .andExpect(jsonPath("$.back").value("back"));
+            .andExpect(jsonPath("$.front").value("f1"))
+            .andExpect(jsonPath("$.back").value("b1"));
     }
 
     @Test
@@ -171,8 +175,6 @@ class CardControllerTest {
 
     @Test
     void getByMinAvgRating_validThreshold_returnsListOfCardResponse() throws Exception {
-        Card c1 = Card.builder().id(1L).front("f1").back("b1").build();
-        Card c2 = Card.builder().id(2L).front("f2").back("b2").build();
         when(cardService.getCardsByMinAvgRating(3.0, false))
             .thenReturn(List.of(c1, c2));
         mockMvc.perform(get(ENDPOINT + "/minAvgRating")
@@ -190,8 +192,6 @@ class CardControllerTest {
 
     @Test
     void getByMinAvgRating_validThreshold_shuffledTrue_returnsListOfCardResponse() throws Exception {
-        Card c1 = Card.builder().id(1L).front("f1").back("b1").build();
-        Card c2 = Card.builder().id(2L).front("f2").back("b2").build();
         when(cardService.getCardsByMinAvgRating(3.0, true))
             .thenReturn(List.of(c1, c2));
         mockMvc.perform(get(ENDPOINT + "/minAvgRating")
@@ -210,8 +210,6 @@ class CardControllerTest {
 
     @Test
     void getByMaxAvgRating_validThreshold_returnsListOfCardResponse() throws Exception {
-        Card c1 = Card.builder().id(1L).front("f1").back("b1").build();
-        Card c2 = Card.builder().id(2L).front("f2").back("b2").build();
         when(cardService.getCardsByMaxAvgRating(3.0, false))
             .thenReturn(List.of(c1, c2));
         mockMvc.perform(get(ENDPOINT + "/maxAvgRating")
@@ -229,8 +227,6 @@ class CardControllerTest {
 
     @Test
     void getByMaxAvgRating_validThreshold_shuffledTrue_returnsListOfCardResponse() throws Exception {
-        Card c1 = Card.builder().id(1L).front("f1").back("b1").build();
-        Card c2 = Card.builder().id(2L).front("f2").back("b2").build();
         when(cardService.getCardsByMaxAvgRating(3.0, true))
             .thenReturn(List.of(c1, c2));
         mockMvc.perform(get(ENDPOINT + "/maxAvgRating")
