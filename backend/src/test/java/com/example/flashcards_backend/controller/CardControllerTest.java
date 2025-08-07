@@ -131,7 +131,7 @@ class CardControllerTest {
                 .content(json))
             .andExpect(status().isNoContent());
 
-        verify(cardService).updateCard(5L, new CardRequest("newF", "newB", null));
+        verify(cardService).updateCard(5L, CardRequest.of("newF", "newB"));
     }
 
     @Test
@@ -151,7 +151,7 @@ class CardControllerTest {
 
     @Test
     void rate_validIdAndRating_returnsNoContent() throws Exception {
-        mockMvc.perform(post(ENDPOINT + "/7/rate")
+        mockMvc.perform(put(ENDPOINT + "/7/rate")
                 .param("rating", "5")
                 .contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isNoContent());
@@ -162,7 +162,7 @@ class CardControllerTest {
     void rate_missingCard_returnsNotFoundWithMessage() throws Exception {
         doThrow(new CardNotFoundException(55L))
             .when(cardService).rateCard(55L, 2);
-        mockMvc.perform(post(ENDPOINT + "/55/rate")
+        mockMvc.perform(put(ENDPOINT + "/55/rate")
                 .param("rating", "2")
                 .contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isNotFound())
