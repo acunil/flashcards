@@ -6,6 +6,11 @@ import com.example.flashcards_backend.dto.CreateCardResponse;
 import com.example.flashcards_backend.exception.CardNotFoundException;
 import com.example.flashcards_backend.model.Card;
 import com.example.flashcards_backend.service.CardService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import lombok.AllArgsConstructor;
@@ -29,6 +34,12 @@ public class CardController {
 
     private final CardService cardService;
 
+    @Operation(summary = "Get all cards", description = "Returns all cards. Optionally shuffled.")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Successful operation",
+            content = @Content(mediaType = "application/json",
+                schema = @Schema(implementation = CardResponse.class)))
+    })
     @GetMapping
     public List<CardResponse> getAll(
         @RequestParam(name = "shuffled", defaultValue = "false") boolean shuffled
@@ -40,12 +51,26 @@ public class CardController {
             .toList();
     }
 
+    @Operation(summary = "Get card by ID", description = "Returns a card by its ID.")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Successful operation",
+            content = @Content(mediaType = "application/json",
+                schema = @Schema(implementation = CardResponse.class))),
+        @ApiResponse(responseCode = "404", description = "Card not found",
+            content = @Content(mediaType = "application/json"))
+    })
     @GetMapping("/{id}")
     public ResponseEntity<CardResponse> getById(@PathVariable Long id) {
         Card card = cardService.getCardById(id); // throws CardNotFoundException if missing
         return ResponseEntity.ok(CardResponse.fromEntity(card));
     }
 
+    @Operation(summary = "Create a new card", description = "Creates a new card.")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "201", description = "Card created",
+            content = @Content(mediaType = "application/json",
+                schema = @Schema(implementation = CreateCardResponse.class)))
+    })
     @PostMapping
     public ResponseEntity<CreateCardResponse> createCard(@Valid @RequestBody CardRequest request) {
         var cardCreationResult = cardService.createCard(request);
@@ -61,6 +86,13 @@ public class CardController {
             .body(response);
     }
 
+    @Operation(summary = "Update card", description = "Updates a card by its ID.")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "204", description = "Card updated",
+            content = @Content(mediaType = "application/json")),
+        @ApiResponse(responseCode = "404", description = "Card not found",
+            content = @Content(mediaType = "application/json"))
+    })
     @PutMapping("/{id}")
     public ResponseEntity<Void> update(
         @PathVariable Long id,
@@ -70,6 +102,13 @@ public class CardController {
         return ResponseEntity.noContent().build();
     }
 
+    @Operation(summary = "Delete card", description = "Deletes a card by its ID.")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "204", description = "Card deleted",
+            content = @Content(mediaType = "application/json")),
+        @ApiResponse(responseCode = "404", description = "Card not found",
+            content = @Content(mediaType = "application/json"))
+    })
     @PostMapping("/{id}/rate")
     public ResponseEntity<Void> rate(
         @PathVariable Long id,
@@ -79,6 +118,14 @@ public class CardController {
         return ResponseEntity.noContent().build();
     }
 
+    @Operation(summary = "Get cards by minimum average rating", description = "Returns cards with an average rating above a threshold.")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Successful operation",
+            content = @Content(mediaType = "application/json",
+                schema = @Schema(implementation = CardResponse.class))),
+        @ApiResponse(responseCode = "400", description = "Bad request, invalid rating threshold",
+            content = @Content(mediaType = "application/json"))
+    })
     @GetMapping
     @RequestMapping("/minAvgRating")
     public ResponseEntity<List<CardResponse>> getByMinAvgRating(
@@ -94,6 +141,14 @@ public class CardController {
         return ResponseEntity.ok(cardResponses);
     }
 
+    @Operation(summary = "Get cards by maximum average rating", description = "Returns cards with an average rating below a threshold.")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Successful operation",
+            content = @Content(mediaType = "application/json",
+                schema = @Schema(implementation = CardResponse.class))),
+        @ApiResponse(responseCode = "400", description = "Bad request, invalid rating threshold",
+            content = @Content(mediaType = "application/json"))
+    })
     @GetMapping
     @RequestMapping("/maxAvgRating")
     public ResponseEntity<List<CardResponse>> getByMaxAvgRating(
@@ -109,6 +164,14 @@ public class CardController {
         return ResponseEntity.ok(cardResponses);
     }
 
+    @Operation(summary = "Get cards by deck ID", description = "Returns cards associated with a specific deck.")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Successful operation",
+            content = @Content(mediaType = "application/json",
+                schema = @Schema(implementation = CardResponse.class))),
+        @ApiResponse(responseCode = "404", description = "Deck not found",
+            content = @Content(mediaType = "application/json"))
+    })
     @GetMapping
     @RequestMapping("/deck/{deckId}")
     public ResponseEntity<List<CardResponse>> getCardsByDeckId(

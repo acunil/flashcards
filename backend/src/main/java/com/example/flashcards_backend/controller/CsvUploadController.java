@@ -2,6 +2,11 @@ package com.example.flashcards_backend.controller;
 
 import com.example.flashcards_backend.dto.CsvUploadResponseDto;
 import com.example.flashcards_backend.service.CsvUploadServiceImpl;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -21,6 +26,18 @@ import java.io.InputStream;
 @Slf4j
 public class CsvUploadController {
     private final CsvUploadServiceImpl csvUploadService;
+
+    @Operation(summary = "Upload CSV file for card import",
+               description = "Uploads a CSV file containing flashcards and processes it for import.")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "CSV file processed successfully",
+            content = @Content(mediaType = "application/json",
+                schema = @Schema(implementation = CsvUploadResponseDto.class))),
+        @ApiResponse(responseCode = "400", description = "Bad request, no file provided",
+            content = @Content(mediaType = "application/json")),
+        @ApiResponse(responseCode = "500", description = "Internal server error, could not process CSV",
+            content = @Content(mediaType = "application/json"))
+    })
 
     @PostMapping(value = "/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<CsvUploadResponseDto> uploadCsv(@RequestParam MultipartFile file) {
