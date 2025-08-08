@@ -1,11 +1,10 @@
 package com.example.flashcards_backend.dto;
 
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Size;
+import com.example.flashcards_backend.annotations.CardContent;
 
 public record CardRequest(
-    @NotBlank @Size(min = 1, max = 200) String front,
-    @NotBlank @Size(min = 1, max = 200) String back,
+    @CardContent String front,
+    @CardContent String back,
     DeckNamesDto deckNamesDto
 ) {
     public static CardRequest of(String front, String back) {

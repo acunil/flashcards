@@ -1,7 +1,9 @@
 package com.example.flashcards_backend.service;
 
+import com.example.flashcards_backend.dto.CreateDeckRequest;
 import com.example.flashcards_backend.dto.DeckNamesDto;
 import com.example.flashcards_backend.model.Deck;
+import com.example.flashcards_backend.repository.CardRepository;
 import com.example.flashcards_backend.repository.DeckRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -25,13 +27,15 @@ class CardDeckServiceTest {
 
     @Mock
     private DeckRepository deckRepository;
+    @Mock
+    private CardRepository cardRepository;
 
     private Deck deck1;
     private Deck deck2;
 
     @BeforeEach
     void setUp() {
-        cardDeckService = new CardDeckService(deckRepository);
+        cardDeckService = new CardDeckService(deckRepository, cardRepository);
         deck1 = Deck.builder().id(1L).name("Deck 1").build();
         deck2 = Deck.builder().id(2L).name("Deck 2").build();
     }
@@ -80,5 +84,17 @@ class CardDeckServiceTest {
         assertThat(savedDecks)
             .extracting(Deck::getName)
             .containsExactlyInAnyOrder("Deck 2", "Deck 3");
+    }
+
+    @Test
+    void testCreateDeck() {
+        CreateDeckRequest request = new CreateDeckRequest("New Deck", null);
+        Deck expectedDeck = Deck.builder().name("New Deck").build();
+
+        when(deckRepository.save(expectedDeck)).thenReturn(expectedDeck);
+
+        Deck actualDeck = cardDeckService.createDeck(request);
+
+        assertThat(actualDeck.getName()).isEqualTo("New Deck");
     }
 }

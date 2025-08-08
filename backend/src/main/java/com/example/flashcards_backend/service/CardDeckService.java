@@ -1,12 +1,16 @@
 package com.example.flashcards_backend.service;
 
+import com.example.flashcards_backend.dto.CreateDeckRequest;
 import com.example.flashcards_backend.dto.DeckNamesDto;
+import com.example.flashcards_backend.model.Card;
 import com.example.flashcards_backend.model.Deck;
+import com.example.flashcards_backend.repository.CardRepository;
 import com.example.flashcards_backend.repository.DeckRepository;
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import static java.util.Objects.isNull;
 import static java.util.stream.Collectors.toSet;
 
 import java.util.HashSet;
@@ -17,7 +21,7 @@ import java.util.Set;
 @AllArgsConstructor
 public class CardDeckService {
     private final DeckRepository deckRepository;
-
+    private final CardRepository cardRepository;
 
     @Transactional
     public Set<Deck> getOrCreateDecksByNames(DeckNamesDto deckNamesDto) {
@@ -37,6 +41,24 @@ public class CardDeckService {
             allDecks.addAll(newDecks);
         }
         return allDecks;
+    }
+
+    @Transactional
+    public Deck createDeck(CreateDeckRequest request) {
+        Deck deck = getOrCreateDecksByNames(DeckNamesDto.of(request.name()))
+            .stream()
+            .findFirst()
+            .orElseThrow(() -> new IllegalArgumentException("Deck creation failed for name: " + request.name()));
+
+        if (!isNull(request.cardIds()) && !request.cardIds().isEmpty()) {
+            deck.addCards(getCards(request));
+        }
+
+        return deck;
+    }
+
+    private Set<Card> getCards(CreateDeckRequest request) {
+        return new HashSet<>(cardRepository.findAllById(request.cardIds()));
     }
 
 }
