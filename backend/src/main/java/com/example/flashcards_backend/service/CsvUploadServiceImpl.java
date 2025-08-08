@@ -56,8 +56,8 @@ public class CsvUploadServiceImpl implements CsvUploadService {
         }
     }
 
-    private static List<CardResponse> generateResponses(List<Card> duplicates) {
-        return duplicates.stream()
+    private static List<CardResponse> generateResponses(List<Card> cards) {
+        return cards.stream()
             .map(CardResponse::fromEntity)
             .toList();
     }

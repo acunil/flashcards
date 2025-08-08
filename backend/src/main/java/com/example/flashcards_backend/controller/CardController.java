@@ -3,7 +3,6 @@ package com.example.flashcards_backend.controller;
 import com.example.flashcards_backend.dto.CardRequest;
 import com.example.flashcards_backend.dto.CardResponse;
 import com.example.flashcards_backend.dto.CreateCardResponse;
-import com.example.flashcards_backend.exception.CardNotFoundException;
 import com.example.flashcards_backend.model.Card;
 import com.example.flashcards_backend.service.CardService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -13,10 +12,7 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
-import liquibase.exception.DatabaseException;
 import lombok.AllArgsConstructor;
-import org.springframework.dao.DataAccessException;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -48,8 +44,6 @@ public class CardController {
         @RequestParam(name = "minAvgRating", required = false) Double minAvgRating,
         @RequestParam(name = "maxAvgRating", required = false) Double maxAvgRating
     ) {
-
-
         var cards = cardService.getAllCards(shuffled);
 
         return generateResponse(cards);
@@ -170,26 +164,4 @@ public class CardController {
             .toList();
     }
 
-    /*Exception Handlers*/
-
-    @ExceptionHandler(CardNotFoundException.class)
-    public ResponseEntity<String> handleNotFound(CardNotFoundException ex) {
-        return ResponseEntity
-            .status(HttpStatus.NOT_FOUND)
-            .body(ex.getMessage());
-    }
-
-    @ExceptionHandler(DatabaseException.class)
-    public ResponseEntity<String> handleDatabaseException(DatabaseException ex) {
-        return ResponseEntity
-            .status(HttpStatus.INTERNAL_SERVER_ERROR)
-            .body("Database error occurred: " + ex.getMessage());
-    }
-
-    @ExceptionHandler(DataAccessException.class)
-    public ResponseEntity<String> handleDataAccessException(DataAccessException ex) {
-        return ResponseEntity
-            .status(HttpStatus.INTERNAL_SERVER_ERROR)
-            .body("Data access error occurred: " + ex.getMessage());
-    }
 }

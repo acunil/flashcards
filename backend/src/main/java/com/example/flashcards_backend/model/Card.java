@@ -1,5 +1,6 @@
 package com.example.flashcards_backend.model;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Size;
 import lombok.*;
@@ -11,7 +12,7 @@ import java.util.Set;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
+@Builder(builderClassName = "CardBuilder")
 @Table(name = "card", uniqueConstraints = @UniqueConstraint(columnNames = {"front", "back"}))
 public class Card {
     @Id
@@ -30,7 +31,14 @@ public class Card {
     @EqualsAndHashCode.Exclude
     @ToString.Exclude
     @Builder.Default
+    @JsonBackReference
     private Set<Deck> decks = new HashSet<>();
+
+    @OneToMany(mappedBy = "card")
+    @EqualsAndHashCode.Exclude
+    @ToString.Exclude
+    @Singular
+    private final Set<CardHistory> cardHistories = new HashSet<>();
 
     public void addDeck(Deck deck) {
         decks.add(deck);
@@ -93,6 +101,37 @@ public class Card {
                 .filter(deck -> deck.getId().equals(deckId))
                 .findFirst()
                 .orElse(null);
+    }
+
+    public void addCardHistory(CardHistory cardHistory) {
+        cardHistory.setCard(this);
+    }
+
+
+
+    public static class CardBuilder {
+        private Long id;
+        private String front;
+        private String back;
+        private Set<Deck> decks = new HashSet<>();
+        private Set<CardHistory> cardHistories = new HashSet<>();
+
+        public CardBuilder cardHistory(CardHistory cardHistory) {
+            this.cardHistories.add(cardHistory);
+            return this;
+        }
+
+        public Card build() {
+            Card card = new Card();
+            card.id = this.id;
+            card.front = this.front;
+            card.back = this.back;
+            card.decks = this.decks;
+            for (CardHistory ch : this.cardHistories) {
+                card.addCardHistory(ch);
+            }
+            return card;
+        }
     }
 
 
