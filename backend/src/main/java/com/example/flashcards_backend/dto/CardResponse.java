@@ -2,15 +2,30 @@ package com.example.flashcards_backend.dto;
 
 import com.example.flashcards_backend.model.Card;
 import com.example.flashcards_backend.model.CardHistory;
-import lombok.Builder;
 
 import java.util.Set;
 
-@Builder
-public record CardResponse(Long id, String front, String back, Set<String> deckNames,
-                           Double avgRating, Integer viewCount, String lastViewed, Integer lastRating) {
-    public static CardResponse fromEntity(Card card, Long userId) {
-        CardHistory cardHistory = card.getCardHistories()
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
+public record CardResponse(
+    @JsonProperty("id")         Long    id,
+    @JsonProperty("front")      String  front,
+    @JsonProperty("back")       String  back,
+    @JsonProperty("deckNames")  Set<String> deckNames,
+    @JsonProperty("avgRating")  Double  avgRating,
+    @JsonProperty("viewCount")  Integer viewCount,
+    @JsonProperty("lastViewed") String  lastViewed,
+    @JsonProperty("lastRating") Integer lastRating
+) {
+
+    @JsonCreator
+    public CardResponse {
+        // canonical constructor; Jackson will call this
+    }
+
+    public static CardResponse fromEntity(Card card) {
+        CardHistory ch = card.getCardHistories()
             .stream()
             .findFirst()
             .orElseThrow(() -> new IllegalArgumentException("Card history not found for card ID: " + card.getId()));
@@ -20,15 +35,10 @@ public record CardResponse(Long id, String front, String back, Set<String> deckN
             card.getFront(),
             card.getBack(),
             card.getDeckNames(),
-            cardHistory.getAvgRating(),
-            cardHistory.getViewCount(),
-            cardHistory.getLastViewed() != null ? cardHistory.getLastViewed().toString() : null,
-            cardHistory.getLastRating()
+            ch.getAvgRating(),
+            ch.getViewCount(),
+            ch.getLastViewed() != null ? ch.getLastViewed().toString() : null,
+            ch.getLastRating()
         );
     }
-
-    public static CardResponse fromEntity(Card card) {
-        return fromEntity(card, null);
-    }
-
 }

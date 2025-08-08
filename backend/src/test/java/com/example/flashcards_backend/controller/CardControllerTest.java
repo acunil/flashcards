@@ -6,16 +6,23 @@ import com.example.flashcards_backend.model.Card;
 import com.example.flashcards_backend.model.CardCreationResult;
 import com.example.flashcards_backend.model.CardHistory;
 import com.example.flashcards_backend.service.CardService;
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import com.fasterxml.jackson.module.paramnames.ParameterNamesModule;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.springframework.http.MediaType;
+import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 import static org.mockito.Mockito.*;
@@ -39,13 +46,34 @@ class CardControllerTest {
 
     @BeforeEach
     void setUp() {
-        c1 = Card.builder().id(1L).front("f1").back("b1").build();
-        c2 = Card.builder().id(2L).front("f2").back("b2").build();
-        c1.addCardHistory(new CardHistory());
-        c2.addCardHistory(new CardHistory());
+        ObjectMapper objectMapper = new ObjectMapper()
+            // for Java record ctor parameter names
+            .registerModule(new ParameterNamesModule(JsonCreator.Mode.PROPERTIES))
+            // for java.time support
+            .registerModule(new JavaTimeModule())
+            // serialize dates as ISO strings, not timestamps
+            .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
 
-        mockMvc = MockMvcBuilders.standaloneSetup(controller)
-            .setControllerAdvice(controller)
+        MappingJackson2HttpMessageConverter jacksonConverter =
+            new MappingJackson2HttpMessageConverter(objectMapper);
+
+
+        CardHistory history1 = CardHistory.builder()
+            .id(1L)
+            .avgRating(2.0)
+            .viewCount(10)
+            .lastViewed(LocalDateTime.parse("2023-10-01T12:00:00"))
+            .lastRating(3)
+            .build();
+        c1 = Card.builder().id(1L).front("f1").back("b1").cardHistory(history1).build();
+        c2 = Card.builder().id(2L).front("f2").back("b2").cardHistory(history1).build();
+
+        mockMvc = MockMvcBuilders
+            .standaloneSetup(controller)
+            // point at your real exception‐handler class
+            .setControllerAdvice(new RestExceptionHandler())
+            // register our customized ObjectMapper
+            .setMessageConverters(jacksonConverter)
             .build();
     }
 
@@ -59,9 +87,17 @@ class CardControllerTest {
             .andExpect(jsonPath("$[0].id").value(1))
             .andExpect(jsonPath("$[0].front").value("f1"))
             .andExpect(jsonPath("$[0].back").value("b1"))
+            .andExpect(jsonPath("$[0].avgRating").value(2))
+            .andExpect(jsonPath("$[0].viewCount").value(10))
+            .andExpect(jsonPath("$[0].lastViewed").value("2023-10-01T12:00"))
+            .andExpect(jsonPath("$[0].lastRating").value(3))
             .andExpect(jsonPath("$[1].id").value(2))
             .andExpect(jsonPath("$[1].front").value("f2"))
-            .andExpect(jsonPath("$[1].back").value("b2"));
+            .andExpect(jsonPath("$[1].back").value("b2"))
+            .andExpect(jsonPath("$[1].avgRating").value(2))
+            .andExpect(jsonPath("$[1].viewCount").value(10))
+            .andExpect(jsonPath("$[1].lastViewed").value("2023-10-01T12:00"))
+            .andExpect(jsonPath("$[1].lastRating").value(3));
         verify(cardService, never()).getAllCards(true);
     }
 
@@ -130,7 +166,7 @@ class CardControllerTest {
             {"id":null,"front":"newF","back":"newB","decks":null}
             """;
 
-        mockMvc.perform(put(ENDPOINT + "/5")
+        mockMvc.perform(put(ENDPOINT + "5")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(json))
             .andExpect(status().isNoContent());
@@ -140,7 +176,7 @@ class CardControllerTest {
 
     @Test
     void update_missingId_returnsNotFound() throws Exception {
-        doThrow(new CardNotFoundException(7L)).when(cardService).updateCard(eq(7L), any());
+        when(cardService.getCardById(7L)).thenThrow(new CardNotFoundException(7L));
 
         String json = """
             {"id":null,"front":"x","back":"y"}
