@@ -23,7 +23,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(SpringExtension.class)
-class CsvUploadServiceImplTest {
+class CsvUploadServiceTest {
 
     @Mock
     private CardRepository cardRepository;
@@ -56,7 +56,7 @@ class CsvUploadServiceImplTest {
         when(cardRepository.existsByFrontAndBack("f3", "b3")).thenReturn(false);
         when(cardRepository.existsByFrontAndBack("f4", "b4")).thenReturn(true);
 
-        Card savedCard = Card.builder().front("f3").back("b3").build();
+        Card savedCard = Card.builder().front("f3").back("b3").id(1L).build();
         when(cardRepository.saveAll(cardListCaptor.capture())).thenReturn(List.of(savedCard));
 
         CsvUploadResponseDto csvUploadResponseDTO = service.uploadCsv(is);

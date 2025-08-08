@@ -28,7 +28,7 @@ public record CardResponse(
         CardHistory ch = card.getCardHistories()
             .stream()
             .findFirst()
-            .orElseThrow(() -> new IllegalArgumentException("Card history not found for card ID: " + card.getId()));
+            .orElseGet(CardHistory::new);
 
         return new CardResponse(
             card.getId(),
