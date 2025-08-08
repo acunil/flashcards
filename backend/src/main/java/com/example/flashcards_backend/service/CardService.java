@@ -95,6 +95,12 @@ public class CardService {
         cardHistoryService.recordRating(cardId, rating);
     }
 
+    @Transactional
+    public void deleteCard(Long id) {
+        Card card = getCardById(id);
+        cardRepository.delete(card);
+    }
+
     /* Helpers */
     private static Set<String> getDeckNames(CardRequest request) {
         return request.decks() == null
