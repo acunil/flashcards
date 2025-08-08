@@ -1,23 +1,17 @@
 package com.example.flashcards_backend.dto;
 
-import jakarta.validation.constraints.Max;
-import jakarta.validation.constraints.Min;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Size;
-
-import java.util.Set;
+import com.example.flashcards_backend.annotations.CardContent;
 
 public record CardRequest(
-    @NotBlank @Size(min = 1, max = 200) String front,
-    @NotBlank @Size(min = 1, max = 200) String back,
-    Set<@NotBlank @Size(min = 1, max = 50) String> decks,
-    @Min(1) @Max(5) Integer rating
+    @CardContent String front,
+    @CardContent String back,
+    DeckNamesDto deckNamesDto
 ) {
     public static CardRequest of(String front, String back) {
-        return new CardRequest(front, back, null, null);
+        return new CardRequest(front, back, null);
     }
 
-    public static CardRequest of(String front, String back, int rating) {
-        return new CardRequest(front, back, null, rating);
+    public static CardRequest of(String front, String back, DeckNamesDto deckNamesDto) {
+        return new CardRequest(front, back, deckNamesDto);
     }
 }

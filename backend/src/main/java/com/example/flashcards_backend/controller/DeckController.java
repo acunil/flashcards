@@ -6,6 +6,7 @@ import com.example.flashcards_backend.dto.DeckResponse;
 import com.example.flashcards_backend.dto.UpdateDeckNameRequest;
 import com.example.flashcards_backend.exception.DeckNotFoundException;
 import com.example.flashcards_backend.model.Deck;
+import com.example.flashcards_backend.service.CardDeckService;
 import com.example.flashcards_backend.service.DeckService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -28,6 +29,7 @@ import java.util.stream.Collectors;
 public class DeckController {
 
     private final DeckService deckService;
+    private final CardDeckService cardDeckService;
 
     @Operation(summary = "Get all decks", description = "Returns all decks.")
     @ApiResponses(value = {
@@ -63,7 +65,7 @@ public class DeckController {
     })
     @PostMapping("/create")
     public ResponseEntity<DeckResponse> createDeck(@RequestBody CreateDeckRequest request) {
-        Deck createdDeck = deckService.createDeck(request);
+        Deck createdDeck = cardDeckService.createDeck(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(generateResponse(createdDeck));
     }
 
@@ -114,7 +116,7 @@ public class DeckController {
     })
     @PostMapping
     public ResponseEntity<Set<DeckResponse>> getDecksByNames(@RequestParam DeckNamesDto deckNamesDto) {
-        Set<Deck> decks = deckService.getOrCreateDecksByNames(deckNamesDto);
+        Set<Deck> decks = cardDeckService.getOrCreateDecksByNames(deckNamesDto);
         return ResponseEntity.ok(generateResponse(decks));
     }
 
