@@ -155,6 +155,21 @@ public class CardController {
         return ResponseEntity.ok(generateResponse(cards));
     }
 
+    @Operation(summary = "Delete card", description = "Deletes a card by its ID.")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "204", description = "Card deleted",
+            content = @Content(mediaType = "application/json")),
+        @ApiResponse(responseCode = "404", description = "Card not found",
+            content = @Content(mediaType = "application/json"))
+    })
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteCard(
+        @PathVariable Long id
+    ) {
+        cardService.deleteCard(id); // throws CardNotFoundException if missing
+        return ResponseEntity.noContent().build();
+    }
+
     /* Helpers */
 
     private static List<CardResponse> generateResponse(List<Card> cards) {

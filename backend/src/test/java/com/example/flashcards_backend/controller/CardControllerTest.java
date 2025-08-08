@@ -281,4 +281,21 @@ class CardControllerTest {
             .andExpect(jsonPath("$[1].back").value("b2"));
         verify(cardService, never()).getCardsByMaxAvgRating(3.0, false);
     }
+
+    @Test
+    void deleteCard_existingId_returnsNoContent() throws Exception {
+        mockMvc.perform(delete(ENDPOINT + "/5"))
+            .andExpect(status().isNoContent());
+        verify(cardService).deleteCard(5L);
+    }
+
+    @Test
+    void deleteCard_missingId_returnsNotFound() throws Exception {
+        doThrow(new CardNotFoundException(99L))
+            .when(cardService).deleteCard(99L);
+        mockMvc.perform(delete(ENDPOINT + "/99"))
+            .andExpect(status().isNotFound())
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+            .andExpect(content().string("\"Card not found with id: 99\""));
+    }
 }

@@ -22,7 +22,6 @@ import java.util.*;
 public class DeckService {
 
     private final DeckRepository deckRepository;
-    private final CardDeckService cardDeckService;
     private final CardRepository cardRepository;
 
     public Set<Deck> getAll() {
@@ -83,9 +82,8 @@ public class DeckService {
 
     @Transactional
     public void deleteDeck(Long id) {
-        removeAllCardsFromDeck(id);
-        cardDeckService.removeDeckFromAllCards(id);
-        deckRepository.deleteById(id);
+        Deck deck = getDeckById(id);
+        deckRepository.delete(deck);
     }
 
     @Transactional
@@ -105,7 +103,7 @@ public class DeckService {
     @Transactional
     public void removeAllCardsFromDeck(Long deckId) {
         Deck deck = getDeckById(deckId);
-        deck.removeCards(deck.getCards());
+        deck.removeAllCards();
     }
 
     @Transactional

@@ -4,10 +4,12 @@ import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Size;
 import lombok.*;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.HashSet;
 import java.util.Set;
 
+@Slf4j
 @Entity
 @Data
 @NoArgsConstructor
@@ -34,7 +36,7 @@ public class Card {
     @JsonBackReference
     private Set<Deck> decks = new HashSet<>();
 
-    @OneToMany(mappedBy = "card")
+    @OneToMany(mappedBy = "card", cascade = CascadeType.REMOVE, orphanRemoval = true)
     @EqualsAndHashCode.Exclude
     @ToString.Exclude
     @Singular
@@ -50,10 +52,13 @@ public class Card {
         deck.getCards().remove(this);
     }
 
+    @PreRemove
     public void removeAllDecks() {
+        log.info("Removing all decks from card with ID: {}", id);
         for (Deck deck : new HashSet<>(decks)) {
             removeDeck(deck);
         }
+        log.info("Card was detached from {} decks", decks.size());
     }
 
     public void addDecks(Set<Deck> newDecks) {

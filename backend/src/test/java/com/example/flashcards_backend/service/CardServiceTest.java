@@ -229,4 +229,20 @@ class CardServiceTest {
         assertThat(result).isSameAs(originalCards);
     }
 
+    @Test
+    void deleteCard_existingCard_deletesCard() {
+        cardService.deleteCard(CARD_1_ID);
+        verify(cardRepository).findById(CARD_1_ID);
+        verify(cardRepository).delete(card1);
+    }
+
+    @Test
+    void deleteCard_missingCard_throwsException() {
+        when(cardRepository.findById(CARD_3_ID)).thenReturn(Optional.empty());
+        assertThatThrownBy(() -> cardService.deleteCard(CARD_3_ID))
+            .isInstanceOf(CardNotFoundException.class)
+            .extracting("message")
+            .isEqualTo("Card not found with id: " + CARD_3_ID);
+    }
+
 }
