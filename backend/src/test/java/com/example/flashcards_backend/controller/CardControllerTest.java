@@ -132,11 +132,13 @@ class CardControllerTest {
 
     @Test
     void getById_missingId_returnsNotFound() throws Exception {
-        when(cardService.getCardById(99L)).thenThrow(new CardNotFoundException(99L));
+        doThrow( new CardNotFoundException(99L))
+            .when(cardService).getCardById(99L);
 
         mockMvc.perform(get(ENDPOINT + "/99"))
             .andExpect(status().isNotFound())
-            .andExpect(content().string("Card not found with id: 99"));
+            .andExpect(content().contentType( MediaType.APPLICATION_JSON))
+            .andExpect(content().string("\"Card not found with id: 99\""));
     }
 
     @Test
@@ -146,7 +148,7 @@ class CardControllerTest {
             .thenReturn(new CardCreationResult(created, false));
 
         String json = """
-            {"id":null,"front":"f","back":"b"}
+            {"front":"f","back":"b"}
             """;
 
         mockMvc.perform(post(ENDPOINT)
@@ -163,10 +165,10 @@ class CardControllerTest {
     @Test
     void update_existingId_returnsNoContent() throws Exception {
         String json = """
-            {"id":null,"front":"newF","back":"newB","decks":null}
+            {"front":"newF","back":"newB","decks":null}
             """;
 
-        mockMvc.perform(put(ENDPOINT + "5")
+        mockMvc.perform(put(ENDPOINT + "/5")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(json))
             .andExpect(status().isNoContent());
@@ -176,17 +178,18 @@ class CardControllerTest {
 
     @Test
     void update_missingId_returnsNotFound() throws Exception {
-        when(cardService.getCardById(7L)).thenThrow(new CardNotFoundException(7L));
+        doThrow(new CardNotFoundException(7L))
+            .when(cardService).updateCard(anyLong(), any(CardRequest.class));
 
-        String json = """
-            {"id":null,"front":"x","back":"y"}
+        String requestJson = """
+            {"front":"newF","back":"newB","decks":null,"rating":null}
             """;
 
         mockMvc.perform(put(ENDPOINT + "/7")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(json))
+                .content(requestJson))
             .andExpect(status().isNotFound())
-            .andExpect(content().string("Card not found with id: 7"));
+            .andExpect(content().string("\"Card not found with id: 7\""));
     }
 
     @Test
@@ -206,7 +209,7 @@ class CardControllerTest {
                 .param("rating", "2")
                 .contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isNotFound())
-            .andExpect(content().string("Card not found with id: 55"));
+            .andExpect(content().string("\"Card not found with id: 55\""));
     }
 
     @Test

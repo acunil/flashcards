@@ -4,7 +4,6 @@ import com.example.flashcards_backend.exception.CardNotFoundException;
 import liquibase.exception.DatabaseException;
 import org.springframework.dao.DataAccessException;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -16,7 +15,6 @@ public class RestExceptionHandler {
     public ResponseEntity<String> handleNotFound(CardNotFoundException ex) {
         return ResponseEntity
             .status(HttpStatus.NOT_FOUND)
-            .contentType(MediaType.TEXT_PLAIN)
             .body(ex.getMessage());
     }
 
@@ -24,7 +22,6 @@ public class RestExceptionHandler {
     public ResponseEntity<String> handleDatabaseException(DatabaseException ex) {
         return ResponseEntity
             .status(HttpStatus.INTERNAL_SERVER_ERROR)
-            .contentType(MediaType.TEXT_PLAIN)
             .body("Database error occurred: " + ex.getMessage());
     }
 
@@ -32,7 +29,6 @@ public class RestExceptionHandler {
     public ResponseEntity<String> handleDataAccessException(DataAccessException ex) {
         return ResponseEntity
             .status(HttpStatus.INTERNAL_SERVER_ERROR)
-            .contentType(MediaType.TEXT_PLAIN)
             .body("Data access error occurred: " + ex.getMessage());
     }
 }
