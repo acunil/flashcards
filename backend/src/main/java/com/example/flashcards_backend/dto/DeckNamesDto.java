@@ -2,6 +2,8 @@ package com.example.flashcards_backend.dto;
 
 import com.example.flashcards_backend.annotations.DeckName;
 import com.example.flashcards_backend.model.Deck;
+import com.fasterxml.jackson.databind.JsonNode;
+import io.swagger.v3.core.util.Json;
 import jakarta.validation.constraints.NotNull;
 
 import java.util.Set;
@@ -20,5 +22,9 @@ public record DeckNamesDto(
 
     public static DeckNamesDto of(String... deckNames) {
         return new DeckNamesDto(Set.of(deckNames));
+    }
+
+    public JsonNode toJson() {
+        return Json.mapper().valueToTree(this);
     }
 }

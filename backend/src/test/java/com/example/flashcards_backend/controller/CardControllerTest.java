@@ -116,7 +116,7 @@ class CardControllerTest {
         mockMvc.perform(get(ENDPOINT + "/99"))
             .andExpect(status().isNotFound())
             .andExpect(content().contentType( MediaType.APPLICATION_JSON))
-            .andExpect(content().json("{\"error\":\"Card not found with id: 99\"}"));
+            .andExpect(jsonPath("$.error").value("Card not found with id: 99"));
     }
 
     @Test
@@ -167,7 +167,7 @@ class CardControllerTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(requestJson))
             .andExpect(status().isNotFound())
-            .andExpect(content().json("{\"error\":\"Card not found with id: 7\"}"));
+            .andExpect(jsonPath( "$.error").value("Card not found with id: 7"));
     }
 
     @Test
@@ -187,7 +187,7 @@ class CardControllerTest {
                 .param("rating", "2")
                 .contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isNotFound())
-            .andExpect(content().json("{\"error\":\"Card not found with id: 55\"}"));
+            .andExpect(jsonPath( "$.error").value("Card not found with id: 55"));
     }
 
     @Test
@@ -274,6 +274,6 @@ class CardControllerTest {
         mockMvc.perform(delete(ENDPOINT + "/99"))
             .andExpect(status().isNotFound())
             .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-            .andExpect(content().json("{\"error\":\"Card not found with id: 99\"}"));
+            .andExpect(jsonPath("$.error").value("Card not found with id: 99"));
     }
 }

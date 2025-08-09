@@ -1,6 +1,7 @@
 package com.example.flashcards_backend.controller;
 
 import com.example.flashcards_backend.exception.CardNotFoundException;
+import com.example.flashcards_backend.exception.DeckNotFoundException;
 import liquibase.exception.DatabaseException;
 import org.springframework.dao.DataAccessException;
 import org.springframework.http.HttpStatus;
@@ -38,5 +39,21 @@ public class RestExceptionHandler {
             .status(HttpStatus.INTERNAL_SERVER_ERROR)
             .contentType(MediaType.APPLICATION_JSON)
             .body(Map.of(ERROR, "Data access error occurred: " + ex.getMessage()));
+    }
+
+    @ExceptionHandler(DeckNotFoundException.class)
+    public ResponseEntity<Map<String, String>> handleDeckNotFoundException(DeckNotFoundException ex) {
+        return ResponseEntity
+            .status(HttpStatus.NOT_FOUND)
+            .contentType(MediaType.APPLICATION_JSON)
+            .body(Map.of(ERROR, ex.getMessage()));
+    }
+
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<Map<String, String>> handleIllegalArgumentException(IllegalArgumentException ex) {
+        return ResponseEntity
+            .status(HttpStatus.BAD_REQUEST)
+            .contentType(MediaType.APPLICATION_JSON)
+            .body(Map.of(ERROR, ex.getMessage()));
     }
 }

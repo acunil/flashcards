@@ -1,11 +1,10 @@
 package com.example.flashcards_backend.service;
 
+import com.example.flashcards_backend.annotations.DeckName;
 import com.example.flashcards_backend.exception.DeckNotFoundException;
 import com.example.flashcards_backend.model.Deck;
 import com.example.flashcards_backend.repository.DeckRepository;
 import jakarta.transaction.Transactional;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -35,10 +34,8 @@ public class DeckService {
         return deckRepository.findDecksByCardId(cardId);
     }
 
-
-
     @Transactional
-    public Deck renameDeck(Long id, @NotBlank @NotNull String name) {
+    public Deck renameDeck(Long id, @DeckName String name) {
         Deck deck = getDeckById(id);
         // check that name is unique in database
         if (deckRepository.existsByName(name.trim())) {
