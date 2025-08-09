@@ -4,6 +4,7 @@ import com.example.flashcards_backend.dto.CardRequest;
 import com.example.flashcards_backend.dto.CardResponse;
 import com.example.flashcards_backend.dto.CreateCardResponse;
 import com.example.flashcards_backend.model.Card;
+import com.example.flashcards_backend.service.CardHistoryService;
 import com.example.flashcards_backend.service.CardService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -30,6 +31,7 @@ public class CardController {
 
     public static final String REQUEST_MAPPING = "/api/cards/";
     private final CardService cardService;
+    private final CardHistoryService cardHistoryService;
 
     @Operation(summary = "Get all cards",
         description = "Returns all cards. Optionally shuffled. Optionally filtered by average rating.")
@@ -114,8 +116,8 @@ public class CardController {
         @PathVariable Long id,
         @RequestParam @Min(1) @Max(5) int rating
     ) {
-        cardService.rateCard(id, rating); // throws CardNotFoundException if missing
-                                          // throws DataAccessException if database error occurs
+        cardHistoryService.recordRating(id, rating); // throws CardNotFoundException if missing
+                                                    // throws DataAccessException if database error occurs
         return ResponseEntity.noContent().build();
     }
 

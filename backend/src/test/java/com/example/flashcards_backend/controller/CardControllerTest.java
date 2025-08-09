@@ -5,6 +5,7 @@ import com.example.flashcards_backend.exception.CardNotFoundException;
 import com.example.flashcards_backend.model.Card;
 import com.example.flashcards_backend.model.CardCreationResult;
 import com.example.flashcards_backend.model.CardHistory;
+import com.example.flashcards_backend.service.CardHistoryService;
 import com.example.flashcards_backend.service.CardService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
@@ -12,6 +13,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.dao.DataAccessException;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
@@ -20,6 +22,7 @@ import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
+import java.sql.SQLException;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -30,6 +33,9 @@ class CardControllerTest {
 
     @MockitoBean
     private CardService cardService;
+
+    @MockitoBean
+    private CardHistoryService cardHistoryService;
 
     @Autowired
     private MockMvc mockMvc;
@@ -176,18 +182,32 @@ class CardControllerTest {
                 .param("rating", "5")
                 .contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isNoContent());
-        verify(cardService).rateCard(7L, 5);
+        verify(cardHistoryService).recordRating(7L, 5);
     }
 
     @Test
     void rate_missingCard_returnsNotFoundWithMessage() throws Exception {
         doThrow(new CardNotFoundException(55L))
-            .when(cardService).rateCard(55L, 2);
+            .when(cardHistoryService).recordRating(55L, 2);
         mockMvc.perform(put(ENDPOINT + "/55/rate")
                 .param("rating", "2")
                 .contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isNotFound())
             .andExpect(jsonPath( "$.error").value("Card not found with id: 55"));
+    }
+
+    @Test
+    void rate_databaseError_returnsInternalServerError() throws Exception {
+        SQLException e = new SQLException("Test SQL error");
+        DataAccessException dataAccessException = new DataAccessException("Test Database error", e) {};
+        doThrow(dataAccessException)
+            .when(cardHistoryService).recordRating(7L, 5);
+        mockMvc.perform(put(ENDPOINT + "/7/rate")
+                .param("rating", "5")
+                .contentType(MediaType.APPLICATION_JSON))
+            .andExpect(status().isInternalServerError())
+            .andExpect(jsonPath("$.error")
+                .value("Data access error occurred: Test Database error"));
     }
 
     @Test
