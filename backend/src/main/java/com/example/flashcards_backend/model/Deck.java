@@ -3,11 +3,13 @@ package com.example.flashcards_backend.model;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Size;
 import lombok.*;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Entity
 @Data
 @NoArgsConstructor
@@ -62,6 +64,15 @@ public class Deck {
                 removeCard(card);
             }
         }
+    }
+
+    @PreRemove
+    public void removeAllCards() {
+        log.info("Removing all cards from deck with ID: {}", id);
+        for (Card card : new HashSet<>(cards)) {
+            removeCard(card);
+        }
+        log.info("Deck was detached from {} cards", cards.size());
     }
 
     public boolean hasCard(Card card) {

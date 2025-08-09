@@ -83,13 +83,13 @@ class CardServiceTest {
     }
 
     @Test
-    void testGetAllCardsCards() {
+    void testGetAllCards() {
          List<Card> cards = cardService.getAllCards();
          assertThat(cards).containsExactly(card1, card2, card3);
     }
 
     @Test
-    void testGetAllCardsCardsShuffledTrue() {
+    void testGetAllCardsShuffledTrue() {
         assertEventuallyReorders(
             () -> cardService.getAllCards(true),
             originalCards
@@ -97,7 +97,7 @@ class CardServiceTest {
     }
 
     @Test
-    void testGetAllCardsCardsShuffledFalse() {
+    void testGetAllCardsShuffledFalse() {
         List<Card> shuffledCards = cardService.getAllCards(false);
         assertThat(shuffledCards).containsExactly(card1, card2, card3);
     }
@@ -112,7 +112,7 @@ class CardServiceTest {
     }
 
     @Test
-    void testCreateCardCard() {
+    void testCreateCard() {
         String newFront = "New Front";
         String newBack = "New Back";
         long newId = 4L;
@@ -137,11 +137,10 @@ class CardServiceTest {
     }
 
     @Test
-    void testUpdateCardCard() {
-        // Mock setDecks to do nothing, as we are not testing that here.
-        doNothing().when(cardDeckService).setDecks(anyLong(), any());
+    void testUpdateCard_removesDecks_andDoesNotCallCardDeckService() {
+        when(cardDeckService.getOrCreateDecksByNames(any())).thenReturn(Set.of());
 
-        // request contains empty decks
+        // request contains empty deckNamesDto
         CardRequest request = CardRequest.of("Updated Front", "Updated Back");
         cardService.updateCard(CARD_1_ID, request);
 
@@ -149,9 +148,39 @@ class CardServiceTest {
         assertThat(updatedCard.getFront()).isEqualTo("Updated Front");
         assertThat(updatedCard.getBack()).isEqualTo("Updated Back");
 
-        // expect empty decks sent to cardDeckService
-        DeckNamesDto expectedDeckNamesDto = DeckNamesDto.of(Set.of());
-        verify(cardDeckService).setDecks(CARD_1_ID, expectedDeckNamesDto);
+        // Service was not called with null deckNamesDto
+        verifyNoMoreInteractions(cardDeckService);
+    }
+
+    @Test
+    void testUpdateCard_updatesDecks() {
+        Set<Deck> decks = Set.of(deck2);
+        when(cardDeckService.getOrCreateDecksByNames(any())).thenReturn(decks);
+
+        CardRequest updateRequest = CardRequest.of(
+            "Updated Front", "Updated Back", DeckNamesDto.of(decks));
+        cardService.updateCard(CARD_3_ID, updateRequest);
+
+        Card updatedCard = cardService.getCardById(CARD_3_ID);
+        assertThat(updatedCard.getFront()).isEqualTo("Updated Front");
+        assertThat(updatedCard.getBack()).isEqualTo("Updated Back");
+        assertThat(updatedCard.getDecks()).containsExactly(deck2);
+
+        verify(cardDeckService).getOrCreateDecksByNames(DeckNamesDto.of(deck2.getName()));
+    }
+
+    @Test
+    void testUpdateCard_doesNotUpdateDecks_whenSameDecks() {
+        // card already has the same decks, so no need to update
+        CardRequest request = CardRequest.of("Front 1", "Back 1", DeckNamesDto.of(deck1.getName(), deck2.getName()));
+        cardService.updateCard(CARD_1_ID, request);
+
+        Card updatedCard = cardService.getCardById(CARD_1_ID);
+        assertThat(updatedCard.getFront()).isEqualTo("Front 1");
+        assertThat(updatedCard.getBack()).isEqualTo("Back 1");
+        assertThat(updatedCard.getDecks()).containsExactlyInAnyOrder(deck1, deck2);
+
+        verifyNoMoreInteractions(cardDeckService);
     }
 
     @Test
@@ -163,12 +192,11 @@ class CardServiceTest {
 
     @Test
     void rate_Card_missingCard_throwsException() {
-        when(cardRepository.findById(99L)).thenReturn(Optional.empty());
+        doThrow(new CardNotFoundException(99L)).when(cardHistoryService).recordRating(99L, 4);
         assertThatThrownBy(() -> cardService.rateCard(99L, 4))
             .isInstanceOf(CardNotFoundException.class)
             .extracting("message")
             .isEqualTo("Card not found with id: 99");
-        verifyNoInteractions(cardHistoryService);
     }
 
     @Test
@@ -224,6 +252,22 @@ class CardServiceTest {
 
         List<Card> result = cardService.getCardsByMaxAvgRating(THRESHOLD, false);
         assertThat(result).isSameAs(originalCards);
+    }
+
+    @Test
+    void deleteCard_existingCard_deletesCard() {
+        cardService.deleteCard(CARD_1_ID);
+        verify(cardRepository).findById(CARD_1_ID);
+        verify(cardRepository).delete(card1);
+    }
+
+    @Test
+    void deleteCard_missingCard_throwsException() {
+        when(cardRepository.findById(CARD_3_ID)).thenReturn(Optional.empty());
+        assertThatThrownBy(() -> cardService.deleteCard(CARD_3_ID))
+            .isInstanceOf(CardNotFoundException.class)
+            .extracting("message")
+            .isEqualTo("Card not found with id: " + CARD_3_ID);
     }
 
 }

@@ -1,5 +1,6 @@
 package com.example.flashcards_backend.service;
 
+import com.example.flashcards_backend.dto.CardResponse;
 import com.example.flashcards_backend.dto.CsvUploadResponseDto;
 import com.example.flashcards_backend.model.Card;
 import com.example.flashcards_backend.repository.CardRepository;
@@ -42,15 +43,23 @@ public class CsvUploadServiceImpl implements CsvUploadService {
             );
 
             List<Card> saved = cardRepository.saveAll(toSave);
+            log.info("Found {} duplicates", duplicates.size());
+            log.info("Saved {} new cards", saved.size());
 
             return CsvUploadResponseDto.builder()
-                .saved(saved)
-                .duplicates(duplicates)
+                .saved(generateResponses(saved))
+                .duplicates(generateResponses(duplicates))
                 .build();
         } catch (IOException e) {
             log.error("CSV processing error", e);
             throw e;
         }
+    }
+
+    private static List<CardResponse> generateResponses(List<Card> cards) {
+        return cards.stream()
+            .map(CardResponse::fromEntity)
+            .toList();
     }
 
     private List<CSVRecord> parseAllRecords(Reader reader) throws IOException {

@@ -3,6 +3,7 @@ package com.example.flashcards_backend.testutils;
 import static org.assertj.core.api.Assertions.*;
 
 import java.util.List;
+import java.util.Set;
 import java.util.function.Supplier;
 import java.util.stream.IntStream;
 
@@ -37,5 +38,15 @@ public final class ShuffleTestUtils {
         List<T> original
     ) {
         assertEventuallyReorders(supplier, original, 20);
+    }
+
+    public static <T> void assertEventuallyReorders(
+        Supplier<Set<T>> supplier,
+        Set<T> original
+    ) {
+        assertEventuallyReorders(
+            () -> supplier.get().stream().toList(),
+            original.stream().toList()
+        );
     }
 }

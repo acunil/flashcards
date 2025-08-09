@@ -1,5 +1,6 @@
 package com.example.flashcards_backend.service;
 
+import com.example.flashcards_backend.dto.CardResponse;
 import com.example.flashcards_backend.dto.CsvUploadResponseDto;
 import com.example.flashcards_backend.model.Card;
 import com.example.flashcards_backend.repository.CardRepository;
@@ -22,7 +23,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(SpringExtension.class)
-class CsvUploadServiceImplTest {
+class CsvUploadServiceTest {
 
     @Mock
     private CardRepository cardRepository;
@@ -55,7 +56,7 @@ class CsvUploadServiceImplTest {
         when(cardRepository.existsByFrontAndBack("f3", "b3")).thenReturn(false);
         when(cardRepository.existsByFrontAndBack("f4", "b4")).thenReturn(true);
 
-        Card savedCard = Card.builder().front("f3").back("b3").build();
+        Card savedCard = Card.builder().front("f3").back("b3").id(1L).build();
         when(cardRepository.saveAll(cardListCaptor.capture())).thenReturn(List.of(savedCard));
 
         CsvUploadResponseDto csvUploadResponseDTO = service.uploadCsv(is);
@@ -64,14 +65,17 @@ class CsvUploadServiceImplTest {
             .allSatisfy(msg -> assertThat(msg).startsWith("Skipping invalid row:"));
 
         assertThat(logCaptor.getInfoLogs())
-            .singleElement()
-            .isEqualTo("Duplicate, skipping: front='f4', back='b4'");
+            .hasSize(3)
+            .containsSequence("Duplicate, skipping: front='f4', back='b4'",
+                "Found 1 duplicates",
+                "Saved 1 new cards");
 
         List<Card> toSaveCaptured = cardListCaptor.getValue();
         assertThat(toSaveCaptured).containsExactly(Card.builder().front("f3").back("b3").build());
 
-        assertThat(csvUploadResponseDTO.saved()).containsExactly(savedCard);
-        assertThat(csvUploadResponseDTO.duplicates()).containsExactly(Card.builder().front("f4").back("b4").build());
+        assertThat(csvUploadResponseDTO.saved()).containsExactly(CardResponse.fromEntity(savedCard));
+        Card expectedDuplicate = Card.builder().front("f4").back("b4").build();
+        assertThat(csvUploadResponseDTO.duplicates()).containsExactly(CardResponse.fromEntity(expectedDuplicate));
     }
 
     @Test
