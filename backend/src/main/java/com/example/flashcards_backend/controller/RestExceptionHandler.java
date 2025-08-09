@@ -14,25 +14,29 @@ import java.util.Map;
 @RestControllerAdvice
 public class RestExceptionHandler {
 
+    public static final String ERROR = "error";
+
     @ExceptionHandler(CardNotFoundException.class)
     public ResponseEntity<Map<String, String>> handleNotFound(CardNotFoundException ex) {
         return ResponseEntity
             .status(HttpStatus.NOT_FOUND)
             .contentType(MediaType.APPLICATION_JSON)
-            .body(Map.of("error", ex.getMessage()));
+            .body(Map.of(ERROR, ex.getMessage()));
     }
 
     @ExceptionHandler(DatabaseException.class)
-    public ResponseEntity<String> handleDatabaseException(DatabaseException ex) {
+    public ResponseEntity<Map<String, String>> handleDatabaseException(DatabaseException ex) {
         return ResponseEntity
             .status(HttpStatus.INTERNAL_SERVER_ERROR)
-            .body("Database error occurred: " + ex.getMessage());
+            .contentType(MediaType.APPLICATION_JSON)
+            .body(Map.of(ERROR, "Database error occurred: " + ex.getMessage()));
     }
 
     @ExceptionHandler(DataAccessException.class)
-    public ResponseEntity<String> handleDataAccessException(DataAccessException ex) {
+    public ResponseEntity<Map<String, String>> handleDataAccessException(DataAccessException ex) {
         return ResponseEntity
             .status(HttpStatus.INTERNAL_SERVER_ERROR)
-            .body("Data access error occurred: " + ex.getMessage());
+            .contentType(MediaType.APPLICATION_JSON)
+            .body(Map.of(ERROR, "Data access error occurred: " + ex.getMessage()));
     }
 }
