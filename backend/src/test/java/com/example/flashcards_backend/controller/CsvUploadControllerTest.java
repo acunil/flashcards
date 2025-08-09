@@ -3,16 +3,15 @@ package com.example.flashcards_backend.controller;
 import com.example.flashcards_backend.dto.CsvUploadResponseDto;
 import com.example.flashcards_backend.service.CsvUploadServiceImpl;
 import nl.altindag.log.LogCaptor;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
-import org.springframework.test.context.junit.jupiter.SpringExtension;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import java.io.InputStream;
 import java.util.List;
@@ -22,25 +21,27 @@ import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@ExtendWith(SpringExtension.class)
+@WebMvcTest(CsvUploadController.class)
 class CsvUploadControllerTest {
 
     public static final String PATH = "/api/upload";
 
-    @Mock
-    private CsvUploadServiceImpl service;
+    @MockitoBean
+    private CsvUploadServiceImpl csvUploadService;
 
-    @InjectMocks
-    private CsvUploadController controller;
-
+    @Autowired
     private MockMvc mockMvc;
+
     private LogCaptor logCaptor;
 
     @BeforeEach
     void setUp() {
-        mockMvc = MockMvcBuilders.standaloneSetup(controller).build();
         logCaptor = LogCaptor.forClass(CsvUploadController.class);
-        logCaptor.clearLogs();
+    }
+
+    @AfterEach
+    void tearDown() {
+        logCaptor.close();
     }
 
     @Test
@@ -56,8 +57,8 @@ class CsvUploadControllerTest {
     @Test
     void uploadCsv_serviceThrows_returnsInternalServerErrorAndLogsError() throws Exception {
         MockMultipartFile file = new MockMultipartFile("file", "test.csv", "text/csv", "a,b".getBytes());
-        doThrow(new RuntimeException("ouch"))
-            .when(service).uploadCsv(any(InputStream.class));
+        doThrow(new RuntimeException("Expected test exception"))
+            .when(csvUploadService).uploadCsv(any(InputStream.class));
         mockMvc.perform(multipart(PATH)
                 .file(file)
                 .contentType(MediaType.MULTIPART_FORM_DATA))
@@ -74,7 +75,7 @@ class CsvUploadControllerTest {
             .saved(List.of())
             .duplicates(List.of())
             .build();
-        when(service.uploadCsv(any(InputStream.class))).thenReturn(response);
+        when(csvUploadService.uploadCsv(any(InputStream.class))).thenReturn(response);
         mockMvc.perform(multipart(PATH)
                 .file(file)
                 .contentType(MediaType.MULTIPART_FORM_DATA))

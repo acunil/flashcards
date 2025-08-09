@@ -6,6 +6,7 @@
 *.iml
 out
 gen
+htmlReport
 
 # Existing frontend ignores
 node_modules/

@@ -14,7 +14,7 @@ import org.springframework.util.MultiValueMap;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-class CsvUploadIntegrationTest {
+class CsvUploadIT {
 
     @LocalServerPort
     private int port;

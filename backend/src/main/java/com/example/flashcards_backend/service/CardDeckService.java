@@ -1,7 +1,6 @@
 package com.example.flashcards_backend.service;
 
 import com.example.flashcards_backend.dto.CreateDeckRequest;
-import com.example.flashcards_backend.dto.DeckNamesDto;
 import com.example.flashcards_backend.model.Card;
 import com.example.flashcards_backend.model.Deck;
 import com.example.flashcards_backend.repository.CardRepository;
@@ -24,12 +23,12 @@ public class CardDeckService {
     private final CardRepository cardRepository;
 
     @Transactional
-    public Set<Deck> getOrCreateDecksByNames(DeckNamesDto deckNamesDto) {
-        Set<Deck> existingDecks = deckRepository.findByNameIn(deckNamesDto.deckNames());
+    public Set<Deck> getOrCreateDecksByNames(Set<String> names) {
+        Set<Deck> existingDecks = deckRepository.findByNameIn(names);
         Set<String> existingNames = existingDecks.stream()
             .map(Deck::getName)
             .collect(toSet());
-        Set<String> newNames = deckNamesDto.deckNames().stream()
+        Set<String> newNames = names.stream()
             .filter(name -> !existingNames.contains(name))
             .collect(toSet());
         Set<Deck> allDecks = new HashSet<>(existingDecks);
@@ -43,9 +42,13 @@ public class CardDeckService {
         return allDecks;
     }
 
+    private Set<Deck> getOrCreateDecksByNames(String name) {
+        return getOrCreateDecksByNames(Set.of(name));
+    }
+
     @Transactional
     public Deck createDeck(CreateDeckRequest request) {
-        Deck deck = getOrCreateDecksByNames(DeckNamesDto.of(request.name()))
+        Deck deck = getOrCreateDecksByNames(request.name())
             .stream()
             .findFirst()
             .orElseThrow(() -> new IllegalArgumentException("Deck creation failed for name: " + request.name()));
