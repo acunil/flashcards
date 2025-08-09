@@ -1,31 +1,47 @@
-import type { IconProps } from "phosphor-react";
-import type { ComponentType } from "react";
+import { GraduationCap, type IconProps } from "phosphor-react";
+import type { ComponentType, MouseEventHandler } from "react";
 
 interface DeckListItemProps {
+  id: string;
   deckName: string;
   className?: string;
+  totalCards?: number;
   Icon?: ComponentType<IconProps>;
+  onClick?: MouseEventHandler<HTMLButtonElement>;
 }
 
 const DeckListItem = ({
+  id,
   deckName,
   className = "",
   Icon,
+  onClick,
+  totalCards,
 }: DeckListItemProps) => {
   return (
-    <>
+    <div className="flex flex-row gap-1 w-full">
       <button
-        key={deckName}
-        onClick={() => {}}
-        className={`relative flex items-center text-black py-3 px-4 w-60 rounded shadow-lg cursor-pointer hover:bg-gray-200 border-black border-2 ${
-          className ?? ""
-        }`}
+        onClick={onClick}
+        className={`relative flex items-center justify-between text-black py-3 px-4 w-[80%] rounded shadow-lg cursor-pointer hover:bg-gray-200 border-black border-2 ${className}`}
+        aria-label={`Select deck ${deckName}`}
+        data-id={id}
+        type="button"
       >
-        {Icon && <Icon size={20} className="mr-2" weight="regular" />}
-        {deckName}
+        <span className="flex items-center">
+          {Icon && <Icon size={20} className="mr-2" weight="regular" />}
+          {deckName}
+        </span>
+        {totalCards && totalCards > 0 && (
+          <span className="text-gray-500">{totalCards}</span>
+        )}
       </button>
-      <button></button>
-    </>
+      <button
+        onClick={() => {}}
+        className="relative flex items-center text-black py-3 px-4 rounded shadow-lg cursor-pointer hover:bg-yellow-200 border-black border-2"
+      >
+        <GraduationCap size={20} />
+      </button>
+    </div>
   );
 };
 
