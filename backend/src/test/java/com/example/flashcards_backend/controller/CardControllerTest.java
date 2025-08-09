@@ -6,58 +6,42 @@ import com.example.flashcards_backend.model.Card;
 import com.example.flashcards_backend.model.CardCreationResult;
 import com.example.flashcards_backend.model.CardHistory;
 import com.example.flashcards_backend.service.CardService;
-import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import com.fasterxml.jackson.module.paramnames.ParameterNamesModule;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.http.MediaType;
-import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
-import org.springframework.test.context.junit.jupiter.SpringExtension;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.setup.MockMvcBuilders;
-
-import java.time.LocalDateTime;
-import java.util.List;
 
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@ExtendWith(SpringExtension.class)
+import java.time.LocalDateTime;
+import java.util.List;
+
+@WebMvcTest(CardController.class)
 class CardControllerTest {
 
     public static final String ENDPOINT = "/api/cards";
-    @Mock
+
+    @MockitoBean
     private CardService cardService;
 
-    @InjectMocks
-    private CardController controller;
-
+    @Autowired
     private MockMvc mockMvc;
+
+    @Autowired
+    private ObjectMapper objectMapper;
 
     private Card c1;
     private Card c2;
 
     @BeforeEach
     void setUp() {
-        ObjectMapper objectMapper = new ObjectMapper()
-            // for Java record ctor parameter names
-            .registerModule(new ParameterNamesModule(JsonCreator.Mode.PROPERTIES))
-            // for java.time support
-            .registerModule(new JavaTimeModule())
-            // serialize dates as ISO strings, not timestamps
-            .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
-
-        MappingJackson2HttpMessageConverter jacksonConverter =
-            new MappingJackson2HttpMessageConverter(objectMapper);
-
-
         CardHistory history1 = CardHistory.builder()
             .id(1L)
             .avgRating(2.0)
@@ -68,13 +52,7 @@ class CardControllerTest {
         c1 = Card.builder().id(1L).front("f1").back("b1").cardHistory(history1).build();
         c2 = Card.builder().id(2L).front("f2").back("b2").cardHistory(history1).build();
 
-        mockMvc = MockMvcBuilders
-            .standaloneSetup(controller)
-            // point at your real exception‐handler class
-            .setControllerAdvice(new RestExceptionHandler())
-            // register our customized ObjectMapper
-            .setMessageConverters(jacksonConverter)
-            .build();
+        objectMapper.registerModule(new JavaTimeModule());
     }
 
     @Test
@@ -138,7 +116,7 @@ class CardControllerTest {
         mockMvc.perform(get(ENDPOINT + "/99"))
             .andExpect(status().isNotFound())
             .andExpect(content().contentType( MediaType.APPLICATION_JSON))
-            .andExpect(content().string("\"Card not found with id: 99\""));
+            .andExpect(content().json("{\"error\":\"Card not found with id: 99\"}"));
     }
 
     @Test
@@ -189,7 +167,7 @@ class CardControllerTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(requestJson))
             .andExpect(status().isNotFound())
-            .andExpect(content().string("\"Card not found with id: 7\""));
+            .andExpect(content().json("{\"error\":\"Card not found with id: 7\"}"));
     }
 
     @Test
@@ -209,7 +187,7 @@ class CardControllerTest {
                 .param("rating", "2")
                 .contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isNotFound())
-            .andExpect(content().string("\"Card not found with id: 55\""));
+            .andExpect(content().json("{\"error\":\"Card not found with id: 55\"}"));
     }
 
     @Test
@@ -296,6 +274,6 @@ class CardControllerTest {
         mockMvc.perform(delete(ENDPOINT + "/99"))
             .andExpect(status().isNotFound())
             .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-            .andExpect(content().string("\"Card not found with id: 99\""));
+            .andExpect(content().json("{\"error\":\"Card not found with id: 99\"}"));
     }
 }

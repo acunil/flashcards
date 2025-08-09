@@ -4,18 +4,22 @@ import com.example.flashcards_backend.exception.CardNotFoundException;
 import liquibase.exception.DatabaseException;
 import org.springframework.dao.DataAccessException;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+
+import java.util.Map;
 
 @RestControllerAdvice
 public class RestExceptionHandler {
 
     @ExceptionHandler(CardNotFoundException.class)
-    public ResponseEntity<String> handleNotFound(CardNotFoundException ex) {
+    public ResponseEntity<Map<String, String>> handleNotFound(CardNotFoundException ex) {
         return ResponseEntity
             .status(HttpStatus.NOT_FOUND)
-            .body(ex.getMessage());
+            .contentType(MediaType.APPLICATION_JSON)
+            .body(Map.of("error", ex.getMessage()));
     }
 
     @ExceptionHandler(DatabaseException.class)
