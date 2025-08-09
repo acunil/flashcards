@@ -1,7 +1,6 @@
 package com.example.flashcards_backend.service;
 
 import com.example.flashcards_backend.dto.CreateDeckRequest;
-import com.example.flashcards_backend.dto.DeckNamesDto;
 import com.example.flashcards_backend.model.Deck;
 import com.example.flashcards_backend.repository.CardRepository;
 import com.example.flashcards_backend.repository.DeckRepository;
@@ -46,14 +45,14 @@ class CardDeckServiceTest {
         when(deckRepository.findByNameIn(anySet()))
             .thenReturn(expectedDecks);
 
-        var deckNamesDto = DeckNamesDto.of("Deck 1", "Deck 2");
-        Set<Deck> actualDecks = cardDeckService.getOrCreateDecksByNames(deckNamesDto);
+        var deckNames = Set.of("Deck 1", "Deck 2");
+        Set<Deck> actualDecks = cardDeckService.getOrCreateDecksByNames(deckNames);
 
         assertThat(actualDecks)
             .isNotNull()
             .hasSize(2)
             .containsExactlyInAnyOrderElementsOf(expectedDecks);
-        verify(deckRepository).findByNameIn(deckNamesDto.deckNames());
+        verify(deckRepository).findByNameIn(deckNames);
         verify(deckRepository, never()).saveAll(anySet());
     }
 
@@ -62,19 +61,19 @@ class CardDeckServiceTest {
         var existingDecks = Set.of(deck1);
         var newDecks = List.of(Deck.builder().name("Deck 2").build(),
             Deck.builder().name("Deck 3").build());
-        var deckNamesDto = DeckNamesDto.of("Deck 1", "Deck 2", "Deck 3");
-        when(deckRepository.findByNameIn(deckNamesDto.deckNames()))
+        var deckNames = Set.of("Deck 1", "Deck 2", "Deck 3");
+        when(deckRepository.findByNameIn(deckNames))
             .thenReturn(existingDecks);
         when(deckRepository.saveAll(anyList())).thenReturn(newDecks);
 
-        Set<Deck> actualDecks = cardDeckService.getOrCreateDecksByNames(deckNamesDto);
+        Set<Deck> actualDecks = cardDeckService.getOrCreateDecksByNames(deckNames);
         Set<Deck> expectedDecks = new HashSet<>(existingDecks);
         expectedDecks.addAll(newDecks);
         assertThat(actualDecks)
             .isNotNull()
             .hasSize(3)
             .containsExactlyInAnyOrderElementsOf(expectedDecks);
-        verify(deckRepository).findByNameIn(deckNamesDto.deckNames());
+        verify(deckRepository).findByNameIn(deckNames);
 
         @SuppressWarnings("unchecked")
         ArgumentCaptor<List<Deck>> captor = ArgumentCaptor.forClass(List.class);

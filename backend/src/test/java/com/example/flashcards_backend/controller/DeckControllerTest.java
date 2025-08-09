@@ -1,12 +1,14 @@
 package com.example.flashcards_backend.controller;
 
 import com.example.flashcards_backend.dto.CreateDeckRequest;
-import com.example.flashcards_backend.dto.DeckNamesDto;
+import com.example.flashcards_backend.dto.DeckResponse;
 import com.example.flashcards_backend.exception.DeckNotFoundException;
 import com.example.flashcards_backend.model.Deck;
 import com.example.flashcards_backend.service.CardDeckService;
 import com.example.flashcards_backend.service.DeckService;
-import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,11 +16,14 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.tuple;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
+import java.util.List;
 import java.util.Set;
 
 @WebMvcTest(DeckController.class)
@@ -35,6 +40,9 @@ class DeckControllerTest {
     @Autowired
     private MockMvc mockMvc;
 
+    @Autowired
+    private ObjectMapper objectMapper;
+
     private Deck deck1;
     private Deck deck2;
 
@@ -49,13 +57,20 @@ class DeckControllerTest {
         // Mock the service to return a set of decks
         when(deckService.getAll()).thenReturn(Set.of(deck1, deck2));
 
-        // Perform the GET request and verify the response
-        mockMvc.perform(get(ENDPOINT))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].id").value(deck1.getId()))
-                .andExpect(jsonPath("$[0].name").value(deck1.getName()))
-                .andExpect(jsonPath("$[1].id").value(deck2.getId()))
-                .andExpect(jsonPath("$[1].name").value(deck2.getName()));
+        String json = mockMvc.perform(get(ENDPOINT))
+            .andExpect(status().isOk())
+            .andReturn()
+            .getResponse()
+            .getContentAsString();
+
+        List<DeckResponse> responses = readResponses(json);
+
+        assertThat(responses)
+            .extracting("id", "name")
+            .containsExactlyInAnyOrder(
+                tuple(deck1.getId(), deck1.getName()),
+                tuple(deck2.getId(), deck2.getName())
+            );
     }
 
     @Test
@@ -135,20 +150,31 @@ class DeckControllerTest {
 
     @Test
     void getDecksByNames() throws Exception {
-        when(deckService.getDeckByName("Deck 1")).thenReturn(deck1);
-        when(deckService.getDeckByName("Deck 2")).thenReturn(deck2);
+        when(cardDeckService.getOrCreateDecksByNames(Set.of("Deck 1", "Deck 2")))
+            .thenReturn(Set.of(deck1, deck2));
 
-        DeckNamesDto deckNamesDto = DeckNamesDto.of("Deck 1", "Deck 2");
-        JsonNode json = deckNamesDto.toJson();
-//        String jsonString = '{"deckNames":["Deck 1","Deck 2"]}';
+        String json = mockMvc.perform(post(ENDPOINT)
+                .param("names", "Deck 1", "Deck 2"))
+            .andExpect(status().isOk())
+            .andReturn()
+            .getResponse()
+            .getContentAsString();
 
-        mockMvc.perform(post(ENDPOINT)
-                .param("deckNamesDto", json.toString()))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].id").value(deck1.getId()))
-                .andExpect(jsonPath("$[0].name").value(deck1.getName()))
-                .andExpect(jsonPath("$[1].id").value(deck2.getId()))
-                .andExpect(jsonPath("$[1].name").value(deck2.getName()));
+        List<DeckResponse> responses = readResponses(json);
+
+        assertThat(responses)
+            .extracting("id", "name")
+            .containsExactlyInAnyOrder(
+                tuple(deck1.getId(), deck1.getName()),
+                tuple(deck2.getId(), deck2.getName())
+            );
+    }
+
+
+    /* Helpers */
+
+    private List<DeckResponse> readResponses(String json) throws JsonProcessingException {
+        return objectMapper.readValue(json, new TypeReference<>() {});
     }
 
 }

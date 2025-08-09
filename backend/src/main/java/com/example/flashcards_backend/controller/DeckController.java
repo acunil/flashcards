@@ -1,7 +1,7 @@
 package com.example.flashcards_backend.controller;
 
+import com.example.flashcards_backend.annotations.DeckName;
 import com.example.flashcards_backend.dto.CreateDeckRequest;
-import com.example.flashcards_backend.dto.DeckNamesDto;
 import com.example.flashcards_backend.dto.DeckResponse;
 import com.example.flashcards_backend.dto.UpdateDeckNameRequest;
 import com.example.flashcards_backend.model.Deck;
@@ -102,8 +102,8 @@ public class DeckController {
                 schema = @Schema(implementation = DeckResponse.class)))
     })
     @PostMapping
-    public ResponseEntity<Set<DeckResponse>> getDecksByNames(@RequestParam DeckNamesDto deckNamesDto) {
-        Set<Deck> decks = cardDeckService.getOrCreateDecksByNames(deckNamesDto);
+    public ResponseEntity<Set<DeckResponse>> getDecksByNames(@RequestParam Set<@DeckName String> names) {
+        Set<Deck> decks = cardDeckService.getOrCreateDecksByNames(names);
         return ResponseEntity.ok(generateResponse(decks));
     }
 
