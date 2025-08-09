@@ -1,8 +1,8 @@
 import { useState } from "react";
 import DifficultyButtons from "../components/difficultyButtons"; // we'll export levels from DifficultyButtons
 import Header from "../components/header";
-import useCards from "../hooks/useCards";
-import useRateCard from "../hooks/useRateCard";
+import useCards from "../hooks/cards/useCards";
+import useRateCard from "../hooks/cards/useRateCard";
 import CardCarousel from "../components/cardCarousel";
 import { levels } from "../components/difficultyButtons/levels";
 

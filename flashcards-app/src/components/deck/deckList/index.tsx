@@ -1,6 +1,7 @@
 import { Cards } from "phosphor-react";
 import DeckListItem from "../deckListItem";
 import AddDeckButton from "../addDeckButton";
+import { useNavigate } from "react-router-dom";
 
 export interface Deck {
   id: string;
@@ -14,8 +15,10 @@ export interface DeckListProps {
 }
 
 const DeckList = ({ decks, onAddDeck }: DeckListProps) => {
-  const handleClick = () => {
-    alert("hi");
+  const navigate = useNavigate();
+
+  const handleDeckClick = (id: string) => {
+    navigate(`/decks/${id}`);
   };
 
   return (
@@ -25,14 +28,14 @@ const DeckList = ({ decks, onAddDeck }: DeckListProps) => {
         deckName={"all cards"}
         className={"bg-pink-200"}
         Icon={Cards}
-        onClick={handleClick}
+        onClick={() => handleDeckClick("all")}
       />
       {decks.map((deck) => (
         <DeckListItem
           key={deck.id}
           id={deck.id}
           deckName={deck.name}
-          onClick={handleClick}
+          onClick={() => handleDeckClick(deck.id)}
           totalCards={deck.totalCards}
         />
       ))}

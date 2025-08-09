@@ -1,6 +1,6 @@
 import { useState } from "react";
 import Header from "../components/header";
-import useCreateCard from "../hooks/useCreateCard";
+import useCreateCard from "../hooks/cards/useCreateCard";
 
 const AddCard = () => {
   const [front, setFront] = useState("");
