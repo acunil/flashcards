@@ -1,11 +1,35 @@
-import { useNavigate } from "react-router-dom";
-import DeckList from "../components/deck/deckList";
+import { useState, useEffect } from "react";
+import useAllDecks from "../hooks/decks/useAllDecks";
+import useCreateDeck from "../hooks/decks/useCreateDeck";
+import DeckList, { type Deck } from "../components/deck/deckList";
 import Header from "../components/header";
 import { CaretLeft } from "phosphor-react";
+import { useNavigate } from "react-router-dom";
+import DeckListSkeleton from "../components/deck/deckList/deckListSkeleton";
 
 const Decks = () => {
   const navigate = useNavigate();
-  const decks = ["family", "job words", "other"];
+
+  const { decks: fetchedDecks, loading, error } = useAllDecks();
+  const { createDeck, loading: creating, error: createError } = useCreateDeck();
+
+  // Local decks state to immediately update UI when adding decks
+  const [decks, setDecks] = useState<Deck[]>([]);
+
+  // Sync fetched decks to local state
+  useEffect(() => {
+    setDecks(fetchedDecks);
+  }, [fetchedDecks]);
+
+  const handleAddDeck = async (name: string) => {
+    if (!name.trim()) return;
+
+    const newDeck = await createDeck(name.trim());
+    if (newDeck) {
+      setDecks((prev) => [...prev, newDeck]);
+    }
+  };
+
   return (
     <div className="bg-sky-200">
       <Header />
@@ -23,7 +47,15 @@ const Decks = () => {
             </div>
             <p className="mx-auto text-md">decks</p>
           </div>
-          <DeckList decks={decks} />
+
+          {(loading || creating) && <DeckListSkeleton />}
+          {(error || createError) && (
+            <p className="text-red-600">Error: {error || createError}</p>
+          )}
+
+          {!loading && !creating && !error && !createError && (
+            <DeckList decks={decks} onAddDeck={handleAddDeck} />
+          )}
         </div>
       </div>
     </div>
