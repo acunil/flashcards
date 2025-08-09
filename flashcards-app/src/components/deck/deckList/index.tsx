@@ -5,6 +5,7 @@ import AddDeckButton from "../addDeckButton";
 export interface Deck {
   id: string;
   name: string;
+  totalCards?: number;
 }
 
 export interface DeckListProps {
@@ -32,6 +33,7 @@ const DeckList = ({ decks, onAddDeck }: DeckListProps) => {
           id={deck.id}
           deckName={deck.name}
           onClick={handleClick}
+          totalCards={deck.totalCards}
         />
       ))}
       <AddDeckButton onAddDeck={onAddDeck} />
