@@ -60,11 +60,15 @@ public class DeckController {
     @ApiResponses(value = {
         @ApiResponse(responseCode = "201", description = "Deck created",
             content = @Content(mediaType = "application/json",
-                schema = @Schema(implementation = DeckResponse.class)))
+                schema = @Schema(implementation = DeckResponse.class))),
+        @ApiResponse(responseCode = "400", description = "Invalid request",
+            content = @Content(mediaType = "application/json")),
+        @ApiResponse(responseCode = "409", description = "Deck with the same name already exists",
+            content = @Content(mediaType = "application/json"))
     })
     @PostMapping("/create")
     public ResponseEntity<DeckResponse> createDeck(@RequestBody CreateDeckRequest request) {
-        Deck createdDeck = cardDeckService.createDeck(request);
+        Deck createdDeck = cardDeckService.createDeck(request); // Throws DuplicateDeckNameException if a deck with the same name already exists
         return ResponseEntity.status(HttpStatus.CREATED).body(generateResponse(createdDeck));
     }
 

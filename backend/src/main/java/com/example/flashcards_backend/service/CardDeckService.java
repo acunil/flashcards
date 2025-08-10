@@ -1,12 +1,15 @@
 package com.example.flashcards_backend.service;
 
 import com.example.flashcards_backend.dto.CreateDeckRequest;
+import com.example.flashcards_backend.exception.DuplicateDeckNameException;
 import com.example.flashcards_backend.model.Card;
 import com.example.flashcards_backend.model.Deck;
 import com.example.flashcards_backend.repository.CardRepository;
 import com.example.flashcards_backend.repository.DeckRepository;
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 
 import static java.util.Objects.isNull;
@@ -16,6 +19,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+@Slf4j
 @Service
 @AllArgsConstructor
 public class CardDeckService {
@@ -42,16 +46,17 @@ public class CardDeckService {
         return allDecks;
     }
 
-    private Set<Deck> getOrCreateDecksByNames(String name) {
-        return getOrCreateDecksByNames(Set.of(name));
-    }
-
     @Transactional
     public Deck createDeck(CreateDeckRequest request) {
-        Deck deck = getOrCreateDecksByNames(request.name())
-            .stream()
-            .findFirst()
-            .orElseThrow(() -> new IllegalArgumentException("Deck creation failed for name: " + request.name()));
+        Deck deck = Deck.builder()
+            .name(request.name().trim())
+            .build();
+        try {
+            deck = deckRepository.save(deck);
+        } catch (DataIntegrityViolationException e) {
+            log.error(e.getMessage(), e);
+            throw new DuplicateDeckNameException("A deck with the name '" + request.name() + "' already exists");
+        }
 
         if (!isNull(request.cardIds()) && !request.cardIds().isEmpty()) {
             deck.addCards(getCards(request));

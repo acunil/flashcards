@@ -3,6 +3,7 @@ package com.example.flashcards_backend.controller;
 import com.example.flashcards_backend.dto.CreateDeckRequest;
 import com.example.flashcards_backend.dto.DeckResponse;
 import com.example.flashcards_backend.exception.DeckNotFoundException;
+import com.example.flashcards_backend.exception.DuplicateDeckNameException;
 import com.example.flashcards_backend.model.Deck;
 import com.example.flashcards_backend.service.CardDeckService;
 import com.example.flashcards_backend.service.DeckService;
@@ -103,6 +104,20 @@ class DeckControllerTest {
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.id").value(newDeck.getId()))
                 .andExpect(jsonPath("$.name").value(newDeck.getName()));
+    }
+
+    @Test
+    void createDeck_Conflict() throws Exception {
+        doThrow(new DuplicateDeckNameException("Existing Deck"))
+            .when(cardDeckService).createDeck(any(CreateDeckRequest.class));
+
+        String content = "{\"name\": \"Existing Deck\"}";
+        mockMvc.perform(post(ENDPOINT + "/create")
+                .contentType("application/json")
+                .content(content))
+            .andExpect(status().isConflict())
+            .andExpect(jsonPath("$.error")
+                .value("A deck with the name 'Existing Deck' already exists"));
     }
 
     @Test

@@ -2,6 +2,7 @@ package com.example.flashcards_backend.controller;
 
 import com.example.flashcards_backend.exception.CardNotFoundException;
 import com.example.flashcards_backend.exception.DeckNotFoundException;
+import com.example.flashcards_backend.exception.DuplicateDeckNameException;
 import liquibase.exception.DatabaseException;
 import org.springframework.dao.DataAccessException;
 import org.springframework.http.HttpStatus;
@@ -53,6 +54,14 @@ public class RestExceptionHandler {
     public ResponseEntity<Map<String, String>> handleIllegalArgumentException(IllegalArgumentException ex) {
         return ResponseEntity
             .status(HttpStatus.BAD_REQUEST)
+            .contentType(MediaType.APPLICATION_JSON)
+            .body(Map.of(ERROR, ex.getMessage()));
+    }
+
+    @ExceptionHandler(DuplicateDeckNameException.class)
+    public ResponseEntity<Map<String, String>> handleDuplicateDeckNameException(DuplicateDeckNameException ex) {
+        return ResponseEntity
+            .status(HttpStatus.CONFLICT)
             .contentType(MediaType.APPLICATION_JSON)
             .body(Map.of(ERROR, ex.getMessage()));
     }
