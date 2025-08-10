@@ -1,0 +1,102 @@
+package com.example.flashcards_backend.model;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
+import static org.assertj.core.api.Assertions.assertThat;
+
+class CardTest {
+
+    Card card;
+    Deck deck1;
+    Deck deck2;
+
+    @BeforeEach
+    void setUp() {
+        card = Card.builder()
+                .front("Front text")
+                .back("Back text")
+                .build();
+        deck1 = Deck.builder().name("Deck 1").id(1L).build();
+        deck2 = Deck.builder().name("Deck 2").id(2L).build();
+    }
+
+    @Test
+    void testAddDecks() {
+        card.addDeck(deck1);
+        card.addDeck(deck2);
+
+        assertThat(card.getDecks())
+            .hasSize(2)
+            .contains(deck1, deck2);
+        assertThat(deck1.getCards()).contains(card);
+        assertThat(deck2.getCards()).contains(card);
+    }
+
+    @Test
+    void testAddDecks_null() {
+        card.addDecks(null);
+        assertThat(card.getDecks()).isEmpty();
+    }
+
+    @Test
+    void testHasDeck() {
+        card.addDeck(deck1);
+        assertThat(card.hasDeck(deck1)).isTrue();
+        assertThat(card.hasDeck(deck2)).isFalse();
+    }
+
+    @Test
+    void testHasDeck_name() {
+        card.addDeck(deck1);
+        assertThat(card.hasDeck("Deck 1")).isTrue();
+        assertThat(card.hasDeck("Deck 2")).isFalse();
+    }
+
+    @Test
+    void testHasDeck_id() {
+        card.addDeck(deck1);
+        assertThat(card.hasDeck(1L)).isTrue();
+        assertThat(card.hasDeck(2L)).isFalse();
+    }
+
+    @Test
+    void testHasNotDeck() {
+        card.addDeck(deck1);
+        assertThat(card.hasNotDeck(deck1)).isFalse();
+        assertThat(card.hasNotDeck(deck2)).isTrue();
+    }
+
+    @Test
+    void testHasNotDeck_name() {
+        card.addDeck(deck1);
+        assertThat(card.hasNotDeck("Deck 1")).isFalse();
+        assertThat(card.hasNotDeck("Deck 2")).isTrue();
+    }
+
+    @Test
+    void testHasNotDeck_id() {
+        card.addDeck(deck1);
+        assertThat(card.hasNotDeck(1L)).isFalse();
+        assertThat(card.hasNotDeck(2L)).isTrue();
+    }
+
+    @Test
+    void testGetDeckNames() {
+        card.addDeck(deck1);
+        card.addDeck(deck2);
+
+        var deckNames = card.getDeckNames();
+        assertThat(deckNames).containsExactlyInAnyOrder("Deck 1", "Deck 2");
+    }
+
+    @Test
+    void testGetDeckById() {
+        card.addDeck(deck1);
+
+        assertThat(card.getDeckById(1L)).isEqualTo(deck1);
+        assertThat(card.getDeckById(2L)).isNull();
+    }
+
+
+}
