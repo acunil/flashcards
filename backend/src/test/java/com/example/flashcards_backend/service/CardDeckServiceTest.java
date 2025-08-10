@@ -1,6 +1,7 @@
 package com.example.flashcards_backend.service;
 
 import com.example.flashcards_backend.dto.CreateDeckRequest;
+import com.example.flashcards_backend.model.Card;
 import com.example.flashcards_backend.model.Deck;
 import com.example.flashcards_backend.repository.CardRepository;
 import com.example.flashcards_backend.repository.DeckRepository;
@@ -95,5 +96,33 @@ class CardDeckServiceTest {
         Deck actualDeck = cardDeckService.createDeck(request);
 
         assertThat(actualDeck.getName()).isEqualTo("New Deck");
+    }
+
+    @Test
+    void testCreateDeck_withCards() {
+        CreateDeckRequest request = new CreateDeckRequest("New Deck", Set.of(1L, 2L));
+        Deck expectedDeck = Deck.builder().name("New Deck").build();
+        when(deckRepository.save(expectedDeck)).thenReturn(expectedDeck);
+        Card card1 = Card.builder().id(1L).build();
+        Card card2 = Card.builder().id(2L).build();
+        when(cardRepository.findAllById(request.cardIds()))
+            .thenReturn(List.of(card1, card2));
+
+        Deck actualDeck = cardDeckService.createDeck(request);
+
+        assertThat(actualDeck.getName()).isEqualTo("New Deck");
+        assertThat(actualDeck.getCards()).hasSize(2).containsExactly(card1, card2);
+    }
+
+    @Test
+    void testCreateDeck_withNoCards() {
+        CreateDeckRequest request = new CreateDeckRequest("New Deck", Set.of());
+        Deck expectedDeck = Deck.builder().name("New Deck").build();
+        when(deckRepository.save(expectedDeck)).thenReturn(expectedDeck);
+
+        Deck actualDeck = cardDeckService.createDeck(request);
+
+        assertThat(actualDeck.getName()).isEqualTo("New Deck");
+        assertThat(actualDeck.getCards()).isEmpty();
     }
 }
