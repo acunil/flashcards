@@ -13,6 +13,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
@@ -21,6 +22,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+@Slf4j
 @RestController
 @RequestMapping("/api/decks")
 @Validated
@@ -38,7 +40,10 @@ public class DeckController {
     })
     @GetMapping
     public ResponseEntity<Set<DeckResponse>> getAll() {
-        return ResponseEntity.ok(deckService.getAll());
+        log.info("Fetching all decks with cards");
+        Set<DeckResponse> responses = deckService.getAll();
+        log.info("Returning {} decks", responses.size());
+        return ResponseEntity.ok(responses);
     }
 
     @Operation(summary = "Get deck by ID", description = "Returns a deck by its ID.")
