@@ -1,9 +1,5 @@
 import { useCallback, useState } from "react";
-
-export type Deck = {
-  id: string;
-  name: string;
-};
+import type { Deck } from "../../types/deck";
 
 const BASE_DECK_URL = "http://localhost:8080/api/decks";
 

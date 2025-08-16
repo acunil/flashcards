@@ -1,25 +1,16 @@
-import { useState, useEffect } from "react";
-import useAllDecks from "../hooks/decks/useAllDecks";
 import useCreateDeck from "../hooks/decks/useCreateDeck";
-import DeckList, { type Deck } from "../components/deck/deckList";
+import DeckList from "../components/deck/deckList";
 import Header from "../components/header";
 import { CaretLeft } from "phosphor-react";
 import { useNavigate } from "react-router-dom";
 import DeckListSkeleton from "../components/deck/deckList/deckListSkeleton";
+import { useDeckContext } from "../contexts";
 
 const Decks = () => {
   const navigate = useNavigate();
 
-  const { decks: fetchedDecks, loading, error } = useAllDecks();
+  const { decks, loading, error, setDecks } = useDeckContext();
   const { createDeck, loading: creating, error: createError } = useCreateDeck();
-
-  // Local decks state to immediately update UI when adding decks
-  const [decks, setDecks] = useState<Deck[]>([]);
-
-  // Sync fetched decks to local state
-  useEffect(() => {
-    setDecks(fetchedDecks);
-  }, [fetchedDecks]);
 
   const handleAddDeck = async (name: string) => {
     if (!name.trim()) return;

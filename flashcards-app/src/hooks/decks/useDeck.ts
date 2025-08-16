@@ -1,10 +1,5 @@
 import { useEffect, useState } from "react";
-
-export type Deck = {
-  id: string;
-  name: string;
-  // add other deck properties if any
-};
+import type { Deck } from "../../types/deck";
 
 const BASE_DECK_URL = "http://localhost:8080/api/decks";
 
@@ -20,6 +15,7 @@ const useDeck = (id: string) => {
       try {
         setLoading(true);
         const response = await fetch(`${BASE_DECK_URL}/${id}`);
+        console.log(response);
         if (!response.ok) {
           throw new Error("Failed to fetch deck");
         }

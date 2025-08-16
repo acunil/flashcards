@@ -16,7 +16,7 @@ const buttons = [
   },
   {
     label: "revise hard",
-    path: "/revise-hard",
+    path: "/revise?hardMode=true",
     buttonClassName: "bg-pink-300",
     Icon: Barbell,
   },

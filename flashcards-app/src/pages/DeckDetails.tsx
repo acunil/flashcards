@@ -1,46 +1,26 @@
 import { useNavigate, useParams } from "react-router-dom";
 import Header from "../components/header";
-import { CaretLeft } from "phosphor-react";
+import { CaretLeft, GraduationCap } from "phosphor-react";
 import CardList from "../components/detailedCard/cardList";
-
-const mockCards = [
-  {
-    id: "1",
-    textFront: "Hello",
-    textBack: "Hallo",
-    viewCount: 10,
-    avgRating: 3.5,
-    lastRating: 4,
-  },
-  {
-    id: "2",
-    textFront: "Goodbye",
-    textBack: "Auf Wiedersehen",
-    viewCount: 5,
-    avgRating: 2.1,
-    lastRating: 1,
-  },
-  {
-    id: "3",
-    textFront: "Thank you",
-    textBack: "Danke",
-    viewCount: 12,
-    avgRating: 4.9,
-    lastRating: 5,
-  },
-  {
-    id: "4",
-    textFront: "Yes",
-    textBack: "Ja",
-    viewCount: 8,
-    avgRating: 3.2,
-    lastRating: 3,
-  },
-];
+import { useDeckContext } from "../contexts";
 
 const DeckDetails = () => {
   const { deckId } = useParams<{ deckId: string }>();
+  const { decks } = useDeckContext();
   const navigate = useNavigate();
+
+  const cards =
+    deckId === "all"
+      ? decks.flatMap((deck) => deck.cardResponses)
+      : decks.find((d) => d.id === deckId)?.cardResponses || [];
+
+  const handleClickRevise = () => {
+    if (deckId === "all") {
+      navigate(`/revise/?hardMode=false`);
+    } else {
+      navigate(`/revise/${deckId}?hardMode=false`);
+    }
+  };
 
   return (
     <div className="bg-sky-200">
@@ -57,10 +37,18 @@ const DeckDetails = () => {
                 <CaretLeft size={24} />
               </button>
             </div>
+            <div className="absolute right-0">
+              <button
+                onClick={handleClickRevise}
+                className="relative flex items-center text-black py-3 px-4 mr-5 mt-3 rounded shadow-lg cursor-pointer bg-yellow-200 hover:bg-yellow-100 border-black border-2"
+              >
+                <GraduationCap size={20} />
+              </button>
+            </div>
             <p className="mx-auto text-md">my deck for deck ID: {deckId}</p>
           </div>
           <div className="mt-6 flex justify-center mx-auto w-full">
-            <CardList cards={mockCards} />
+            <CardList cards={cards} />
           </div>
         </div>
       </div>

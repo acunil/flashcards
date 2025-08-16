@@ -1,5 +1,6 @@
 import { GraduationCap, type IconProps } from "phosphor-react";
 import type { ComponentType, MouseEventHandler } from "react";
+import { useNavigate } from "react-router-dom";
 
 interface DeckListItemProps {
   id: string;
@@ -18,6 +19,8 @@ const DeckListItem = ({
   onClick,
   totalCards,
 }: DeckListItemProps) => {
+  const navigate = useNavigate();
+
   return (
     <div className="flex flex-row gap-1 w-full">
       <button
@@ -36,7 +39,7 @@ const DeckListItem = ({
         )}
       </button>
       <button
-        onClick={() => {}}
+        onClick={() => navigate(`/revise/${id}?hardMode=false`)}
         className="relative flex items-center text-black py-3 px-4 rounded shadow-lg cursor-pointer hover:bg-yellow-200 border-black border-2"
       >
         <GraduationCap size={20} />

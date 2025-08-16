@@ -1,7 +1,8 @@
-import CardListItem, { type CardListItemProps } from "../cardListItem";
+import type { CardResponse } from "../../../types/cardResponse";
+import CardListItem from "../cardListItem";
 
 interface CardListProps {
-  cards: CardListItemProps[]; // <-- Use the correct interface here
+  cards: CardResponse[];
 }
 
 const CardList = ({ cards }: CardListProps) => {
