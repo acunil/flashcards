@@ -71,7 +71,10 @@ class CsvUploadServiceTest {
                 "Saved 1 new cards");
 
         List<Card> toSaveCaptured = cardListCaptor.getValue();
-        assertThat(toSaveCaptured).containsExactly(Card.builder().front("f3").back("b3").build());
+        assertThat(toSaveCaptured).hasSize(1);
+        assertThat(toSaveCaptured.getFirst().getFront()).isEqualTo("f3");
+        assertThat(toSaveCaptured.getFirst().getBack()).isEqualTo("b3");
+        verify(cardRepository).existsByFrontAndBack("f3", "b3");
 
         assertThat(csvUploadResponseDTO.saved()).containsExactly(CardResponse.fromEntity(savedCard));
         Card expectedDuplicate = Card.builder().front("f4").back("b4").build();
