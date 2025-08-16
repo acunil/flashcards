@@ -1,14 +1,31 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Header from "../components/header";
-import useCreateCard from "../hooks/useCreateCard";
+import useCreateCard from "../hooks/cards/useCreateCard";
+import useUpdateCard from "../hooks/cards/useUpdateCard";
+import { useCardEdit } from "../contexts/CardEditContext";
 
 const AddCard = () => {
+  const { cardToEdit, setCardToEdit } = useCardEdit();
+
+  const { updateCard } = useUpdateCard();
+
   const [front, setFront] = useState("");
   const [back, setBack] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [showToast, setShowToast] = useState(false);
 
   const { createCard } = useCreateCard();
+
+  // On mount or cardToEdit change, pre-fill form if editing
+  useEffect(() => {
+    if (cardToEdit) {
+      setFront(cardToEdit.textFront);
+      setBack(cardToEdit.textBack);
+    } else {
+      setFront("");
+      setBack("");
+    }
+  }, [cardToEdit]);
 
   const handleSubmit = async () => {
     if (!front.trim() || !back.trim()) {
@@ -19,13 +36,22 @@ const AddCard = () => {
     setError(null);
 
     try {
-      await createCard({ front, back });
+      if (cardToEdit) {
+        await updateCard(cardToEdit.id, {
+          front,
+          back,
+          deckNamesDto: { deckNames: [] },
+        });
+        setCardToEdit(null);
+      } else {
+        await createCard({ front, back });
+      }
       setFront("");
       setBack("");
       setShowToast(true);
       setTimeout(() => setShowToast(false), 2000);
     } catch {
-      // Error already handled in the hook
+      // error handled inside the hook
     }
   };
 
@@ -41,7 +67,9 @@ const AddCard = () => {
       <Header />
       <div className="min-h-screen bg-yellow-200 flex justify-center items-start pt-10">
         <div className="bg-white p-6 rounded shadow-md w-full max-w-md space-y-4 border-2 border-black">
-          <h1 className="text-xl font-bold text-center">add a new card</h1>
+          <h1 className="text-xl font-bold text-center">
+            {cardToEdit ? "Edit card" : "Add a new card"}
+          </h1>
 
           <div>
             <label className="block mb-1 font-medium">front</label>

@@ -12,11 +12,13 @@ export const levels = [
     Icon: SmileyXEyes,
     buttonClassName: "bg-red-300",
     rating: 5,
+    color: "#DC2626",
   },
   {
     label: "Very Hard",
     Icon: SmileyNervous,
     buttonClassName: "bg-orange-300",
+    color: "#F97316",
     rating: 4,
   },
   {
@@ -24,7 +26,35 @@ export const levels = [
     Icon: SmileyMeh,
     buttonClassName: "bg-yellow-200",
     rating: 3,
+    color: "#EAB308",
   },
-  { label: "Medium", Icon: Smiley, buttonClassName: "bg-green-200", rating: 2 },
-  { label: "Easy", Icon: Lightning, buttonClassName: "bg-sky-200", rating: 1 },
+  {
+    label: "Medium",
+    Icon: Smiley,
+    buttonClassName: "bg-green-200",
+    rating: 2,
+    color: "#16A34A",
+  },
+  {
+    label: "Easy",
+    Icon: Lightning,
+    buttonClassName: "bg-sky-200",
+    rating: 1,
+    color: "#0284C7",
+  },
 ];
+
+export const getClosestLevel = (rating: number) => {
+  // Find level with closest rating (round or nearest)
+  let closest = levels[0];
+  let minDiff = Math.abs(rating - closest.rating);
+
+  for (const level of levels) {
+    const diff = Math.abs(rating - level.rating);
+    if (diff < minDiff) {
+      closest = level;
+      minDiff = diff;
+    }
+  }
+  return closest;
+};

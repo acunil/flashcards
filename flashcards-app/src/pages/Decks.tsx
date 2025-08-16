@@ -1,25 +1,16 @@
-import { useState, useEffect } from "react";
-import useAllDecks from "../hooks/decks/useAllDecks";
 import useCreateDeck from "../hooks/decks/useCreateDeck";
-import DeckList, { type Deck } from "../components/deck/deckList";
+import DeckList from "../components/deck/deckList";
 import Header from "../components/header";
 import { CaretLeft } from "phosphor-react";
 import { useNavigate } from "react-router-dom";
 import DeckListSkeleton from "../components/deck/deckList/deckListSkeleton";
+import { useDeckContext } from "../contexts";
 
 const Decks = () => {
   const navigate = useNavigate();
 
-  const { decks: fetchedDecks, loading, error } = useAllDecks();
+  const { decks, loading, error, setDecks } = useDeckContext();
   const { createDeck, loading: creating, error: createError } = useCreateDeck();
-
-  // Local decks state to immediately update UI when adding decks
-  const [decks, setDecks] = useState<Deck[]>([]);
-
-  // Sync fetched decks to local state
-  useEffect(() => {
-    setDecks(fetchedDecks);
-  }, [fetchedDecks]);
 
   const handleAddDeck = async (name: string) => {
     if (!name.trim()) return;
@@ -34,7 +25,7 @@ const Decks = () => {
     <div className="bg-sky-200">
       <Header />
       <div className="min-h-screen flex justify-center">
-        <div className="bg-white w-full max-w-screen-sm border-black border-2 p-3 rounded m-2">
+        <div className="bg-white w-full max-w-screen-sm border-black border-2 p-3 rounded m-4">
           <div className="relative flex items-center h-12">
             <div className="absolute left-0">
               <button

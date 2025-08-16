@@ -1,24 +1,42 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import DifficultyButtons from "../components/difficultyButtons"; // we'll export levels from DifficultyButtons
 import Header from "../components/header";
-import useCards from "../hooks/useCards";
-import useRateCard from "../hooks/useRateCard";
+import useRateCard from "../hooks/cards/useRateCard";
 import CardCarousel from "../components/cardCarousel";
 import { levels } from "../components/difficultyButtons/levels";
+import { useDeckContext } from "../contexts";
+import type { CardResponse } from "../types/cardResponse";
+import type { Deck } from "../types/deck";
 
 interface ReviseProps {
   hardMode?: boolean;
+  deckId?: string;
 }
-const Revise = ({ hardMode = false }: ReviseProps) => {
-  const { cards, loading, error } = useCards(hardMode);
+
+const Revise = ({ hardMode = false, deckId }: ReviseProps) => {
   const { rateCard } = useRateCard();
+  const { decks, loading, error } = useDeckContext();
+
   const [currentIndex, setCurrentIndex] = useState(0);
   const [cardDisplay, setCardDisplay] = useState<"Front" | "Back" | "Any">(
     "Front"
   );
 
+  const cards: CardResponse[] = useMemo(() => {
+    let allDecks: Deck[] = decks;
+
+    if (deckId) {
+      allDecks = decks.filter((d) => d.id === deckId);
+    }
+
+    const allCards = allDecks.flatMap((deck) => deck.cardResponses);
+
+    return hardMode ? allCards.filter((card) => card.avgRating >= 4) : allCards;
+  }, [decks, deckId, hardMode]);
+
   // Map card id -> color
   const [cardColors, setCardColors] = useState<Record<string, string>>({});
+
   const handleDifficultySelect = (rating: number) => {
     if (cards.length === 0) return;
 
