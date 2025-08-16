@@ -85,10 +85,10 @@ public class CardService {
         boolean decksDiffer = !card.getDeckNames().equals(getDeckNames(request));
         if (decksDiffer) {
             card.removeAllDecks();
-            if (request.deckNamesDto() == null || request.deckNamesDto().deckNames().isEmpty()) {
+            if (request.deckNames() == null || request.deckNames().isEmpty()) {
                 return;
             }
-            Set<Deck> decks = cardDeckService.getOrCreateDecksByNames(request.deckNamesDto());
+            Set<Deck> decks = cardDeckService.getOrCreateDecksByNames(request.deckNames());
             card.addDecks(decks);
         }
     }
@@ -106,9 +106,9 @@ public class CardService {
 
     /* Helpers */
     private static Set<String> getDeckNames(CardRequest request) {
-        return request.deckNamesDto() == null
+        return request.deckNames() == null
             ? Set.of()
-            : request.deckNamesDto().deckNames();
+            : request.deckNames();
     }
 
 }

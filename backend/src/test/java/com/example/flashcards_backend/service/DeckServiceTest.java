@@ -1,6 +1,7 @@
 package com.example.flashcards_backend.service;
 
 
+import com.example.flashcards_backend.dto.DeckResponse;
 import com.example.flashcards_backend.exception.DeckNotFoundException;
 import com.example.flashcards_backend.model.Deck;
 import com.example.flashcards_backend.repository.DeckRepository;
@@ -16,6 +17,7 @@ import static org.mockito.Mockito.*;
 
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @ExtendWith(SpringExtension.class)
 class DeckServiceTest {
@@ -40,11 +42,13 @@ class DeckServiceTest {
     @Test
     void testGetAllDecks() {
         Set<Deck> expectedDecks = Set.of(deck1, deck2);
-        when(deckRepository.findAll()).thenReturn(expectedDecks.stream().toList());
+        when(deckRepository.findAllWithCards()).thenReturn(expectedDecks.stream().toList());
 
-        Set<Deck> actualDecks = deckService.getAll();
+        Set<DeckResponse> actualDecks = deckService.getAll();
 
-        assertThat(actualDecks).isEqualTo(expectedDecks);
+        var expected = expectedDecks.stream().map(DeckResponse::fromEntity).collect(Collectors.toSet());
+
+        assertThat(actualDecks).isEqualTo(expected);
     }
 
     @Test

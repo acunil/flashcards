@@ -1,10 +1,9 @@
 package com.example.flashcards_backend.controller;
 
+import com.example.flashcards_backend.annotations.DeckName;
 import com.example.flashcards_backend.dto.CreateDeckRequest;
-import com.example.flashcards_backend.dto.DeckNamesDto;
 import com.example.flashcards_backend.dto.DeckResponse;
 import com.example.flashcards_backend.dto.UpdateDeckNameRequest;
-import com.example.flashcards_backend.exception.DeckNotFoundException;
 import com.example.flashcards_backend.model.Deck;
 import com.example.flashcards_backend.service.CardDeckService;
 import com.example.flashcards_backend.service.DeckService;
@@ -14,6 +13,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
@@ -22,6 +22,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+@Slf4j
 @RestController
 @RequestMapping("/api/decks")
 @Validated
@@ -31,7 +32,7 @@ public class DeckController {
     private final DeckService deckService;
     private final CardDeckService cardDeckService;
 
-    @Operation(summary = "Get all decks", description = "Returns all decks.")
+    @Operation(summary = "Get all decks", description = "Returns all decks with cards.")
     @ApiResponses(value = {
         @ApiResponse(responseCode = "200", description = "Successful operation",
             content = @Content(mediaType = "application/json",
@@ -39,8 +40,10 @@ public class DeckController {
     })
     @GetMapping
     public ResponseEntity<Set<DeckResponse>> getAll() {
-        Set<Deck> decks = deckService.getAll();
-        return ResponseEntity.ok(generateResponse(decks));
+        log.info("Fetching all decks with cards");
+        Set<DeckResponse> responses = deckService.getAll();
+        log.info("Returning {} decks", responses.size());
+        return ResponseEntity.ok(responses);
     }
 
     @Operation(summary = "Get deck by ID", description = "Returns a deck by its ID.")
@@ -61,11 +64,15 @@ public class DeckController {
     @ApiResponses(value = {
         @ApiResponse(responseCode = "201", description = "Deck created",
             content = @Content(mediaType = "application/json",
-                schema = @Schema(implementation = DeckResponse.class)))
+                schema = @Schema(implementation = DeckResponse.class))),
+        @ApiResponse(responseCode = "400", description = "Invalid request",
+            content = @Content(mediaType = "application/json")),
+        @ApiResponse(responseCode = "409", description = "Deck with the same name already exists",
+            content = @Content(mediaType = "application/json"))
     })
     @PostMapping("/create")
     public ResponseEntity<DeckResponse> createDeck(@RequestBody CreateDeckRequest request) {
-        Deck createdDeck = cardDeckService.createDeck(request);
+        Deck createdDeck = cardDeckService.createDeck(request); // Throws DuplicateDeckNameException if a deck with the same name already exists
         return ResponseEntity.status(HttpStatus.CREATED).body(generateResponse(createdDeck));
     }
 
@@ -96,18 +103,6 @@ public class DeckController {
         return ResponseEntity.noContent().build();
     }
 
-    @Operation(summary = "Get decks by card ID", description = "Returns decks containing a specific card.")
-    @ApiResponses(value = {
-        @ApiResponse(responseCode = "200", description = "Successful operation",
-            content = @Content(mediaType = "application/json",
-                schema = @Schema(implementation = DeckResponse.class)))
-    })
-    @GetMapping("/card/{cardId}")
-    public ResponseEntity<Set<DeckResponse>> getDecksByCardId(@PathVariable Long cardId) {
-        Set<Deck> decks = deckService.getDecksByCardId(cardId);
-        return ResponseEntity.ok(generateResponse(decks));
-    }
-
     @Operation(summary = "Get or create decks by names", description = "Returns or creates decks by their names.")
     @ApiResponses(value = {
         @ApiResponse(responseCode = "200", description = "Successful operation",
@@ -115,8 +110,8 @@ public class DeckController {
                 schema = @Schema(implementation = DeckResponse.class)))
     })
     @PostMapping
-    public ResponseEntity<Set<DeckResponse>> getDecksByNames(@RequestParam DeckNamesDto deckNamesDto) {
-        Set<Deck> decks = cardDeckService.getOrCreateDecksByNames(deckNamesDto);
+    public ResponseEntity<Set<DeckResponse>> getDecksByNames(@RequestParam Set<@DeckName String> names) {
+        Set<Deck> decks = cardDeckService.getOrCreateDecksByNames(names);
         return ResponseEntity.ok(generateResponse(decks));
     }
 
@@ -128,19 +123,7 @@ public class DeckController {
             .collect(Collectors.toSet());
     }
 
-    private static DeckResponse generateResponse(Deck updatedDeck) {
-        return DeckResponse.fromEntity(updatedDeck);
-    }
-
-    /*Exception Handlers*/
-
-    @ExceptionHandler(DeckNotFoundException.class)
-    public ResponseEntity<String> handleDeckNotFoundException(DeckNotFoundException ex) {
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());
-    }
-
-    @ExceptionHandler(IllegalArgumentException.class)
-    public ResponseEntity<String> handleIllegalArgumentException(IllegalArgumentException ex) {
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ex.getMessage());
+    private static DeckResponse generateResponse(Deck deck) {
+        return DeckResponse.fromEntity(deck);
     }
 }

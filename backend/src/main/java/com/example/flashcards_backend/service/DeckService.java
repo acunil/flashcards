@@ -1,24 +1,29 @@
 package com.example.flashcards_backend.service;
 
+import com.example.flashcards_backend.annotations.DeckName;
+import com.example.flashcards_backend.dto.DeckResponse;
 import com.example.flashcards_backend.exception.DeckNotFoundException;
 import com.example.flashcards_backend.model.Deck;
 import com.example.flashcards_backend.repository.DeckRepository;
 import jakarta.transaction.Transactional;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 @AllArgsConstructor
+@Slf4j
 public class DeckService {
 
     private final DeckRepository deckRepository;
 
-    public Set<Deck> getAll() {
-        return Set.copyOf(deckRepository.findAll());
+    public Set<DeckResponse> getAll() {
+        return deckRepository.findAllWithCards().stream()
+                .map(DeckResponse::fromEntity)
+                .collect(Collectors.toSet());
     }
 
     public Deck getDeckById(Long id) {
@@ -35,10 +40,8 @@ public class DeckService {
         return deckRepository.findDecksByCardId(cardId);
     }
 
-
-
     @Transactional
-    public Deck renameDeck(Long id, @NotBlank @NotNull String name) {
+    public Deck renameDeck(Long id, @DeckName String name) {
         Deck deck = getDeckById(id);
         // check that name is unique in database
         if (deckRepository.existsByName(name.trim())) {

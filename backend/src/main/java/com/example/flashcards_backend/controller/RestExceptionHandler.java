@@ -1,34 +1,68 @@
 package com.example.flashcards_backend.controller;
 
 import com.example.flashcards_backend.exception.CardNotFoundException;
+import com.example.flashcards_backend.exception.DeckNotFoundException;
+import com.example.flashcards_backend.exception.DuplicateDeckNameException;
 import liquibase.exception.DatabaseException;
 import org.springframework.dao.DataAccessException;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
+import java.util.Map;
+
 @RestControllerAdvice
 public class RestExceptionHandler {
 
+    public static final String ERROR = "error";
+
     @ExceptionHandler(CardNotFoundException.class)
-    public ResponseEntity<String> handleNotFound(CardNotFoundException ex) {
+    public ResponseEntity<Map<String, String>> handleNotFound(CardNotFoundException ex) {
         return ResponseEntity
             .status(HttpStatus.NOT_FOUND)
-            .body(ex.getMessage());
+            .contentType(MediaType.APPLICATION_JSON)
+            .body(Map.of(ERROR, ex.getMessage()));
     }
 
     @ExceptionHandler(DatabaseException.class)
-    public ResponseEntity<String> handleDatabaseException(DatabaseException ex) {
+    public ResponseEntity<Map<String, String>> handleDatabaseException(DatabaseException ex) {
         return ResponseEntity
             .status(HttpStatus.INTERNAL_SERVER_ERROR)
-            .body("Database error occurred: " + ex.getMessage());
+            .contentType(MediaType.APPLICATION_JSON)
+            .body(Map.of(ERROR, "Database error occurred: " + ex.getMessage()));
     }
 
     @ExceptionHandler(DataAccessException.class)
-    public ResponseEntity<String> handleDataAccessException(DataAccessException ex) {
+    public ResponseEntity<Map<String, String>> handleDataAccessException(DataAccessException ex) {
         return ResponseEntity
             .status(HttpStatus.INTERNAL_SERVER_ERROR)
-            .body("Data access error occurred: " + ex.getMessage());
+            .contentType(MediaType.APPLICATION_JSON)
+            .body(Map.of(ERROR, "Data access error occurred: " + ex.getMessage()));
+    }
+
+    @ExceptionHandler(DeckNotFoundException.class)
+    public ResponseEntity<Map<String, String>> handleDeckNotFoundException(DeckNotFoundException ex) {
+        return ResponseEntity
+            .status(HttpStatus.NOT_FOUND)
+            .contentType(MediaType.APPLICATION_JSON)
+            .body(Map.of(ERROR, ex.getMessage()));
+    }
+
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<Map<String, String>> handleIllegalArgumentException(IllegalArgumentException ex) {
+        return ResponseEntity
+            .status(HttpStatus.BAD_REQUEST)
+            .contentType(MediaType.APPLICATION_JSON)
+            .body(Map.of(ERROR, ex.getMessage()));
+    }
+
+    @ExceptionHandler(DuplicateDeckNameException.class)
+    public ResponseEntity<Map<String, String>> handleDuplicateDeckNameException(DuplicateDeckNameException ex) {
+        return ResponseEntity
+            .status(HttpStatus.CONFLICT)
+            .contentType(MediaType.APPLICATION_JSON)
+            .body(Map.of(ERROR, ex.getMessage()));
     }
 }

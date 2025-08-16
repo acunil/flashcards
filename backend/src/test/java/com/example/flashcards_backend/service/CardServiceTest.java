@@ -1,7 +1,6 @@
 package com.example.flashcards_backend.service;
 
 import com.example.flashcards_backend.dto.CardRequest;
-import com.example.flashcards_backend.dto.DeckNamesDto;
 import com.example.flashcards_backend.exception.CardNotFoundException;
 import com.example.flashcards_backend.model.Card;
 import com.example.flashcards_backend.model.CardCreationResult;
@@ -157,8 +156,7 @@ class CardServiceTest {
         Set<Deck> decks = Set.of(deck2);
         when(cardDeckService.getOrCreateDecksByNames(any())).thenReturn(decks);
 
-        CardRequest updateRequest = CardRequest.of(
-            "Updated Front", "Updated Back", DeckNamesDto.of(decks));
+        CardRequest updateRequest = CardRequest.of("Updated Front", "Updated Back", deck2.getName());
         cardService.updateCard(CARD_3_ID, updateRequest);
 
         Card updatedCard = cardService.getCardById(CARD_3_ID);
@@ -166,13 +164,13 @@ class CardServiceTest {
         assertThat(updatedCard.getBack()).isEqualTo("Updated Back");
         assertThat(updatedCard.getDecks()).containsExactly(deck2);
 
-        verify(cardDeckService).getOrCreateDecksByNames(DeckNamesDto.of(deck2.getName()));
+        verify(cardDeckService).getOrCreateDecksByNames(Set.of(deck2.getName()));
     }
 
     @Test
     void testUpdateCard_doesNotUpdateDecks_whenSameDecks() {
         // card already has the same decks, so no need to update
-        CardRequest request = CardRequest.of("Front 1", "Back 1", DeckNamesDto.of(deck1.getName(), deck2.getName()));
+        CardRequest request = CardRequest.of("Front 1", "Back 1", deck1.getName(), deck2.getName());
         cardService.updateCard(CARD_1_ID, request);
 
         Card updatedCard = cardService.getCardById(CARD_1_ID);

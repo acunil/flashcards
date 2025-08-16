@@ -4,15 +4,19 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.Size;
 import lombok.*;
 import lombok.extern.slf4j.Slf4j;
+import org.hibernate.proxy.HibernateProxy;
 
 import java.util.HashSet;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 @Slf4j
 @Entity
-@Data
-@NoArgsConstructor
+@Getter
+@Setter
+@ToString
+@RequiredArgsConstructor
 @AllArgsConstructor
 @Builder
 public class Deck {
@@ -28,8 +32,8 @@ public class Deck {
     @ManyToMany
     @JoinTable(
         name = "cardDeck",
-        joinColumns = @JoinColumn(name = "deckId"),
-        inverseJoinColumns = @JoinColumn(name = "cardId")
+        joinColumns = @JoinColumn(name = "deck_id"),
+        inverseJoinColumns = @JoinColumn(name = "card_id")
     )
     @EqualsAndHashCode.Exclude
     @ToString.Exclude
@@ -98,5 +102,21 @@ public class Deck {
         return cards.stream()
             .map(Card::getId)
             .collect(Collectors.toSet());
+    }
+
+    @Override
+    public final boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null) return false;
+        Class<?> oEffectiveClass = o instanceof HibernateProxy ? ((HibernateProxy) o).getHibernateLazyInitializer().getPersistentClass() : o.getClass();
+        Class<?> thisEffectiveClass = this instanceof HibernateProxy ? ((HibernateProxy) this).getHibernateLazyInitializer().getPersistentClass() : this.getClass();
+        if (thisEffectiveClass != oEffectiveClass) return false;
+        Deck deck = (Deck) o;
+        return getId() != null && Objects.equals(getId(), deck.getId());
+    }
+
+    @Override
+    public final int hashCode() {
+        return this instanceof HibernateProxy ? ((HibernateProxy) this).getHibernateLazyInitializer().getPersistentClass().hashCode() : getClass().hashCode();
     }
 }
