@@ -30,7 +30,7 @@ public class DeckController {
     private final DeckService deckService;
     private final CardDeckService cardDeckService;
 
-    @Operation(summary = "Get all decks", description = "Returns all decks.")
+    @Operation(summary = "Get all decks", description = "Returns all decks with cards.")
     @ApiResponses(value = {
         @ApiResponse(responseCode = "200", description = "Successful operation",
             content = @Content(mediaType = "application/json",
@@ -38,8 +38,7 @@ public class DeckController {
     })
     @GetMapping
     public ResponseEntity<Set<DeckResponse>> getAll() {
-        Set<Deck> decks = deckService.getAll();
-        return ResponseEntity.ok(generateResponse(decks));
+        return ResponseEntity.ok(deckService.getAll());
     }
 
     @Operation(summary = "Get deck by ID", description = "Returns a deck by its ID.")
