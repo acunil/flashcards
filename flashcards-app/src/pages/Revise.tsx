@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import DifficultyButtons from "../components/difficultyButtons"; // we'll export levels from DifficultyButtons
+import DifficultyButtons from "../components/difficultyButtons";
 import Header from "../components/header";
 import useRateCard from "../hooks/cards/useRateCard";
 import CardCarousel from "../components/cardCarousel";
@@ -29,7 +29,13 @@ const Revise = ({ hardMode = false, deckId }: ReviseProps) => {
       allDecks = decks.filter((d) => d.id === deckId);
     }
 
-    const allCards = allDecks.flatMap((deck) => deck.cardResponses);
+    const allCards = Array.from(
+      new Map(
+        allDecks
+          .flatMap((deck) => deck.cardResponses)
+          .map((card) => [card.id, card])
+      ).values()
+    );
 
     return hardMode ? allCards.filter((card) => card.avgRating >= 4) : allCards;
   }, [decks, deckId, hardMode]);
