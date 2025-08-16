@@ -56,7 +56,7 @@ class DeckControllerTest {
     @Test
     void getAllDecks() throws Exception {
         // Mock the service to return a set of decks
-        when(deckService.getAll()).thenReturn(Set.of(deck1, deck2));
+        when(deckService.getAll()).thenReturn(Set.of(DeckResponse.fromEntity(deck1), DeckResponse.fromEntity(deck2)));
 
         String json = mockMvc.perform(get(ENDPOINT))
             .andExpect(status().isOk())
