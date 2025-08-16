@@ -9,10 +9,23 @@ const DeckDetails = () => {
   const { decks } = useDeckContext();
   const navigate = useNavigate();
 
-  const cards =
-    deckId === "all"
-      ? decks.flatMap((deck) => deck.cardResponses)
-      : decks.find((d) => d.id === deckId)?.cardResponses || [];
+  let cards = [];
+  let deckName = "";
+
+  if (deckId === "all") {
+    cards = Array.from(
+      new Map(
+        decks
+          .flatMap((deck) => deck.cardResponses)
+          .map((card) => [card.id, card])
+      ).values()
+    );
+    deckName = "all cards";
+  } else {
+    const currentDeck = decks.find((d) => d.id == deckId);
+    cards = currentDeck?.cardResponses || [];
+    deckName = currentDeck?.name || "";
+  }
 
   const handleClickRevise = () => {
     if (deckId === "all") {
@@ -45,7 +58,7 @@ const DeckDetails = () => {
                 <GraduationCap size={20} />
               </button>
             </div>
-            <p className="mx-auto text-md">my deck for deck ID: {deckId}</p>
+            <p className="mx-auto text-md">{deckName}</p>
           </div>
           <div className="mt-6 flex justify-center mx-auto w-full">
             <CardList cards={cards} />
