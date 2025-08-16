@@ -7,6 +7,7 @@ import com.example.flashcards_backend.model.Deck;
 import com.example.flashcards_backend.repository.DeckRepository;
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
@@ -14,13 +15,13 @@ import java.util.stream.Collectors;
 
 @Service
 @AllArgsConstructor
+@Slf4j
 public class DeckService {
 
     private final DeckRepository deckRepository;
 
     public Set<DeckResponse> getAll() {
-        return deckRepository.findAllWithCards()
-                .stream()
+        return deckRepository.findAllWithCards().stream()
                 .map(DeckResponse::fromEntity)
                 .collect(Collectors.toSet());
     }

@@ -32,8 +32,8 @@ public class Deck {
     @ManyToMany
     @JoinTable(
         name = "cardDeck",
-        joinColumns = @JoinColumn(name = "deckId"),
-        inverseJoinColumns = @JoinColumn(name = "cardId")
+        joinColumns = @JoinColumn(name = "deck_id"),
+        inverseJoinColumns = @JoinColumn(name = "card_id")
     )
     @EqualsAndHashCode.Exclude
     @ToString.Exclude
