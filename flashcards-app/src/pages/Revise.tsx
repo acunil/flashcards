@@ -26,7 +26,7 @@ const Revise = ({ hardMode = false, deckId }: ReviseProps) => {
     let allDecks: Deck[] = decks;
 
     if (deckId) {
-      allDecks = decks.filter((d) => d.id === deckId);
+      allDecks = decks.filter((d) => d.id.toString() === deckId);
     }
 
     const allCards = Array.from(
