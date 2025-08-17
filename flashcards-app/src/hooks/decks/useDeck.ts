@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
 import type { Deck } from "../../types/deck";
 
-const BASE_DECK_URL = "http://localhost:8080/api/decks";
+const BASE_DECK_URL = "http://localhost:8080/decks";
 
-const useDeck = (id: string) => {
+const useDeck = (id: number) => {
   const [deck, setDeck] = useState<Deck | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);

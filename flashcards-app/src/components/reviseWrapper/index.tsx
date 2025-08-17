@@ -3,7 +3,7 @@ import Revise from "../../pages/Revise";
 
 const ReviseWrapper = () => {
   const { deckId } = useParams<{ deckId: string }>();
-  const effectiveDeckId = deckId === "all" ? undefined : deckId;
+  const effectiveDeckId = deckId === "0" ? undefined : Number(deckId);
   const [searchParams] = useSearchParams();
   const hardMode = searchParams.get("hardMode") === "true";
 

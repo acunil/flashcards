@@ -2,30 +2,27 @@ import { useNavigate, useParams } from "react-router-dom";
 import Header from "../components/header";
 import { CaretLeft, GraduationCap } from "phosphor-react";
 import CardList from "../components/detailedCard/cardList";
-import { useDeckContext } from "../contexts";
+import { useAppContext } from "../contexts";
+import { useMemo } from "react";
 
 const DeckDetails = () => {
   const { deckId } = useParams<{ deckId: string }>();
-  const { decks } = useDeckContext();
+  const effectiveDeckId = Number(deckId);
+  const { decks, cards } = useAppContext();
   const navigate = useNavigate();
 
-  let cards = [];
-  let deckName = "";
+  // if deck id is all, show all cards
+  // if deck id is not all, only include cards that have the deck id
 
-  if (deckId === "all") {
-    cards = Array.from(
-      new Map(
-        decks
-          .flatMap((deck) => deck.cardResponses)
-          .map((card) => [card.id, card])
-      ).values()
+  const filteredCards = useMemo(() => {
+    if (effectiveDeckId === 0 || !deckId) {
+      return cards;
+    }
+    const deckIdNum = Number(deckId); // params are strings
+    return cards.filter((card) =>
+      card.decks.some((deck) => deck.id === deckIdNum)
     );
-    deckName = "all cards";
-  } else {
-    const currentDeck = decks.find((d) => d.id == deckId);
-    cards = currentDeck?.cardResponses || [];
-    deckName = currentDeck?.name || "";
-  }
+  }, [cards, effectiveDeckId, deckId]);
 
   const handleClickRevise = () => {
     if (deckId === "all") {
@@ -58,10 +55,14 @@ const DeckDetails = () => {
                 <GraduationCap size={20} />
               </button>
             </div>
-            <p className="mx-auto text-md">{deckName}</p>
+            <p className="mx-auto text-md">
+              {deckId
+                ? decks.find((deck) => deck.id == effectiveDeckId)?.name
+                : "All cards"}
+            </p>
           </div>
           <div className="mt-6 flex justify-center mx-auto w-full">
-            <CardList cards={cards} />
+            <CardList cards={filteredCards} />
           </div>
         </div>
       </div>

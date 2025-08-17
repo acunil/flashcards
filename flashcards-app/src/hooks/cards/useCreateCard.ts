@@ -5,7 +5,7 @@ export type NewCard = {
   back: string;
 };
 
-const API_URL = "http://localhost:8080/api/cards";
+const API_URL = "http://localhost:8080/cards";
 
 const useCreateCard = () => {
   const [creating, setCreating] = useState(false);

@@ -3,6 +3,7 @@ import DeckListItem from "../deckListItem";
 import AddDeckButton from "../addDeckButton";
 import { useNavigate } from "react-router-dom";
 import type { Deck } from "../../../types/deck";
+import { useAppContext } from "../../../contexts";
 
 export interface DeckListProps {
   decks: Deck[];
@@ -11,33 +12,34 @@ export interface DeckListProps {
 
 const DeckList = ({ decks, onAddDeck }: DeckListProps) => {
   const navigate = useNavigate();
+  const { cards } = useAppContext();
 
-  const handleDeckClick = (id: string) => {
+  const handleDeckClick = (id: number) => {
     navigate(`/decks/${id}`);
   };
 
-  const totalCards = decks.reduce(
-    (sum, deck) => sum + deck.cardResponses.length,
-    0
-  );
+  const totalCardCount = cards.length;
+
+  const getDeckCardCount = (deckId: number) => {
+    return cards.filter((card) => card.decks.some((deck) => deck.id === deckId))
+      .length;
+  };
 
   return (
     <div className="flex flex-col items-center gap-2 m-2 max-w-xs mx-auto w-full">
       <DeckListItem
-        id="all"
-        deckName={"all cards"}
+        deck={{ id: 0, name: "all cards" }}
         className={"bg-pink-200"}
         Icon={Cards}
-        onClick={() => handleDeckClick("all")}
-        totalCards={totalCards}
+        onClick={() => handleDeckClick(0)}
+        totalCards={totalCardCount}
       />
       {decks.map((deck) => (
         <DeckListItem
           key={deck.id}
-          id={deck.id}
-          deckName={deck.name}
+          deck={deck}
           onClick={() => handleDeckClick(deck.id)}
-          totalCards={deck.cardResponses.length}
+          totalCards={getDeckCardCount(deck.id)}
         />
       ))}
       <AddDeckButton onAddDeck={onAddDeck} />

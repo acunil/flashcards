@@ -1,12 +1,12 @@
 import { useState } from "react";
 
-const BASE_DECK_URL = "http://localhost:8080/api/decks";
+const BASE_DECK_URL = "http://localhost:8080/decks";
 
 const useDeleteDeck = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const deleteDeck = async (id: string) => {
+  const deleteDeck = async (id: number) => {
     setLoading(true);
     setError(null);
 

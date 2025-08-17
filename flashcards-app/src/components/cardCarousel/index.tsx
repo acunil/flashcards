@@ -1,6 +1,6 @@
 import { useState } from "react";
 import FlipCard from "../flipCard";
-import type { Card } from "../flipCard";
+import type { Card } from "../../types/card";
 
 interface CardCarouselProps {
   cards: Card[];

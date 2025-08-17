@@ -1,14 +1,9 @@
 import { useEffect, useRef, useState } from "react";
+import type { Card } from "../../types/card";
 
-export type Card = {
-  id: string;
-  front: string;
-  back: string;
-};
+const BASE_URL = "http://localhost:8080/cards";
 
-const BASE_URL = "http://localhost:8080/api/cards";
-
-const useCards = (hardMode: boolean = false) => {
+const useCards = () => {
   const [cards, setCards] = useState<Card[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -21,11 +16,7 @@ const useCards = (hardMode: boolean = false) => {
 
       try {
         setLoading(true);
-
-        const url = hardMode
-          ? `${BASE_URL}/minAvgRating?threshold=4&shuffled=true`
-          : `${BASE_URL}?shuffled=true`;
-        const response = await fetch(url);
+        const response = await fetch(BASE_URL);
         if (!response.ok) {
           throw new Error("Failed to fetch cards");
         }
@@ -43,7 +34,7 @@ const useCards = (hardMode: boolean = false) => {
     };
 
     fetchCards();
-  }, [hardMode]);
+  });
 
   return { cards, loading, error };
 };

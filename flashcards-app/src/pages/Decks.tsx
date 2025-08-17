@@ -4,12 +4,12 @@ import Header from "../components/header";
 import { CaretLeft } from "phosphor-react";
 import { useNavigate } from "react-router-dom";
 import DeckListSkeleton from "../components/deck/deckList/deckListSkeleton";
-import { useDeckContext } from "../contexts";
+import { useAppContext } from "../contexts";
 
 const Decks = () => {
   const navigate = useNavigate();
 
-  const { decks, loading, error, setDecks } = useDeckContext();
+  const { decks, loading, error, setDecks } = useAppContext();
   const { createDeck, loading: creating, error: createError } = useCreateDeck();
 
   const handleAddDeck = async (name: string) => {

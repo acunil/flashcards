@@ -1,2 +1,2 @@
-export { DeckProvider } from "./DeckProvider";
-export { useDeckContext } from "./DeckContext";
+export { AppProvider } from "./AppProvider";
+export { useAppContext } from "./AppContext";

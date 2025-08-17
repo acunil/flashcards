@@ -1,10 +1,10 @@
 import { GraduationCap, type IconProps } from "phosphor-react";
 import type { ComponentType, MouseEventHandler } from "react";
 import { useNavigate } from "react-router-dom";
+import type { Deck } from "../../../types/deck";
 
 interface DeckListItemProps {
-  id: string;
-  deckName: string;
+  deck: Deck;
   className?: string;
   totalCards?: number;
   Icon?: ComponentType<IconProps>;
@@ -12,8 +12,7 @@ interface DeckListItemProps {
 }
 
 const DeckListItem = ({
-  id,
-  deckName,
+  deck,
   className = "",
   Icon,
   onClick,
@@ -26,20 +25,20 @@ const DeckListItem = ({
       <button
         onClick={onClick}
         className={`relative flex items-center justify-between text-black py-3 px-4 w-[80%] rounded shadow-lg cursor-pointer hover:bg-gray-200 border-black border-2 ${className}`}
-        aria-label={`Select deck ${deckName}`}
-        data-id={id}
+        aria-label={`Select deck ${deck.name}`}
+        data-id={deck.id}
         type="button"
       >
         <span className="flex items-center">
           {Icon && <Icon size={20} className="mr-2" weight="regular" />}
-          {deckName}
+          {deck.name}
         </span>
         {totalCards && totalCards > 0 && (
           <span className="text-gray-500">{totalCards}</span>
         )}
       </button>
       <button
-        onClick={() => navigate(`/revise/${id}?hardMode=false`)}
+        onClick={() => navigate(`/revise/${deck.id}?hardMode=false`)}
         className="relative flex items-center text-black py-3 px-4 rounded shadow-lg cursor-pointer hover:bg-yellow-200 border-black border-2"
       >
         <GraduationCap size={20} />

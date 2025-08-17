@@ -4,49 +4,49 @@ import Header from "../components/header";
 import useRateCard from "../hooks/cards/useRateCard";
 import CardCarousel from "../components/cardCarousel";
 import { levels } from "../components/difficultyButtons/levels";
-import { useDeckContext } from "../contexts";
-import type { CardResponse } from "../types/cardResponse";
 import type { Deck } from "../types/deck";
+import { useAppContext } from "../contexts";
+import type { Card } from "../types/card";
 
 interface ReviseProps {
   hardMode?: boolean;
-  deckId?: string;
+  deckId?: number;
 }
 
 const Revise = ({ hardMode = false, deckId }: ReviseProps) => {
   const { rateCard } = useRateCard();
-  const { decks, loading, error } = useDeckContext();
+  const { cards, loading, error } = useAppContext();
 
   const [currentIndex, setCurrentIndex] = useState(0);
   const [cardDisplay, setCardDisplay] = useState<"Front" | "Back" | "Any">(
     "Front"
   );
 
-  const cards: CardResponse[] = useMemo(() => {
-    let allDecks: Deck[] = decks;
-
-    if (deckId) {
-      allDecks = decks.filter((d) => d.id.toString() === deckId);
-    }
-
-    const allCards = Array.from(
-      new Map(
-        allDecks
-          .flatMap((deck) => deck.cardResponses)
-          .map((card) => [card.id, card])
-      ).values()
+  // filter all cards for the revision deck
+  const revisionCards: Card[] = useMemo(() => {
+    const filtered = cards.filter(
+      (card) =>
+        (!deckId || card.decks.some((deck: Deck) => deck.id === deckId)) &&
+        (!hardMode || card.avgRating >= 4)
     );
 
-    return hardMode ? allCards.filter((card) => card.avgRating >= 4) : allCards;
-  }, [decks, deckId, hardMode]);
+    // Shuffle using Fisher–Yates algorithm
+    for (let i = filtered.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [filtered[i], filtered[j]] = [filtered[j], filtered[i]];
+    }
+
+    return filtered;
+  }, [cards, deckId, hardMode]);
 
   // Map card id -> color
   const [cardColors, setCardColors] = useState<Record<string, string>>({});
 
   const handleDifficultySelect = (rating: number) => {
-    if (cards.length === 0) return;
+    console.log("handle difficulty select");
+    if (revisionCards.length === 0) return;
 
-    const currentCard = cards[currentIndex];
+    const currentCard = revisionCards[currentIndex];
     rateCard(currentCard.id, rating);
 
     const level = levels.find((l) => l.rating === rating);
@@ -77,11 +77,11 @@ const Revise = ({ hardMode = false, deckId }: ReviseProps) => {
         {!loading && !error && cards.length > 0 && (
           <>
             <CardCarousel
-              cards={cards}
+              cards={revisionCards}
               showDecks={false}
               currentIndex={currentIndex}
               setCurrentIndex={setCurrentIndex}
-              cardColors={cardColors} // pass the colors map here
+              cardColors={cardColors}
             />
             <DifficultyButtons onSelectDifficulty={handleDifficultySelect} />
           </>
