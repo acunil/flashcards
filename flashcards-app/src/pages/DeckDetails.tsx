@@ -11,14 +11,14 @@ const DeckDetails = () => {
   const { decks, cards } = useAppContext();
   const navigate = useNavigate();
 
-  // if deck id is all, show all cards
+  // if deck id is 0, show all cards
   // if deck id is not all, only include cards that have the deck id
 
   const filteredCards = useMemo(() => {
     if (effectiveDeckId === 0 || !deckId) {
       return cards;
     }
-    const deckIdNum = Number(deckId); // params are strings
+    const deckIdNum = Number(deckId);
     return cards.filter((card) =>
       card.decks.some((deck) => deck.id === deckIdNum)
     );
@@ -55,11 +55,11 @@ const DeckDetails = () => {
                 <GraduationCap size={20} />
               </button>
             </div>
-            <p className="mx-auto text-md">
-              {deckId
+            <h1 className="text-xl font-bold text-center mx-auto">
+              {effectiveDeckId
                 ? decks.find((deck) => deck.id == effectiveDeckId)?.name
-                : "All cards"}
-            </p>
+                : "all cards"}
+            </h1>
           </div>
           <div className="mt-6 flex justify-center mx-auto w-full">
             <CardList cards={filteredCards} />

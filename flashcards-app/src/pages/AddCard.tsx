@@ -5,7 +5,9 @@ import type { Deck } from "../types/deck";
 import SearchableMultiSelect from "../components/searchableMultiSelect";
 import { useAppContext } from "../contexts";
 import { CaretLeft } from "phosphor-react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
+import useUpdateCard from "../hooks/cards/useUpdateCard";
+import type { Card } from "../types/card";
 
 const AddCard = () => {
   const [front, setFront] = useState("");
@@ -14,9 +16,13 @@ const AddCard = () => {
   const [error, setError] = useState<string | null>(null);
   const [showToast, setShowToast] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-  const { decks } = useAppContext();
+  const { decks, cards } = useAppContext();
   const navigate = useNavigate();
   const { createCard } = useCreateCard();
+  const { updateCard } = useUpdateCard();
+  const { cardId } = useParams<{ cardId: string }>();
+  const [isEditing, setIsEditing] = useState(false);
+  const [cardToEdit, setCardToEdit] = useState<Card>();
 
   const resetForm = () => {
     setFront("");
@@ -24,6 +30,18 @@ const AddCard = () => {
     setSelectedDecks([]);
     setError(null);
   };
+
+  useEffect(() => {
+    if (cardId) {
+      setIsEditing(true);
+      setCardToEdit(cards.find((c) => c.id === Number(cardId)));
+      if (cardToEdit) {
+        setFront(cardToEdit.front);
+        setBack(cardToEdit.back);
+        setSelectedDecks(cardToEdit.decks);
+      }
+    }
+  }, [cardId, cards, cardToEdit]);
 
   useEffect(() => {
     if (showToast) {
@@ -46,13 +64,19 @@ const AddCard = () => {
     try {
       const deckNames = selectedDecks.map((d) => d.name);
 
-      await createCard({ front, back, deckNames });
+      if (isEditing && cardToEdit) {
+        await updateCard({ id: cardToEdit.id, front, back, deckNames }); // new update hook
+      } else {
+        await createCard({ front, back, deckNames });
+      }
 
-      resetForm();
       setShowToast(true);
     } catch {
       // handled inside hooks
     } finally {
+      if (!isEditing) {
+        resetForm();
+      }
       setIsSaving(false);
     }
   };
@@ -75,11 +99,13 @@ const AddCard = () => {
             <button
               id="decks-back-button"
               className="absolute left-0 top-1/2 -translate-y-1/2 cursor-pointer"
-              onClick={() => navigate("/")}
+              onClick={() => navigate(-1)}
             >
               <CaretLeft size={24} />
             </button>
-            <h1 className="text-xl font-bold text-center">Add a New Card</h1>
+            <h1 className="text-xl font-bold text-center">
+              {isEditing ? "Edit Card" : "Add a New Card"}
+            </h1>
           </div>
 
           <div className="pt-4">
@@ -125,7 +151,7 @@ const AddCard = () => {
                   : "bg-green-300 border-black hover:bg-green-400"
               }`}
             >
-              {isSaving ? "Saving..." : "Save"}
+              Save
             </button>
           </div>
         </form>

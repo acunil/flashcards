@@ -1,29 +1,30 @@
 import { useState } from "react";
 
 interface UpdateCardPayload {
+  id: number;
   front: string;
   back: string;
-  deckNamesDto?: {
-    deckNames: string[];
-  };
+  deckNames: string[];
 }
 
 interface UpdateCardResult {
   isLoading: boolean;
   error: string | null;
-  updateCard: (id: number, data: UpdateCardPayload) => Promise<void>;
+  updateCard: (data: UpdateCardPayload) => Promise<void>;
 }
+
+const API_URL = "http://localhost:8080/cards";
 
 const useUpdateCard = (): UpdateCardResult => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const updateCard = async (id: number, data: UpdateCardPayload) => {
+  const updateCard = async (data: UpdateCardPayload) => {
     setIsLoading(true);
     setError(null);
 
     try {
-      const response = await fetch(`/cards/${id}`, {
+      const response = await fetch(`${API_URL}/${data.id}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
