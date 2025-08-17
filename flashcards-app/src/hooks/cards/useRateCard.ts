@@ -1,11 +1,10 @@
-const baseUrl = "http://localhost:8080/api/cards";
+const baseUrl = "http://localhost:8080/cards";
 
 const useRateCard = () => {
-  const rateCard = (id: string, rating: number) => {
+  const rateCard = (id: number, rating: number) => {
     fetch(`${baseUrl}/${id}/rate?rating=${rating}`, {
-      method: "POST",
+      method: "PUT",
     }).catch((error) => {
-      // Optionally log error or ignore it
       console.error("Failed to send rating", error);
     });
   };

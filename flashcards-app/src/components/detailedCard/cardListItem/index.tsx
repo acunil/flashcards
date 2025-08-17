@@ -1,7 +1,7 @@
 import { NotePencil } from "phosphor-react";
 import { getClosestLevel } from "../../difficultyButtons/levels";
 import { useNavigate } from "react-router-dom";
-import type { CardResponse } from "../../../types/cardResponse";
+import type { Card } from "../../../types/card";
 
 const CardListItem = ({
   id,
@@ -10,15 +10,14 @@ const CardListItem = ({
   viewCount,
   avgRating,
   lastRating,
-}: CardResponse) => {
+}: Card) => {
   const lastLevel = getClosestLevel(lastRating);
   const avgLevel = getClosestLevel(avgRating);
 
   const navigate = useNavigate();
 
   const handleEditClick = () => {
-    // TODO
-    navigate("/add-card"); // or your edit route
+    navigate(`/add-card/${id}`);
   };
 
   return (

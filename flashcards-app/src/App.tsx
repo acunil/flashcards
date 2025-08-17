@@ -1,15 +1,15 @@
 import { BrowserRouter } from "react-router-dom";
 import { AppRoutes } from "./routes/routes";
-import { DeckProvider } from "./contexts";
+import { AppProvider } from "./contexts";
 
 function App() {
   return (
     <div className="min-h-screen">
       <div className="mx-auto overflow-visible">
         <BrowserRouter>
-          <DeckProvider>
+          <AppProvider>
             <AppRoutes />
-          </DeckProvider>
+          </AppProvider>
         </BrowserRouter>
       </div>
     </div>

@@ -12,7 +12,7 @@ export const AppRoutes = () => {
       <Route path="/revise/:deckId?" element={<ReviseWrapper />} />
       <Route path="/decks" element={<Decks />} />
       <Route path="/decks/:deckId" element={<DeckDetails />} />
-      <Route path="/add-card" element={<AddCard />} />
+      <Route path="/add-card/:cardId?" element={<AddCard />} />
     </Routes>
   );
 };

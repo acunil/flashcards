@@ -1,10 +1,5 @@
 import { useEffect, useState } from "react";
-
-export interface Card {
-  id: string;
-  front: string;
-  back: string;
-}
+import type { Card } from "../../types/card";
 
 interface FlipCardProps {
   card: Card;

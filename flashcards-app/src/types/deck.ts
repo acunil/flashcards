@@ -1,7 +1,4 @@
-import type { CardResponse } from "./cardResponse";
-
 export type Deck = {
-  id: string;
+  id: number;
   name: string;
-  cardResponses: CardResponse[];
 };

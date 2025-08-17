@@ -11,19 +11,19 @@ interface UpdateCardPayload {
 interface UpdateCardResult {
   isLoading: boolean;
   error: string | null;
-  updateCard: (id: string, data: UpdateCardPayload) => Promise<void>;
+  updateCard: (id: number, data: UpdateCardPayload) => Promise<void>;
 }
 
 const useUpdateCard = (): UpdateCardResult => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const updateCard = async (id: string, data: UpdateCardPayload) => {
+  const updateCard = async (id: number, data: UpdateCardPayload) => {
     setIsLoading(true);
     setError(null);
 
     try {
-      const response = await fetch(`/api/cards/${id}`, {
+      const response = await fetch(`/cards/${id}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
