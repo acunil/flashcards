@@ -3,9 +3,11 @@ package com.example.flashcards_backend.dto;
 import com.example.flashcards_backend.model.Card;
 import com.example.flashcards_backend.model.CardHistory;
 
+import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import com.example.flashcards_backend.repository.CardDeckRowProjection;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
@@ -43,6 +45,19 @@ public record CardResponse(
                 ch.getViewCount(),
                 ch.getLastViewed() != null ? ch.getLastViewed().toString() : null,
                 ch.getLastRating()
+        );
+    }
+
+    public static CardResponse fromEntity(CardDeckRowProjection cd) {
+        return new CardResponse(
+                cd.getCardId(),
+                cd.getFront(),
+                cd.getBack(),
+                new HashSet<>(),
+                cd.getAvgRating(),
+                cd.getViewCount(),
+                cd.getLastViewed() != null ? cd.getLastViewed().toString() : null,
+                cd.getLastRating()
         );
     }
 }

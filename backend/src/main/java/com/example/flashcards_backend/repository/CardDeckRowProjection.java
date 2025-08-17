@@ -1,5 +1,7 @@
 package com.example.flashcards_backend.repository;
 
+import java.time.LocalDateTime;
+
 public interface CardDeckRowProjection {
     Long getCardId();
     String getFront();
@@ -12,6 +14,6 @@ public interface CardDeckRowProjection {
     // history fields may be null
     Double getAvgRating();
     Integer getViewCount();
-    String getLastViewed();
+    LocalDateTime getLastViewed();
     Integer getLastRating();
 }

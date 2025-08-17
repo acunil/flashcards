@@ -40,6 +40,7 @@ public class DeckController {
     })
     @GetMapping
     public ResponseEntity<Set<DeckSummary>> getAll() {
+        log.info("GET /decks");
         Set<DeckSummary> responses = deckService.getAllDeckSummaries();
         return ResponseEntity.ok(responses);
     }
