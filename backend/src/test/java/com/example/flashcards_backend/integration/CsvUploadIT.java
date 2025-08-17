@@ -24,7 +24,7 @@ class CsvUploadIT {
 
     @Test
     void uploadCsv_fileOnClasspath_returns200() {
-        String url = "http://localhost:" + port + "/api/upload";
+        String url = "http://localhost:" + port + "/csv";
         ClassPathResource resource = new ClassPathResource("csv/vocab_upload_1.csv");
 
         MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();

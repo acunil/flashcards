@@ -24,13 +24,13 @@ import java.time.Instant;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/cards")
+@RequestMapping("/cards")
 @Validated
 @AllArgsConstructor
 @Slf4j
 public class CardController {
 
-    public static final String REQUEST_MAPPING = "/api/cards/";
+    public static final String REQUEST_MAPPING = "/cards/";
     private final CardService cardService;
     private final CardHistoryService cardHistoryService;
 
@@ -43,12 +43,12 @@ public class CardController {
     })
     @GetMapping
     public ResponseEntity<List<CardResponse>> getAllCardResponses() {
-        log.info("GET /api/cards");
+        log.info("GET /cards");
         Instant start = Instant.now();
         var cards = cardService.getAllCardResponses();
         Instant end = Instant.now();
-        log.info("GET /api/cards: took {}s", end.toEpochMilli() - start.toEpochMilli() / 1000);
-        log.info("GET /api/cards: returned {} cards", cards.size());
+        log.info("GET /cards: took {}s", end.toEpochMilli() - start.toEpochMilli() / 1000);
+        log.info("GET /cards: returned {} cards", cards.size());
         return ResponseEntity.ok(cards);
     }
 

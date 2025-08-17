@@ -42,7 +42,7 @@ This will execute all the unit tests and integration tests defined in the projec
 ## CSV Upload
 The application supports uploading CSV files to create or update flashcards. 
 
-To upload a CSV file, you can use the `/api/upload` endpoint with a POST request. The request should include the CSV file in the body.
+To upload a CSV file, you can use the `/csv` endpoint with a POST request. The request should include the CSV file in the body.
 
 The CSV file should have the following format: `front,back`
 

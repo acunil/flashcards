@@ -24,7 +24,7 @@ import java.util.stream.Collectors;
 
 @Slf4j
 @RestController
-@RequestMapping("/api/decks")
+@RequestMapping("/decks")
 @Validated
 @AllArgsConstructor
 public class DeckController {

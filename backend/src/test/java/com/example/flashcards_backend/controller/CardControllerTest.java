@@ -29,7 +29,7 @@ import java.util.List;
 @WebMvcTest(CardController.class)
 class CardControllerTest {
 
-    public static final String ENDPOINT = "/api/cards";
+    public static final String ENDPOINT = "/cards";
 
     @MockitoBean
     private CardService cardService;
@@ -99,7 +99,7 @@ class CardControllerTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(json))
             .andExpect(status().isCreated())
-            .andExpect(header().string("Location", "/api/cards/10"))
+            .andExpect(header().string("Location", "/cards/10"))
             .andExpect(content().contentType(MediaType.APPLICATION_JSON))
             .andExpect(jsonPath("$.id").value(10))
             .andExpect(jsonPath("$.front").value("f"))

@@ -22,7 +22,7 @@ import java.io.InputStream;
 
 @AllArgsConstructor
 @RestController(value = "csvUploadController")
-@RequestMapping("/api")
+@RequestMapping("/csv")
 @Slf4j
 public class CsvUploadController {
     private final CsvUploadServiceImpl csvUploadService;
@@ -38,7 +38,7 @@ public class CsvUploadController {
         @ApiResponse(responseCode = "500", description = "Internal server error, could not process CSV",
             content = @Content(mediaType = "application/json"))
     })
-    @PostMapping(value = "/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<CsvUploadResponseDto> uploadCsv(@RequestParam MultipartFile file) {
         if (file.isEmpty()) {
             log.error("CSV upload failed: no file provided");

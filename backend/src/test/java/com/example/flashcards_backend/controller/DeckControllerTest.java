@@ -1,7 +1,7 @@
 package com.example.flashcards_backend.controller;
 
 import com.example.flashcards_backend.dto.CreateDeckRequest;
-import com.example.flashcards_backend.dto.DeckResponse;
+import com.example.flashcards_backend.dto.DeckSummary;
 import com.example.flashcards_backend.exception.DeckNotFoundException;
 import com.example.flashcards_backend.exception.DuplicateDeckNameException;
 import com.example.flashcards_backend.model.Deck;
@@ -30,7 +30,7 @@ import java.util.Set;
 @WebMvcTest(DeckController.class)
 class DeckControllerTest {
 
-    public static final String ENDPOINT = "/api/decks";
+    public static final String ENDPOINT = "/decks";
 
     @MockitoBean
     private CardDeckService cardDeckService;
@@ -154,9 +154,9 @@ class DeckControllerTest {
             .getResponse()
             .getContentAsString();
 
-        List<DeckResponse> responses = readResponses(json);
+        List<DeckSummary> summaries = readSummaries(json);
 
-        assertThat(responses)
+        assertThat(summaries)
             .extracting("id", "name")
             .containsExactlyInAnyOrder(
                 tuple(deck1.getId(), deck1.getName()),
@@ -167,7 +167,7 @@ class DeckControllerTest {
 
     /* Helpers */
 
-    private List<DeckResponse> readResponses(String json) throws JsonProcessingException {
+    private List<DeckSummary> readSummaries(String json) throws JsonProcessingException {
         return objectMapper.readValue(json, new TypeReference<>() {});
     }
 
