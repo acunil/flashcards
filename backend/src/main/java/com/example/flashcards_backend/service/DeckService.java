@@ -21,7 +21,7 @@ public class DeckService {
     private final DeckRepository deckRepository;
 
     public Set<DeckSummary> getAllDeckSummaries() {
-        return deckRepository.findAllWithCards().stream()
+        return deckRepository.findAllDecks().stream()
                 .map(DeckSummary::fromEntity)
                 .collect(Collectors.toSet());
     }
