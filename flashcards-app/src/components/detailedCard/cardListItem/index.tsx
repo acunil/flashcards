@@ -29,16 +29,21 @@ const CardListItem = ({
   const backRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
+    // Only initialize when entering edit mode for the first time
     if (isEditing && frontValue === front && backValue === back) {
       setFrontValue(front);
       setBackValue(back);
     }
-  }, [isEditing]);
+  }, [isEditing, front, back, frontValue, backValue]);
 
   useEffect(() => {
     if (isEditing) {
-      frontRef.current?.focus();
-      autoResize(frontRef.current);
+      const el = frontRef.current;
+      if (el) {
+        el.focus();
+        el.selectionStart = el.selectionEnd = el.value.length; // cursor at end
+        autoResize(el);
+      }
       autoResize(backRef.current);
     }
   }, [isEditing]);
