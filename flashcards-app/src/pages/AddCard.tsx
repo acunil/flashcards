@@ -1,42 +1,30 @@
 import { useEffect, useState } from "react";
 import Header from "../components/header";
 import useCreateCard from "../hooks/cards/useCreateCard";
-import useUpdateCard from "../hooks/cards/useUpdateCard";
-import { useParams } from "react-router-dom";
+import type { Deck } from "../types/deck";
+import SearchableMultiSelect from "../components/searchableMultiSelect";
 import { useAppContext } from "../contexts";
+import { CaretLeft } from "phosphor-react";
+import { useNavigate } from "react-router-dom";
 
 const AddCard = () => {
-  const { cardId } = useParams<{ cardId: string }>();
   const [front, setFront] = useState("");
   const [back, setBack] = useState("");
+  const [selectedDecks, setSelectedDecks] = useState<Deck[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [showToast, setShowToast] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-
-  const editCardId = Number(cardId) || 0;
-  const { cards } = useAppContext();
+  const { decks } = useAppContext();
+  const navigate = useNavigate();
   const { createCard } = useCreateCard();
-  const { updateCard } = useUpdateCard();
-
-  const cardToEdit = cards.find((card) => card.id === editCardId) || null;
 
   const resetForm = () => {
     setFront("");
     setBack("");
+    setSelectedDecks([]);
     setError(null);
   };
 
-  // Pre-fill form when editing
-  useEffect(() => {
-    if (cardToEdit) {
-      setFront(cardToEdit.front);
-      setBack(cardToEdit.back);
-    } else {
-      resetForm();
-    }
-  }, [cardToEdit]);
-
-  // Auto-hide toast
   useEffect(() => {
     if (showToast) {
       const timer = setTimeout(() => setShowToast(false), 2000);
@@ -56,15 +44,10 @@ const AddCard = () => {
     setIsSaving(true);
 
     try {
-      if (cardToEdit) {
-        await updateCard(cardToEdit.id, {
-          front,
-          back,
-          deckNamesDto: { deckNames: [] },
-        });
-      } else {
-        await createCard({ front, back });
-      }
+      const deckNames = selectedDecks.map((d) => d.name);
+
+      await createCard({ front, back, deckNames });
+
       resetForm();
       setShowToast(true);
     } catch {
@@ -77,22 +60,29 @@ const AddCard = () => {
   return (
     <div className="bg-yellow-200 min-h-screen">
       {showToast && (
-        <div className="fixed top-9 left-1/2 -translate-x-1/2 bg-green-200 border-2 border-black px-4 py-2 rounded shadow transition-opacity">
+        <div className="fixed top-20 left-1/2 -translate-x-1/2 bg-green-200 border-2 border-black px-4 py-2 rounded shadow transition-opacity z-50">
           Card saved!
         </div>
       )}
 
       <Header />
-      <div className="flex justify-center items-start pt-10">
+      <div className="flex relative justify-center items-start pt-10">
         <form
           onSubmit={handleSubmit}
           className="bg-white p-6 rounded shadow-md w-full max-w-md space-y-4 border-2 border-black"
         >
-          <h1 className="text-xl font-bold text-center">
-            {cardToEdit ? "Edit Card" : "Add a New Card"}
-          </h1>
+          <div className="relative mb-6">
+            <button
+              id="decks-back-button"
+              className="absolute left-0 top-1/2 -translate-y-1/2 cursor-pointer"
+              onClick={() => navigate("/")}
+            >
+              <CaretLeft size={24} />
+            </button>
+            <h1 className="text-xl font-bold text-center">Add a New Card</h1>
+          </div>
 
-          <div>
+          <div className="pt-4">
             <label className="block mb-1 font-medium">Front</label>
             <textarea
               value={front}
@@ -104,13 +94,22 @@ const AddCard = () => {
           </div>
 
           <div>
-            <label className="block mb-1 font-medium">Back</label>
+            <label className="block mb-2 font-medium">Back</label>
             <textarea
               value={back}
               onChange={(e) => setBack(e.target.value)}
               className="w-full p-2 border-2 rounded-md resize-none"
               rows={4}
               placeholder="Enter back text..."
+            />
+          </div>
+
+          <div>
+            <label className="block font-medium">Add to decks</label>
+            <SearchableMultiSelect
+              options={decks}
+              selected={selectedDecks}
+              onChange={setSelectedDecks}
             />
           </div>
 
