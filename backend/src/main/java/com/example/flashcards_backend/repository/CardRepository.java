@@ -2,6 +2,7 @@ package com.example.flashcards_backend.repository;
 
 import com.example.flashcards_backend.model.Card;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -34,4 +35,7 @@ public interface CardRepository extends JpaRepository<Card, Long>, CardRepositor
     """)
     List<CardDeckRowProjection> findAllCardDeckRows();
 
+    @Modifying
+    @Query("DELETE FROM Card c WHERE c.id IN :ids")
+    void deleteCardsById(List<Long> ids);
 }

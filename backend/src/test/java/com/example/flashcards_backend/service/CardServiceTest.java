@@ -232,15 +232,16 @@ class CardServiceTest {
 
     @Test
     void deleteCard_existingCard_deletesCard() {
-        cardService.deleteCard(CARD_1_ID);
-        verify(cardRepository).findById(CARD_1_ID);
-        verify(cardRepository).delete(card1);
+        List<Long> ids = List.of(CARD_1_ID);
+        cardService.deleteCards(ids);
+        verify(cardRepository).deleteCardsById(ids);
     }
 
     @Test
     void deleteCard_missingCard_throwsException() {
-        when(cardRepository.findById(CARD_3_ID)).thenReturn(Optional.empty());
-        assertThatThrownBy(() -> cardService.deleteCard(CARD_3_ID))
+        doThrow(new CardNotFoundException(CARD_3_ID))
+                .when(cardRepository).deleteCardsById(List.of(CARD_3_ID));
+        assertThatThrownBy(() -> cardService.deleteCards(List.of(CARD_3_ID)))
             .isInstanceOf(CardNotFoundException.class)
             .extracting("message")
             .isEqualTo("Card not found with id: " + CARD_3_ID);
