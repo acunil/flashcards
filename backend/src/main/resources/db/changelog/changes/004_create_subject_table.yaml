@@ -59,7 +59,7 @@ databaseChangeLog:
                     defaultValue: "false"
 
   - changeSet:
-      id: 004_insert_initial_subject
+      id: 004_insert_initial_subject_v2
       author: lucian
       changes:
         - insert:
