@@ -49,13 +49,13 @@ databaseChangeLog:
                   name: default_side
                   type: side
                   constraints:
-                    nullable: false
+                    nullable: true
                     defaultValue: "FRONT"
               - column:
                   name: display_deck_names
                   type: BOOLEAN
                   constraints:
-                    nullable: false
+                    nullable: true
                     defaultValue: "false"
 
   - changeSet:
