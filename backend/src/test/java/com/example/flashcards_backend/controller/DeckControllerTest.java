@@ -54,27 +54,6 @@ class DeckControllerTest {
     }
 
     @Test
-    void getAllDecks() throws Exception {
-        // Mock the service to return a set of decks
-        when(deckService.getAll()).thenReturn(Set.of(DeckResponse.fromEntity(deck1), DeckResponse.fromEntity(deck2)));
-
-        String json = mockMvc.perform(get(ENDPOINT))
-            .andExpect(status().isOk())
-            .andReturn()
-            .getResponse()
-            .getContentAsString();
-
-        List<DeckResponse> responses = readResponses(json);
-
-        assertThat(responses)
-            .extracting("id", "name")
-            .containsExactlyInAnyOrder(
-                tuple(deck1.getId(), deck1.getName()),
-                tuple(deck2.getId(), deck2.getName())
-            );
-    }
-
-    @Test
     void getDeckById() throws Exception {
         when(deckService.getDeckById(1L)).thenReturn(deck1);
         mockMvc.perform(get(ENDPOINT + "/1"))

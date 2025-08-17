@@ -52,14 +52,16 @@ public class CardDeckService {
             .name(request.name().trim())
             .build();
         try {
-            deck = deckRepository.save(deck);
+            deck = deckRepository.saveAndFlush(deck);
         } catch (DataIntegrityViolationException e) {
             log.error(e.getMessage(), e);
             throw new DuplicateDeckNameException("A deck with the name '" + request.name() + "' already exists");
         }
 
         if (!isNull(request.cardIds()) && !request.cardIds().isEmpty()) {
-            deck.addCards(getCards(request));
+            Set<Card> cards = getCards(request);
+            Deck finalDeck = deck;
+            cards.forEach(card -> card.addDeck(finalDeck));
         }
 
         return deck;

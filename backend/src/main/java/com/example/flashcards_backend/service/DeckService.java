@@ -1,7 +1,7 @@
 package com.example.flashcards_backend.service;
 
 import com.example.flashcards_backend.annotations.DeckName;
-import com.example.flashcards_backend.dto.DeckResponse;
+import com.example.flashcards_backend.dto.DeckSummary;
 import com.example.flashcards_backend.exception.DeckNotFoundException;
 import com.example.flashcards_backend.model.Deck;
 import com.example.flashcards_backend.repository.DeckRepository;
@@ -20,9 +20,9 @@ public class DeckService {
 
     private final DeckRepository deckRepository;
 
-    public Set<DeckResponse> getAll() {
+    public Set<DeckSummary> getAllDeckSummaries() {
         return deckRepository.findAllWithCards().stream()
-                .map(DeckResponse::fromEntity)
+                .map(DeckSummary::fromEntity)
                 .collect(Collectors.toSet());
     }
 
@@ -34,10 +34,6 @@ public class DeckService {
     public Deck getDeckByName(String name) {
         return deckRepository.findByName(name)
             .orElseThrow(() -> new DeckNotFoundException(name));
-    }
-
-    public Set<Deck> getDecksByCardId(Long cardId) {
-        return deckRepository.findDecksByCardId(cardId);
     }
 
     @Transactional

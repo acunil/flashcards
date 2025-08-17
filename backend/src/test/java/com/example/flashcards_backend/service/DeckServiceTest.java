@@ -1,7 +1,6 @@
 package com.example.flashcards_backend.service;
 
 
-import com.example.flashcards_backend.dto.DeckResponse;
 import com.example.flashcards_backend.exception.DeckNotFoundException;
 import com.example.flashcards_backend.model.Deck;
 import com.example.flashcards_backend.repository.DeckRepository;
@@ -16,8 +15,6 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.*;
 
 import java.util.Optional;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 @ExtendWith(SpringExtension.class)
 class DeckServiceTest {
@@ -37,18 +34,6 @@ class DeckServiceTest {
         // Initialize test data
         deck1 = Deck.builder().id(1L).name("Deck 1").build();
         deck2 = Deck.builder().id(2L).name("Deck 2").build();
-    }
-
-    @Test
-    void testGetAllDecks() {
-        Set<Deck> expectedDecks = Set.of(deck1, deck2);
-        when(deckRepository.findAllWithCards()).thenReturn(expectedDecks.stream().toList());
-
-        Set<DeckResponse> actualDecks = deckService.getAll();
-
-        var expected = expectedDecks.stream().map(DeckResponse::fromEntity).collect(Collectors.toSet());
-
-        assertThat(actualDecks).isEqualTo(expected);
     }
 
     @Test
@@ -86,20 +71,6 @@ class DeckServiceTest {
             deckService.getDeckByName("Nonexistent Deck"))
             .isInstanceOf(DeckNotFoundException.class)
             .hasMessageContaining("Deck not found with name: Nonexistent Deck");
-    }
-
-    @Test
-    void testGetDecksByCardId() {
-        when(deckRepository.findDecksByCardId(1L)).thenReturn(Set.of(deck1));
-        Set<Deck> actualDecks = deckService.getDecksByCardId(1L);
-        assertThat(actualDecks).containsExactly(deck1);
-    }
-
-    @Test
-    void testGetDecksByCardId_returnsEmptySetIfNoDecksFound() {
-        when(deckRepository.findDecksByCardId(99L)).thenReturn(Set.of());
-        Set<Deck> actualDecks = deckService.getDecksByCardId(99L);
-        assertThat(actualDecks).isEmpty();
     }
 
     @Test

@@ -2,7 +2,7 @@ package com.example.flashcards_backend.controller;
 
 import com.example.flashcards_backend.annotations.DeckName;
 import com.example.flashcards_backend.dto.CreateDeckRequest;
-import com.example.flashcards_backend.dto.DeckResponse;
+import com.example.flashcards_backend.dto.DeckSummary;
 import com.example.flashcards_backend.dto.UpdateDeckNameRequest;
 import com.example.flashcards_backend.model.Deck;
 import com.example.flashcards_backend.service.CardDeckService;
@@ -19,6 +19,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.Duration;
+import java.time.Instant;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -36,13 +38,17 @@ public class DeckController {
     @ApiResponses(value = {
         @ApiResponse(responseCode = "200", description = "Successful operation",
             content = @Content(mediaType = "application/json",
-                schema = @Schema(implementation = DeckResponse.class)))
+                schema = @Schema(implementation = DeckSummary.class)))
     })
     @GetMapping
-    public ResponseEntity<Set<DeckResponse>> getAll() {
+    public ResponseEntity<Set<DeckSummary>> getAll() {
+        Instant start = Instant.now();
         log.info("Fetching all decks with cards");
-        Set<DeckResponse> responses = deckService.getAll();
-        log.info("Returning {} decks", responses.size());
+        Set<DeckSummary> responses = deckService.getAllDeckSummaries();
+        Instant end = Instant.now();
+        Duration duration = Duration.between(start, end);
+        log.info("Returning {} decks at {}. Request took {} seconds",
+                responses.size(), Instant.now(), duration.toMillis() / 1000.0);
         return ResponseEntity.ok(responses);
     }
 
@@ -50,44 +56,44 @@ public class DeckController {
     @ApiResponses(value = {
         @ApiResponse(responseCode = "200", description = "Successful operation",
             content = @Content(mediaType = "application/json",
-                schema = @Schema(implementation = DeckResponse.class))),
+                schema = @Schema(implementation = DeckSummary.class))),
         @ApiResponse(responseCode = "404", description = "Deck not found",
             content = @Content(mediaType = "application/json"))
     })
     @GetMapping("/{id}")
-    public ResponseEntity<DeckResponse> getDeckById(@PathVariable Long id) {
+    public ResponseEntity<DeckSummary> getDeckById(@PathVariable Long id) {
         Deck deck = deckService.getDeckById(id);
-        return ResponseEntity.ok(generateResponse(deck));
+        return ResponseEntity.ok(DeckSummary.fromEntity(deck));
     }
 
     @Operation(summary = "Create a new deck", description = "Creates a new deck.")
     @ApiResponses(value = {
         @ApiResponse(responseCode = "201", description = "Deck created",
             content = @Content(mediaType = "application/json",
-                schema = @Schema(implementation = DeckResponse.class))),
+                schema = @Schema(implementation = DeckSummary.class))),
         @ApiResponse(responseCode = "400", description = "Invalid request",
             content = @Content(mediaType = "application/json")),
         @ApiResponse(responseCode = "409", description = "Deck with the same name already exists",
             content = @Content(mediaType = "application/json"))
     })
     @PostMapping("/create")
-    public ResponseEntity<DeckResponse> createDeck(@RequestBody CreateDeckRequest request) {
+    public ResponseEntity<DeckSummary> createDeck(@RequestBody CreateDeckRequest request) {
         Deck createdDeck = cardDeckService.createDeck(request); // Throws DuplicateDeckNameException if a deck with the same name already exists
-        return ResponseEntity.status(HttpStatus.CREATED).body(generateResponse(createdDeck));
+        return ResponseEntity.status(HttpStatus.CREATED).body(DeckSummary.fromEntity(createdDeck));
     }
 
     @Operation(summary = "Update deck name", description = "Renames a deck.")
     @ApiResponses(value = {
         @ApiResponse(responseCode = "200", description = "Deck updated",
             content = @Content(mediaType = "application/json",
-                schema = @Schema(implementation = DeckResponse.class))),
+                schema = @Schema(implementation = DeckSummary.class))),
         @ApiResponse(responseCode = "404", description = "Deck not found",
             content = @Content(mediaType = "application/json"))
     })
     @PutMapping("/{id}")
-    public ResponseEntity<DeckResponse> updateDeckName(@PathVariable Long id, @RequestBody UpdateDeckNameRequest request) {
+    public ResponseEntity<DeckSummary> updateDeckName(@PathVariable Long id, @RequestBody UpdateDeckNameRequest request) {
         Deck updatedDeck = deckService.renameDeck(id, request.newName());
-        return ResponseEntity.ok(generateResponse(updatedDeck));
+        return ResponseEntity.ok(DeckSummary.fromEntity(updatedDeck));
     }
 
     @Operation(summary = "Delete deck", description = "Deletes a deck by its ID.")
@@ -107,23 +113,17 @@ public class DeckController {
     @ApiResponses(value = {
         @ApiResponse(responseCode = "200", description = "Successful operation",
             content = @Content(mediaType = "application/json",
-                schema = @Schema(implementation = DeckResponse.class)))
+                schema = @Schema(implementation = DeckSummary.class)))
     })
     @PostMapping
-    public ResponseEntity<Set<DeckResponse>> getDecksByNames(@RequestParam Set<@DeckName String> names) {
+    public ResponseEntity<Set<DeckSummary>> getDecksByNames(@RequestParam Set<@DeckName String> names) {
         Set<Deck> decks = cardDeckService.getOrCreateDecksByNames(names);
-        return ResponseEntity.ok(generateResponse(decks));
+        return ResponseEntity.ok(
+            decks.stream()
+                .map(DeckSummary::fromEntity)
+                .collect(Collectors.toSet())
+        );
     }
 
     /* Helpers */
-
-    private static Set<DeckResponse> generateResponse(Set<Deck> decks) {
-        return decks.stream()
-            .map(DeckResponse::fromEntity)
-            .collect(Collectors.toSet());
-    }
-
-    private static DeckResponse generateResponse(Deck deck) {
-        return DeckResponse.fromEntity(deck);
-    }
 }

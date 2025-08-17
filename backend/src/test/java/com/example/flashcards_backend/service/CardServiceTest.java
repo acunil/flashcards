@@ -71,8 +71,6 @@ class CardServiceTest {
             .build();
         card1.addDecks(Set.of(deck1, deck2));
         card2.addDecks(Set.of(deck1));
-        deck1.addCards(Set.of(card1, card2));
-        deck2.addCards(Set.of(card1));
         originalCards = List.of(card1, card2, card3);
 
         when(cardRepository.findById(CARD_1_ID)).thenReturn(Optional.of(card1));
