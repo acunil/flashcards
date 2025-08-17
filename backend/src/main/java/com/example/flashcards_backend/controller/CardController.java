@@ -12,6 +12,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -19,39 +20,35 @@ import org.springframework.web.bind.annotation.*;
 import jakarta.validation.Valid;
 
 import java.net.URI;
+import java.time.Instant;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/cards")
+@RequestMapping("/cards")
 @Validated
 @AllArgsConstructor
+@Slf4j
 public class CardController {
 
-    public static final String REQUEST_MAPPING = "/api/cards/";
+    public static final String REQUEST_MAPPING = "/cards/";
     private final CardService cardService;
     private final CardHistoryService cardHistoryService;
 
     @Operation(summary = "Get all cards",
-        description = "Returns all cards. Optionally shuffled. Optionally filtered by average rating.")
+            description = "Returns all cards.")
     @ApiResponses(value = {
-        @ApiResponse(responseCode = "200", description = "Successful operation",
-            content = @Content(mediaType = "application/json",
-                schema = @Schema(implementation = CardResponse.class)))
+            @ApiResponse(responseCode = "200", description = "Successful operation",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = CardResponse[].class)))
     })
     @GetMapping
-    public List<CardResponse> getAll(
-        @RequestParam(name = "shuffled", defaultValue = "false") boolean shuffled,
-        @RequestParam(name = "minAvgRating", required = false) Double minAvgRating,
-        @RequestParam(name = "maxAvgRating", required = false) Double maxAvgRating
-    ) {
-        var cards = cardService.getAllCards(shuffled);
-
-        return generateResponse(cards);
-    }
-
-    @GetMapping("/response")
     public ResponseEntity<List<CardResponse>> getAllCardResponses() {
+        log.info("GET /cards");
+        Instant start = Instant.now();
         var cards = cardService.getAllCardResponses();
+        Instant end = Instant.now();
+        log.info("GET /cards: took {}s", end.toEpochMilli() - start.toEpochMilli() / 1000);
+        log.info("GET /cards: returned {} cards", cards.size());
         return ResponseEntity.ok(cards);
     }
 
@@ -90,7 +87,8 @@ public class CardController {
             .body(response);
     }
 
-    @Operation(summary = "Update card", description = "Updates a card by its ID.")
+    @Operation(summary = "Update card",
+            description = "Updates a card by its ID. Existing properties are entirely overwritten by those provided.")
     @ApiResponses(value = {
         @ApiResponse(responseCode = "204", description = "Card updated",
             content = @Content(mediaType = "application/json")),
@@ -125,11 +123,12 @@ public class CardController {
         return ResponseEntity.noContent().build();
     }
 
-    @Operation(summary = "Get cards by minimum average rating", description = "Returns cards with an average rating above a threshold.")
+    @Operation(summary = "Get cards by minimum average rating",
+            description = "Returns cards with an average rating above a threshold.")
     @ApiResponses(value = {
         @ApiResponse(responseCode = "200", description = "Successful operation",
             content = @Content(mediaType = "application/json",
-                schema = @Schema(implementation = CardResponse.class))),
+                schema = @Schema(implementation = CardResponse[].class))),
         @ApiResponse(responseCode = "400", description = "Bad request, invalid rating threshold",
             content = @Content(mediaType = "application/json"))
     })
@@ -143,11 +142,12 @@ public class CardController {
         return ResponseEntity.ok(generateResponse(cards));
     }
 
-    @Operation(summary = "Get cards by maximum average rating", description = "Returns cards with an average rating below a threshold.")
+    @Operation(summary = "Get cards by maximum average rating",
+            description = "Returns cards with an average rating below a threshold.")
     @ApiResponses(value = {
         @ApiResponse(responseCode = "200", description = "Successful operation",
             content = @Content(mediaType = "application/json",
-                schema = @Schema(implementation = CardResponse.class))),
+                schema = @Schema(implementation = CardResponse[].class))),
         @ApiResponse(responseCode = "400", description = "Bad request, invalid rating threshold",
             content = @Content(mediaType = "application/json"))
     })

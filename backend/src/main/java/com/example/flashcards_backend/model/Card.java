@@ -1,6 +1,5 @@
 package com.example.flashcards_backend.model;
 
-import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Size;
 import lombok.*;
@@ -15,7 +14,6 @@ import java.util.Set;
 @Entity
 @Getter
 @Setter
-@ToString
 @RequiredArgsConstructor
 @AllArgsConstructor
 @Builder(builderClassName = "CardBuilder")
@@ -33,11 +31,13 @@ public class Card {
     @Size(min = 1, max = 100, message = "Back text must be between 1 and 100 characters")
     private String back;
 
-    @ManyToMany(mappedBy = "cards")
-    @EqualsAndHashCode.Exclude
-    @ToString.Exclude
+
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(
+            name = "card_deck",
+            joinColumns = @JoinColumn(name = "card_id"),
+            inverseJoinColumns = @JoinColumn(name = "deck_id"))
     @Builder.Default
-    @JsonBackReference
     private Set<Deck> decks = new HashSet<>();
 
     @OneToMany(mappedBy = "card", cascade = CascadeType.REMOVE, orphanRemoval = true)
@@ -48,21 +48,14 @@ public class Card {
 
     public void addDeck(Deck deck) {
         decks.add(deck);
-        deck.getCards().add(this);
     }
 
     public void removeDeck(Deck deck) {
         decks.remove(deck);
-        deck.getCards().remove(this);
     }
 
-    @PreRemove
     public void removeAllDecks() {
-        log.info("Removing all decks from card with ID: {}", id);
-        for (Deck deck : new HashSet<>(decks)) {
-            removeDeck(deck);
-        }
-        log.info("Card was detached from {} decks", decks.size());
+        decks.clear();
     }
 
     public void addDecks(Set<Deck> newDecks) {
@@ -105,18 +98,9 @@ public class Card {
         return deckNames;
     }
 
-    public Deck getDeckById(Long deckId) {
-        return decks.stream()
-                .filter(deck -> deck.getId().equals(deckId))
-                .findFirst()
-                .orElse(null);
-    }
-
     public void addCardHistory(CardHistory cardHistory) {
         cardHistory.setCard(this);
     }
-
-
 
     public static class CardBuilder {
         private Long id;

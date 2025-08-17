@@ -29,8 +29,6 @@ class CardTest {
         assertThat(card.getDecks())
             .hasSize(2)
             .contains(deck1, deck2);
-        assertThat(deck1.getCards()).contains(card);
-        assertThat(deck2.getCards()).contains(card);
     }
 
     @Test
@@ -88,14 +86,6 @@ class CardTest {
 
         var deckNames = card.getDeckNames();
         assertThat(deckNames).containsExactlyInAnyOrder("Deck 1", "Deck 2");
-    }
-
-    @Test
-    void testGetDeckById() {
-        card.addDeck(deck1);
-
-        assertThat(card.getDeckById(1L)).isEqualTo(deck1);
-        assertThat(card.getDeckById(2L)).isNull();
     }
 
 

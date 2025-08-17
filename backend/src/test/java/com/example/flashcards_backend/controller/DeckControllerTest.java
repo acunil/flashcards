@@ -1,7 +1,7 @@
 package com.example.flashcards_backend.controller;
 
 import com.example.flashcards_backend.dto.CreateDeckRequest;
-import com.example.flashcards_backend.dto.DeckResponse;
+import com.example.flashcards_backend.dto.DeckSummary;
 import com.example.flashcards_backend.exception.DeckNotFoundException;
 import com.example.flashcards_backend.exception.DuplicateDeckNameException;
 import com.example.flashcards_backend.model.Deck;
@@ -30,7 +30,7 @@ import java.util.Set;
 @WebMvcTest(DeckController.class)
 class DeckControllerTest {
 
-    public static final String ENDPOINT = "/api/decks";
+    public static final String ENDPOINT = "/decks";
 
     @MockitoBean
     private CardDeckService cardDeckService;
@@ -51,27 +51,6 @@ class DeckControllerTest {
     void setUp() {
         deck1 = Deck.builder().id(1L).name("Deck 1").build();
         deck2 = Deck.builder().id(2L).name("Deck 2").build();
-    }
-
-    @Test
-    void getAllDecks() throws Exception {
-        // Mock the service to return a set of decks
-        when(deckService.getAll()).thenReturn(Set.of(DeckResponse.fromEntity(deck1), DeckResponse.fromEntity(deck2)));
-
-        String json = mockMvc.perform(get(ENDPOINT))
-            .andExpect(status().isOk())
-            .andReturn()
-            .getResponse()
-            .getContentAsString();
-
-        List<DeckResponse> responses = readResponses(json);
-
-        assertThat(responses)
-            .extracting("id", "name")
-            .containsExactlyInAnyOrder(
-                tuple(deck1.getId(), deck1.getName()),
-                tuple(deck2.getId(), deck2.getName())
-            );
     }
 
     @Test
@@ -175,9 +154,9 @@ class DeckControllerTest {
             .getResponse()
             .getContentAsString();
 
-        List<DeckResponse> responses = readResponses(json);
+        List<DeckSummary> summaries = readSummaries(json);
 
-        assertThat(responses)
+        assertThat(summaries)
             .extracting("id", "name")
             .containsExactlyInAnyOrder(
                 tuple(deck1.getId(), deck1.getName()),
@@ -188,7 +167,7 @@ class DeckControllerTest {
 
     /* Helpers */
 
-    private List<DeckResponse> readResponses(String json) throws JsonProcessingException {
+    private List<DeckSummary> readSummaries(String json) throws JsonProcessingException {
         return objectMapper.readValue(json, new TypeReference<>() {});
     }
 

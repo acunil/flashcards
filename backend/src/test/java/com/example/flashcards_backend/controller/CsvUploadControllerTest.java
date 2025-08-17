@@ -24,7 +24,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @WebMvcTest(CsvUploadController.class)
 class CsvUploadControllerTest {
 
-    public static final String PATH = "/api/upload";
+    public static final String PATH = "/csv";
 
     @MockitoBean
     private CsvUploadServiceImpl csvUploadService;

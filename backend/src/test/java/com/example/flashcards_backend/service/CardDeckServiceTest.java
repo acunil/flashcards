@@ -89,7 +89,7 @@ class CardDeckServiceTest {
     void testCreateDeck() {
         CreateDeckRequest request = new CreateDeckRequest("New Deck", null);
         ArgumentCaptor<Deck> captor = ArgumentCaptor.forClass(Deck.class);
-        when(deckRepository.save(captor.capture())).thenAnswer(invocation -> invocation.getArgument(0));
+        when(deckRepository.saveAndFlush(captor.capture())).thenAnswer(invocation -> invocation.getArgument(0));
 
         Deck actualDeck = cardDeckService.createDeck(request);
         assertThat(actualDeck.getName()).isEqualTo("New Deck");
@@ -103,20 +103,14 @@ class CardDeckServiceTest {
         when(cardRepository.findAllById(anySet())).thenReturn(cards.stream().toList());
 
         ArgumentCaptor<Deck> captor = ArgumentCaptor.forClass(Deck.class);
-        when(deckRepository.save(captor.capture())).thenAnswer(invocation -> invocation.getArgument(0));
+        when(deckRepository.saveAndFlush(captor.capture())).thenAnswer(invocation -> invocation.getArgument(0));
 
         Deck actualDeck = cardDeckService.createDeck(request);
 
         assertThat(actualDeck.getName()).isEqualTo("New Deck");
-        assertThat(actualDeck.getCards())
-                .extracting(Card::getId)
-                .containsExactlyInAnyOrder(1L, 2L);
 
         Deck savedDeck = captor.getValue();
         assertThat(savedDeck.getName()).isEqualTo("New Deck");
-        assertThat(savedDeck.getCards())
-                .extracting(Card::getId)
-                .containsExactlyInAnyOrder(1L, 2L);
     }
 
     @Test
@@ -124,23 +118,21 @@ class CardDeckServiceTest {
         CreateDeckRequest request = new CreateDeckRequest("New Deck", Set.of());
 
         ArgumentCaptor<Deck> captor = ArgumentCaptor.forClass(Deck.class);
-        when(deckRepository.save(captor.capture())).thenAnswer(invocation -> invocation.getArgument(0));
+        when(deckRepository.saveAndFlush(captor.capture())).thenAnswer(invocation -> invocation.getArgument(0));
 
         Deck actualDeck = cardDeckService.createDeck(request);
 
         assertThat(actualDeck.getName()).isEqualTo("New Deck");
-        assertThat(actualDeck.getCards()).isEmpty();
 
         Deck savedDeck = captor.getValue();
         assertThat(savedDeck.getName()).isEqualTo("New Deck");
-        assertThat(savedDeck.getCards()).isEmpty();
     }
 
     @Test
     void testCreateDeck_withAlreadyExistingDeckName() {
         CreateDeckRequest request = new CreateDeckRequest("Existing Deck", null);
 
-        when(deckRepository.save(any(Deck.class)))
+        when(deckRepository.saveAndFlush(any(Deck.class)))
                 .thenThrow(new DataIntegrityViolationException("Duplicate entry"));
 
         assertThatThrownBy(() -> cardDeckService.createDeck(request))

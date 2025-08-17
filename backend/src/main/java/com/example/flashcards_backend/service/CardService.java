@@ -56,17 +56,6 @@ public class CardService {
         return new ArrayList<>(cardMap.values());
     }
 
-    public List<Card> getAllCards() {
-        return cardRepository.findAll();
-    }
-
-    public List<Card> getAllCards(boolean shuffled) {
-        var cards = getAllCards();
-        return shuffled
-               ? shuffleCards(cards)
-               : cards;
-    }
-
     public Card getCardById(Long id) {
         return cardRepository.findById(id)
             .orElseThrow(() -> new CardNotFoundException(id));
