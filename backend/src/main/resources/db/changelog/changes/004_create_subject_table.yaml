@@ -39,12 +39,12 @@ databaseChangeLog:
                   name: front_label
                   type: VARCHAR(255)
                   constraints:
-                    nullable: false
+                    nullable: true
               - column:
                   name: back_label
                   type: VARCHAR(255)
                   constraints:
-                    nullable: false
+                    nullable: true
               - column:
                   name: default_side
                   type: side
@@ -56,6 +56,7 @@ databaseChangeLog:
                   type: BOOLEAN
                   constraints:
                     nullable: false
+                    defaultValue: "false"
 
   - changeSet:
       id: 004_insert_initial_subject

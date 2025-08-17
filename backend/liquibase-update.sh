@@ -14,11 +14,21 @@ DB_USERNAME=$(grep -v '^#' "$ENV_FILE" | grep '^DB_USERNAME=' | cut -d '=' -f2-)
 DB_PASSWORD=$(grep -v '^#' "$ENV_FILE" | grep '^DB_PASSWORD=' | cut -d '=' -f2-)
 
 # Debug
-echo "-> DB_URL=$DB_URL"
-echo "-> DB_USERNAME=$DB_USERNAME"
+echo "Using database URL: $DB_URL"
+echo "Using database username: $DB_USERNAME"
 
-# Run Liquibase passing values as Maven properties
+# Clear checksums to ensure Liquibase picks up any modified/added changesets
+echo "Clearing Liquibase checksums..."
+./mvnw liquibase:clearCheckSums \
+  -DDB_URL="$DB_URL" \
+  -DDB_USERNAME="$DB_USERNAME" \
+  -DDB_PASSWORD="$DB_PASSWORD"
+
+# Run Liquibase update (only applies pending changesets)
+echo "Running Liquibase update..."
 ./mvnw liquibase:update \
   -DDB_URL="$DB_URL" \
   -DDB_USERNAME="$DB_USERNAME" \
   -DDB_PASSWORD="$DB_PASSWORD"
+
+  echo "Liquibase update complete."
