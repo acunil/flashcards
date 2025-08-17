@@ -133,22 +133,22 @@
 					</excludes>
 				</configuration>
 			</plugin>
-			<plugin>
-				<groupId>org.liquibase</groupId>
-				<artifactId>liquibase-maven-plugin</artifactId>
-				<version>4.33.0</version>
-				<configuration>
-					<changeLogFile>src/main/resources/db/changelog/db.changelog-master.xml</changeLogFile>
-				</configuration>
-				<dependencies>
-					<dependency>
-						<groupId>org.postgresql</groupId>
-						<artifactId>postgresql</artifactId>
-						<version>42.7.7</version>
-					</dependency>
-				</dependencies>
-			</plugin>
-			<plugin>
+            <plugin>
+                <groupId>org.liquibase</groupId>
+                <artifactId>liquibase-maven-plugin</artifactId>
+                <version>4.33.0</version>
+                <configuration>
+                    <propertyFile>src/main/resources/liquibase.properties</propertyFile>
+                    <!--suppress UnresolvedMavenProperty -->
+                    <url>${DB_URL}</url>
+                    <!--suppress UnresolvedMavenProperty -->
+                    <username>${DB_USERNAME}</username>
+                    <!--suppress UnresolvedMavenProperty -->
+                    <password>${DB_PASSWORD}</password>
+                    <driver>org.postgresql.Driver</driver>
+                </configuration>
+            </plugin>
+            <plugin>
 				<groupId>org.springdoc</groupId>
 				<artifactId>springdoc-openapi-maven-plugin</artifactId>
 				<version>1.5</version>
