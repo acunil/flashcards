@@ -50,7 +50,7 @@ databaseChangeLog:
                   type: side
                   constraints:
                     nullable: true
-                    defaultValue: "FRONT"
+                    defaultValueComputed: 'FRONT'
               - column:
                   name: display_deck_names
                   type: BOOLEAN
@@ -76,7 +76,7 @@ databaseChangeLog:
                   value: "Custom Back"
               - column:
                   name: default_side
-                  value: "FRONT"
+                  valueComputed: 'FRONT'
               - column:
                   name: display_deck_names
                   valueBoolean: false
