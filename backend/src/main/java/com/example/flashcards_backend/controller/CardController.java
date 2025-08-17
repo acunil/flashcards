@@ -1,8 +1,6 @@
 package com.example.flashcards_backend.controller;
 
-import com.example.flashcards_backend.dto.CardRequest;
-import com.example.flashcards_backend.dto.CardResponse;
-import com.example.flashcards_backend.dto.CreateCardResponse;
+import com.example.flashcards_backend.dto.*;
 import com.example.flashcards_backend.model.Card;
 import com.example.flashcards_backend.service.CardHistoryService;
 import com.example.flashcards_backend.service.CardService;
@@ -49,6 +47,12 @@ public class CardController {
         var cards = cardService.getAllCards(shuffled);
 
         return generateResponse(cards);
+    }
+
+    @GetMapping("/response")
+    public ResponseEntity<List<CardResponse>> getAllCardResponses() {
+        var cards = cardService.getAllCardResponses();
+        return ResponseEntity.ok(cards);
     }
 
     @Operation(summary = "Get card by ID", description = "Returns a card by its ID.")
