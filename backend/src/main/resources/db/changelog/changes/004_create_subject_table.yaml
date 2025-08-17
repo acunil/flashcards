@@ -1,6 +1,6 @@
 databaseChangeLog:
   - changeSet:
-      id: 004_create_side_enum
+      id: 004_create_side_enum_v2
       author: lucian
       changes:
         - sql:
@@ -15,7 +15,7 @@ databaseChangeLog:
               $$;
 
   - changeSet:
-      id: 004_create_subject_table
+      id: 004_create_subject_table_v2
       author: lucian
       changes:
         - createTable:
