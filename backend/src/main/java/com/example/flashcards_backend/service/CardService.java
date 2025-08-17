@@ -34,17 +34,7 @@ public class CardService {
             CardResponse existing = cardMap.get(row.getCardId());
 
             if (existing == null) {
-                existing = new CardResponse(
-                        row.getCardId(),
-                        row.getFront(),
-                        row.getBack(),
-                        new HashSet<>(),
-                        row.getAvgRating(),
-                        row.getViewCount(),
-                        row.getLastViewed(),
-                        row.getLastRating()
-                );
-
+                existing = CardResponse.fromEntity(row);
                 cardMap.put(row.getCardId(), existing);
             }
 

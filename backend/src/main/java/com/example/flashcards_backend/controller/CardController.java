@@ -47,8 +47,7 @@ public class CardController {
         Instant start = Instant.now();
         var cards = cardService.getAllCardResponses();
         Instant end = Instant.now();
-        log.info("GET /cards: took {}s", end.toEpochMilli() - start.toEpochMilli() / 1000);
-        log.info("GET /cards: returned {} cards", cards.size());
+        log.info("GET /cards: returned {} cards in {} seconds", cards.size(), (end.toEpochMilli() - start.toEpochMilli()) / 1000.0);
         return ResponseEntity.ok(cards);
     }
 
