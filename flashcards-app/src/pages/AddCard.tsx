@@ -131,7 +131,7 @@ const AddCard = () => {
           </div>
 
           <div>
-            <label className="block font-medium">Add to decks</label>
+            <label className="block font-medium">Decks</label>
             <SearchableMultiSelect
               options={decks}
               selected={selectedDecks}

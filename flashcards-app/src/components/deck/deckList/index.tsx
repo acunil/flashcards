@@ -26,7 +26,7 @@ const DeckList = ({ decks, onAddDeck }: DeckListProps) => {
   };
 
   return (
-    <div className="flex flex-col items-center gap-2 m-2 max-w-xs mx-auto w-full">
+    <div className="flex flex-col items-center gap-2 m-2 p-2 mb-4 max-w-xs mx-auto w-full">
       <DeckListItem
         deck={{ id: 0, name: "all cards" }}
         className={"bg-pink-200"}
