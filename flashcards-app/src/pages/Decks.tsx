@@ -36,7 +36,7 @@ const Decks = () => {
                 <CaretLeft size={24} />
               </button>
             </div>
-            <p className="mx-auto text-md">decks</p>
+            <h1 className="text-xl font-bold text-center mx-auto">decks</h1>
           </div>
 
           {(loading || creating) && <DeckListSkeleton />}

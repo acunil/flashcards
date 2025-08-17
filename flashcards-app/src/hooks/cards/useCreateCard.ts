@@ -3,6 +3,7 @@ import { useState } from "react";
 export type NewCard = {
   front: string;
   back: string;
+  deckNames: string[];
 };
 
 const API_URL = "http://localhost:8080/cards";
@@ -27,7 +28,7 @@ const useCreateCard = () => {
       }
 
       const data = await response.json();
-      return data; // This is your CardResponse
+      return data;
     } catch (err: unknown) {
       if (err instanceof Error) {
         setError(err.message);
