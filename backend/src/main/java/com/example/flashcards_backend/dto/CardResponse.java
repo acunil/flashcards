@@ -4,6 +4,7 @@ import com.example.flashcards_backend.model.Card;
 import com.example.flashcards_backend.model.CardHistory;
 
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -12,7 +13,7 @@ public record CardResponse(
     @JsonProperty("id")         Long    id,
     @JsonProperty("front")      String  front,
     @JsonProperty("back")       String  back,
-    @JsonProperty("deckNames")  Set<String> deckNames,
+    @JsonProperty("decks")      Set<DeckSummary> decks,
     @JsonProperty("avgRating")  Double  avgRating,
     @JsonProperty("viewCount")  Integer viewCount,
     @JsonProperty("lastViewed") String  lastViewed,
@@ -25,20 +26,23 @@ public record CardResponse(
     }
 
     public static CardResponse fromEntity(Card card) {
-        CardHistory ch = card.getCardHistories()
-            .stream()
-            .findFirst()
-            .orElseGet(CardHistory::new);
+        Set<DeckSummary> deckSummaries = card.getDecks().stream()
+                .map(DeckSummary::fromEntity)
+                .collect(Collectors.toSet());
+
+        CardHistory ch = card.getCardHistories().stream()
+                .findFirst()
+                .orElseGet(CardHistory::new);
 
         return new CardResponse(
-            card.getId(),
-            card.getFront(),
-            card.getBack(),
-            card.getDeckNames(),
-            ch.getAvgRating(),
-            ch.getViewCount(),
-            ch.getLastViewed() != null ? ch.getLastViewed().toString() : null,
-            ch.getLastRating()
+                card.getId(),
+                card.getFront(),
+                card.getBack(),
+                deckSummaries,
+                ch.getAvgRating(),
+                ch.getViewCount(),
+                ch.getLastViewed() != null ? ch.getLastViewed().toString() : null,
+                ch.getLastRating()
         );
     }
 }

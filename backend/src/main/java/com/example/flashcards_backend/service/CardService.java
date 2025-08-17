@@ -1,11 +1,14 @@
 package com.example.flashcards_backend.service;
 
 import com.example.flashcards_backend.dto.CardRequest;
+import com.example.flashcards_backend.dto.CardResponse;
+import com.example.flashcards_backend.dto.DeckSummary;
 import com.example.flashcards_backend.exception.CardNotFoundException;
 import com.example.flashcards_backend.model.Card;
 import com.example.flashcards_backend.model.CardCreationResult;
 import com.example.flashcards_backend.model.Deck;
 import com.example.flashcards_backend.repository.CardRepository;
+import com.example.flashcards_backend.repository.CardDeckRowProjection;
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
 import org.springframework.dao.DataAccessException;
@@ -21,6 +24,37 @@ public class CardService {
     private final CardRepository cardRepository;
     private final CardHistoryService cardHistoryService;
     private final CardDeckService cardDeckService;
+
+    public List<CardResponse> getAllCardResponses() {
+        List<CardDeckRowProjection> rows = cardRepository.findAllCardDeckRows();
+
+        Map<Long, CardResponse> cardMap = new LinkedHashMap<>();
+
+        for (CardDeckRowProjection row : rows) {
+            CardResponse existing = cardMap.get(row.getCardId());
+
+            if (existing == null) {
+                existing = new CardResponse(
+                        row.getCardId(),
+                        row.getFront(),
+                        row.getBack(),
+                        new HashSet<>(),
+                        row.getAvgRating(),
+                        row.getViewCount(),
+                        row.getLastViewed(),
+                        row.getLastRating()
+                );
+
+                cardMap.put(row.getCardId(), existing);
+            }
+
+            if (row.getDeckId() != null) {
+                existing.decks().add(new DeckSummary(row.getDeckId(), row.getDeckName()));
+            }
+        }
+
+        return new ArrayList<>(cardMap.values());
+    }
 
     public List<Card> getAllCards() {
         return cardRepository.findAll();
