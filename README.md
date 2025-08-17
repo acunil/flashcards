@@ -31,7 +31,7 @@ curl -X POST http://localhost:8080/api/upload \
 This is already active in the Neon database.
 
 ```sql
-CREATE PROCEDURE record_card_rating(
+CREATE OR REPLACE PROCEDURE record_card_rating(
   IN p_card_id BIGINT,
   IN p_rating INT
 )
@@ -43,13 +43,12 @@ BEGIN
     view_count  = view_count + 1,
     last_viewed = NOW(),
     last_rating = p_rating,
-    avg_rating  = ((avg_rating * (view_count::numeric)) + p_rating)
-                  / (view_count + 1)
+    avg_rating  = ROUND(((avg_rating * (view_count::numeric)) + p_rating) / (view_count + 1), 1)
   WHERE card_id = p_card_id;
 
   IF NOT FOUND THEN
     INSERT INTO card_history(card_id, avg_rating, view_count, last_viewed, last_rating)
-    VALUES (p_card_id, p_rating, 1, NOW(), p_rating);
+    VALUES (p_card_id, ROUND(p_rating::numeric, 1), 1, NOW(), p_rating);
   END IF;
 END;
 $$;
@@ -58,5 +57,5 @@ $$;
 To view the stored procedure, you can use the following command in the Neon database:
 
 ```sql
-\df+ record_card_vote
+\df+ record_card_rating
 ```
