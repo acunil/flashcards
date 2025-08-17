@@ -61,46 +61,6 @@ class CardControllerTest {
         objectMapper.registerModule(new JavaTimeModule());
     }
 
-    @Test
-    void getAll_returnsListOfCardResponse() throws Exception {
-        when(cardService.getAllCards(false)).thenReturn(List.of(c1, c2));
-
-        mockMvc.perform(get(ENDPOINT))
-            .andExpect(status().isOk())
-            .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-            .andExpect(jsonPath("$[0].id").value(1))
-            .andExpect(jsonPath("$[0].front").value("f1"))
-            .andExpect(jsonPath("$[0].back").value("b1"))
-            .andExpect(jsonPath("$[0].avgRating").value(2))
-            .andExpect(jsonPath("$[0].viewCount").value(10))
-            .andExpect(jsonPath("$[0].lastViewed").value("2023-10-01T12:00"))
-            .andExpect(jsonPath("$[0].lastRating").value(3))
-            .andExpect(jsonPath("$[1].id").value(2))
-            .andExpect(jsonPath("$[1].front").value("f2"))
-            .andExpect(jsonPath("$[1].back").value("b2"))
-            .andExpect(jsonPath("$[1].avgRating").value(2))
-            .andExpect(jsonPath("$[1].viewCount").value(10))
-            .andExpect(jsonPath("$[1].lastViewed").value("2023-10-01T12:00"))
-            .andExpect(jsonPath("$[1].lastRating").value(3));
-        verify(cardService, never()).getAllCards(true);
-    }
-
-    @Test
-    void getAll_shuffledTrue_returnsListOfCardResponse() throws Exception {
-        when(cardService.getAllCards(true)).thenReturn(List.of(c1, c2));
-
-        mockMvc.perform(get(ENDPOINT)
-                .param("shuffled", "true"))
-            .andExpect(status().isOk())
-            .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-            .andExpect(jsonPath("$[0].id").value(1))
-            .andExpect(jsonPath("$[0].front").value("f1"))
-            .andExpect(jsonPath("$[0].back").value("b1"))
-            .andExpect(jsonPath("$[1].id").value(2))
-            .andExpect(jsonPath("$[1].front").value("f2"))
-            .andExpect(jsonPath("$[1].back").value("b2"));
-        verify(cardService, never()).getAllCards(false);
-    }
 
     @Test
     void getById_existingId_returnsCardResponse() throws Exception {

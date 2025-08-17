@@ -80,26 +80,6 @@ class CardServiceTest {
     }
 
     @Test
-    void testGetAllCards() {
-         List<Card> cards = cardService.getAllCards();
-         assertThat(cards).containsExactly(card1, card2, card3);
-    }
-
-    @Test
-    void testGetAllCardsShuffledTrue() {
-        assertEventuallyReorders(
-            () -> cardService.getAllCards(true),
-            originalCards
-        );
-    }
-
-    @Test
-    void testGetAllCardsShuffledFalse() {
-        List<Card> shuffledCards = cardService.getAllCards(false);
-        assertThat(shuffledCards).containsExactly(card1, card2, card3);
-    }
-
-    @Test
     void testGetCardById() {
         Card foundCard = cardService.getCardById(CARD_1_ID);
         assertThat(foundCard).isEqualTo(card1);

@@ -32,24 +32,13 @@ public class CardController {
     private final CardHistoryService cardHistoryService;
 
     @Operation(summary = "Get all cards",
-        description = "Returns all cards. Optionally shuffled. Optionally filtered by average rating.")
+            description = "Returns all cards.")
     @ApiResponses(value = {
-        @ApiResponse(responseCode = "200", description = "Successful operation",
-            content = @Content(mediaType = "application/json",
-                schema = @Schema(implementation = CardResponse.class)))
+            @ApiResponse(responseCode = "200", description = "Successful operation",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = CardResponse[].class)))
     })
     @GetMapping
-    public List<CardResponse> getAll(
-        @RequestParam(name = "shuffled", defaultValue = "false") boolean shuffled,
-        @RequestParam(name = "minAvgRating", required = false) Double minAvgRating,
-        @RequestParam(name = "maxAvgRating", required = false) Double maxAvgRating
-    ) {
-        var cards = cardService.getAllCards(shuffled);
-
-        return generateResponse(cards);
-    }
-
-    @GetMapping("/response")
     public ResponseEntity<List<CardResponse>> getAllCardResponses() {
         var cards = cardService.getAllCardResponses();
         return ResponseEntity.ok(cards);
@@ -129,7 +118,7 @@ public class CardController {
     @ApiResponses(value = {
         @ApiResponse(responseCode = "200", description = "Successful operation",
             content = @Content(mediaType = "application/json",
-                schema = @Schema(implementation = CardResponse.class))),
+                schema = @Schema(implementation = CardResponse[].class))),
         @ApiResponse(responseCode = "400", description = "Bad request, invalid rating threshold",
             content = @Content(mediaType = "application/json"))
     })
@@ -147,7 +136,7 @@ public class CardController {
     @ApiResponses(value = {
         @ApiResponse(responseCode = "200", description = "Successful operation",
             content = @Content(mediaType = "application/json",
-                schema = @Schema(implementation = CardResponse.class))),
+                schema = @Schema(implementation = CardResponse[].class))),
         @ApiResponse(responseCode = "400", description = "Bad request, invalid rating threshold",
             content = @Content(mediaType = "application/json"))
     })

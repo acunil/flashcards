@@ -37,6 +37,7 @@ public class Card {
             name = "card_deck",
             joinColumns = @JoinColumn(name = "card_id"),
             inverseJoinColumns = @JoinColumn(name = "deck_id"))
+    @Builder.Default
     private Set<Deck> decks = new HashSet<>();
 
     @OneToMany(mappedBy = "card", cascade = CascadeType.REMOVE, orphanRemoval = true)
