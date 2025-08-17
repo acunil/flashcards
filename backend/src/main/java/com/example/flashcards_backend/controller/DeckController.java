@@ -19,8 +19,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
-import java.time.Duration;
-import java.time.Instant;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -34,7 +32,7 @@ public class DeckController {
     private final DeckService deckService;
     private final CardDeckService cardDeckService;
 
-    @Operation(summary = "Get all decks", description = "Returns all decks with cards.")
+    @Operation(summary = "Get all decks", description = "Returns all decks.")
     @ApiResponses(value = {
         @ApiResponse(responseCode = "200", description = "Successful operation",
             content = @Content(mediaType = "application/json",
@@ -42,13 +40,7 @@ public class DeckController {
     })
     @GetMapping
     public ResponseEntity<Set<DeckSummary>> getAll() {
-        Instant start = Instant.now();
-        log.info("Fetching all decks with cards");
         Set<DeckSummary> responses = deckService.getAllDeckSummaries();
-        Instant end = Instant.now();
-        Duration duration = Duration.between(start, end);
-        log.info("Returning {} decks at {}. Request took {} seconds",
-                responses.size(), Instant.now(), duration.toMillis() / 1000.0);
         return ResponseEntity.ok(responses);
     }
 
