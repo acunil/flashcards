@@ -241,19 +241,30 @@ class CardControllerTest {
     }
 
     @Test
-    void deleteCard_existingId_returnsNoContent() throws Exception {
-        mockMvc.perform(delete(ENDPOINT + "/5"))
-            .andExpect(status().isNoContent());
-        verify(cardService).deleteCard(5L);
+    void deleteCards_WhenIdsExist_ShouldReturnNoContent() throws Exception {
+        List<Long> ids = List.of(1L, 2L);
+        doNothing().when(cardService).deleteCards(ids);
+
+        mockMvc.perform(delete(ENDPOINT)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(ids)))
+                .andExpect(status().isNoContent());
+
+        verify(cardService, times(1)).deleteCards(ids);
+        verifyNoInteractions(cardHistoryService);
     }
 
     @Test
-    void deleteCard_missingId_returnsNotFound() throws Exception {
-        doThrow(new CardNotFoundException(99L))
-            .when(cardService).deleteCard(99L);
-        mockMvc.perform(delete(ENDPOINT + "/99"))
-            .andExpect(status().isNotFound())
-            .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-            .andExpect(jsonPath("$.error").value("Card not found with id: 99"));
+    void deleteCards_WhenCardNotFound_ShouldReturnNotFound() throws Exception {
+        List<Long> ids = List.of(1L, 999L);
+        doThrow(new CardNotFoundException(999L)).when(cardService).deleteCards(ids);
+
+        mockMvc.perform(delete(ENDPOINT)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(ids)))
+                .andExpect(status().isNotFound());
+
+        verify(cardService, times(1)).deleteCards(ids);
+        verifyNoInteractions(cardHistoryService);
     }
 }

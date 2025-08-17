@@ -112,9 +112,8 @@ public class CardService {
     }
 
     @Transactional
-    public void deleteCard(Long id) {
-        Card card = getCardById(id);
-        cardRepository.delete(card);
+    public void deleteCards(List<Long> ids) throws CardNotFoundException {
+        cardRepository.deleteCardsById(ids);
     }
 
     /* Helpers */

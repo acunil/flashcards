@@ -11,6 +11,7 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotEmpty;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -160,18 +161,19 @@ public class CardController {
         return ResponseEntity.ok(generateResponse(cards));
     }
 
-    @Operation(summary = "Delete card", description = "Deletes a card by its ID.")
+    @Operation(summary = "Delete cards", description = "Deletes cards by their IDs.")
     @ApiResponses(value = {
-        @ApiResponse(responseCode = "204", description = "Card deleted",
+        @ApiResponse(responseCode = "204", description = "Card(s) deleted",
             content = @Content(mediaType = "application/json")),
         @ApiResponse(responseCode = "404", description = "Card not found",
             content = @Content(mediaType = "application/json"))
     })
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteCard(
-        @PathVariable Long id
+    @DeleteMapping
+    public ResponseEntity<Void> deleteCards(
+        @RequestBody @NotEmpty List<Long> ids
     ) {
-        cardService.deleteCard(id); // throws CardNotFoundException if missing
+        log.info("DELETE /cards: deleting {} cards", ids.size());
+        cardService.deleteCards(ids); // throws CardNotFoundException if any are missing
         return ResponseEntity.noContent().build();
     }
 
