@@ -58,7 +58,8 @@ public class DeckController {
         return ResponseEntity.ok(DeckSummary.fromEntity(deck));
     }
 
-    @Operation(summary = "Create a new deck", description = "Creates a new deck.")
+    @Operation(summary = "Create a new deck with cards",
+            description = "Creates a new deck, optionally adding existing cards by their ID.")
     @ApiResponses(value = {
         @ApiResponse(responseCode = "201", description = "Deck created",
             content = @Content(mediaType = "application/json",
@@ -74,7 +75,7 @@ public class DeckController {
         return ResponseEntity.status(HttpStatus.CREATED).body(DeckSummary.fromEntity(createdDeck));
     }
 
-    @Operation(summary = "Update deck name", description = "Renames a deck.")
+    @Operation(summary = "Update deck name", description = "Renames a deck by its ID.")
     @ApiResponses(value = {
         @ApiResponse(responseCode = "200", description = "Deck updated",
             content = @Content(mediaType = "application/json",
@@ -101,7 +102,8 @@ public class DeckController {
         return ResponseEntity.noContent().build();
     }
 
-    @Operation(summary = "Get or create decks by names", description = "Returns or creates decks by their names.")
+    @Operation(summary = "Get or create decks by names",
+            description = "Returns or creates decks by their names.")
     @ApiResponses(value = {
         @ApiResponse(responseCode = "200", description = "Successful operation",
             content = @Content(mediaType = "application/json",

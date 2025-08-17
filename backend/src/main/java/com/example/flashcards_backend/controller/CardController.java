@@ -87,7 +87,8 @@ public class CardController {
             .body(response);
     }
 
-    @Operation(summary = "Update card", description = "Updates a card by its ID.")
+    @Operation(summary = "Update card",
+            description = "Updates a card by its ID. Existing properties are entirely overwritten by those provided.")
     @ApiResponses(value = {
         @ApiResponse(responseCode = "204", description = "Card updated",
             content = @Content(mediaType = "application/json")),
@@ -122,7 +123,8 @@ public class CardController {
         return ResponseEntity.noContent().build();
     }
 
-    @Operation(summary = "Get cards by minimum average rating", description = "Returns cards with an average rating above a threshold.")
+    @Operation(summary = "Get cards by minimum average rating",
+            description = "Returns cards with an average rating above a threshold.")
     @ApiResponses(value = {
         @ApiResponse(responseCode = "200", description = "Successful operation",
             content = @Content(mediaType = "application/json",
@@ -140,7 +142,8 @@ public class CardController {
         return ResponseEntity.ok(generateResponse(cards));
     }
 
-    @Operation(summary = "Get cards by maximum average rating", description = "Returns cards with an average rating below a threshold.")
+    @Operation(summary = "Get cards by maximum average rating",
+            description = "Returns cards with an average rating below a threshold.")
     @ApiResponses(value = {
         @ApiResponse(responseCode = "200", description = "Successful operation",
             content = @Content(mediaType = "application/json",
