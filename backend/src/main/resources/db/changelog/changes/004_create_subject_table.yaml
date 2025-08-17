@@ -1,0 +1,69 @@
+databaseChangeLog:
+  - changeSet:
+      id: 004_create_side_enum
+      author: lucian
+      changes:
+        - sql:
+            splitStatements: false
+            sql: |
+              DO $$
+              BEGIN
+                IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'side') THEN
+                  CREATE TYPE side AS ENUM ('FRONT', 'BACK', 'ANY');
+                END IF;
+              END
+              $$;
+
+  - changeSet:
+      id: 004_create_subject_table
+      author: lucian
+      changes:
+        - createTable:
+            tableName: subject
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: name
+                  type: VARCHAR(100)
+                  constraints:
+                    nullable: false
+                    unique: true
+                    defaultValue: "New Subject"
+              - column:
+                  name: front_label
+                  type: VARCHAR(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: back_label
+                  type: VARCHAR(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: default_side
+                  type: side
+                  constraints:
+                    nullable: false
+                    defaultValue: "FRONT"
+              - column:
+                  name: display_deck_names
+                  type: BOOLEAN
+                  constraints:
+                    nullable: false
+
+  - changeSet:
+      id: 004_insert_initial_subject
+      author: lucian
+      changes:
+        - insert:
+            tableName: subject
+            columns:
+              - column:
+                  name: name
+                  value: "Default Subject"

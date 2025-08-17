@@ -5,3 +5,5 @@ databaseChangeLog:
       file: db/changelog/changes/002_create_card_history_table.yaml
   - include:
       file: db/changelog/changes/003_create_deck_table.yaml
+  - include:
+      file: db/changelog/changes/004_create_subject_table.yaml
