@@ -67,4 +67,16 @@ databaseChangeLog:
             columns:
               - column:
                   name: name
-                  value: "Default Subject"
+                  value: "Custom Subject"
+              - column:
+                  name: front_label
+                  value: "Custom Front"
+              - column:
+                  name: back_label
+                  value: "Custom Back"
+              - column:
+                  name: default_side
+                  value: "FRONT"
+              - column:
+                  name: display_deck_names
+                  valueBoolean: false
