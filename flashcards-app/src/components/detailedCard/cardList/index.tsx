@@ -2,14 +2,17 @@ import { useState } from "react";
 import type { Card } from "../../../types/card";
 import CardListItem from "../cardListItem";
 import { Trash } from "phosphor-react";
+import useUpdateCard from "../../../hooks/cards/useUpdateCard"; // assuming you have this
 
 interface CardListProps {
   cards: Card[];
 }
 
 const CardList = ({ cards }: CardListProps) => {
+  const { updateCard } = useUpdateCard();
   const [bulkSelectMode, setBulkSelectMode] = useState(false);
   const [selectedCards, setSelectedCards] = useState<Set<number>>(new Set());
+  const [editingCardId, setEditingCardId] = useState<number | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
 
   const toggleBulkSelectMode = () => {
@@ -31,6 +34,15 @@ const CardList = ({ cards }: CardListProps) => {
       if (newSet.size === 0) setBulkSelectMode(false);
       return newSet;
     });
+  };
+
+  const saveCard = async (updated: {
+    id: number;
+    front: string;
+    back: string;
+  }) => {
+    setEditingCardId(null);
+    updateCard({ ...updated, deckNames: [] });
   };
 
   // Filter cards based on search query
@@ -93,7 +105,12 @@ const CardList = ({ cards }: CardListProps) => {
                 )}
               </div>
             )}
-            <CardListItem {...card} clickable={!bulkSelectMode} />
+            <CardListItem
+              {...card}
+              isEditing={editingCardId === card.id}
+              onUpdate={saveCard}
+              onStartEditing={() => setEditingCardId(card.id)}
+            />
           </div>
         ))}
       </div>
