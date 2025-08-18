@@ -46,6 +46,23 @@ public class CardService {
         return new ArrayList<>(cardMap.values());
     }
 
+    public List<CardResponse> getAllCardResponsesFromSubject(Long subjectId) {
+        List<CardDeckRowProjection> rows = cardRepository.findAllCardDeckRowsBySubjectId(subjectId);
+        Map<Long, CardResponse> cardMap = new LinkedHashMap<>();
+        for (CardDeckRowProjection row : rows) {
+            CardResponse existing = cardMap.get(row.getCardId());
+            if (existing == null) {
+                existing = CardResponse.fromEntity(row);
+                cardMap.put(row.getCardId(), existing);
+            }
+            if (row.getDeckId() != null) {
+                existing.decks().add(new DeckSummary(row.getDeckId(), row.getDeckName(), row.getSubjectId()));
+            }
+        }
+
+        return new ArrayList<>(cardMap.values());
+    }
+
     public Card getCardById(Long id) {
         return cardRepository.findById(id)
             .orElseThrow(() -> new CardNotFoundException(id));
