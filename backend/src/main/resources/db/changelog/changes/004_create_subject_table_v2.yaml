@@ -1,0 +1,82 @@
+databaseChangeLog:
+  - changeSet:
+      id: 004_create_side_enum_v2
+      author: lucian
+      changes:
+        - sql:
+            splitStatements: false
+            sql: |
+              DO $$
+              BEGIN
+                IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'side') THEN
+                  CREATE TYPE side AS ENUM ('FRONT', 'BACK', 'ANY');
+                END IF;
+              END
+              $$;
+
+  - changeSet:
+      id: 004_create_subject_table_v2
+      author: lucian
+      changes:
+        - createTable:
+            tableName: subject
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: name
+                  type: VARCHAR(100)
+                  constraints:
+                    nullable: false
+                    unique: true
+                    defaultValue: "New Subject"
+              - column:
+                  name: front_label
+                  type: VARCHAR(255)
+                  constraints:
+                    nullable: true
+              - column:
+                  name: back_label
+                  type: VARCHAR(255)
+                  constraints:
+                    nullable: true
+              - column:
+                  name: default_side
+                  type: side
+                  constraints:
+                    nullable: true
+                    defaultValue: "FRONT"
+              - column:
+                  name: display_deck_names
+                  type: BOOLEAN
+                  constraints:
+                    nullable: true
+                    defaultValue: "false"
+
+  - changeSet:
+      id: 004_insert_initial_subject_v2
+      author: lucian
+      changes:
+        - insert:
+            tableName: subject
+            columns:
+              - column:
+                  name: name
+                  value: "Custom Subject"
+              - column:
+                  name: front_label
+                  value: "Custom Front"
+              - column:
+                  name: back_label
+                  value: "Custom Back"
+              - column:
+                  name: default_side
+                  value: "FRONT"
+              - column:
+                  name: display_deck_names
+                  valueBoolean: false

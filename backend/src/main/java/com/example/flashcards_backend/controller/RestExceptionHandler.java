@@ -1,6 +1,7 @@
 package com.example.flashcards_backend.controller;
 
 import com.example.flashcards_backend.exception.CardNotFoundException;
+import com.example.flashcards_backend.exception.SubjectNotFoundException;
 import com.example.flashcards_backend.exception.DeckNotFoundException;
 import com.example.flashcards_backend.exception.DuplicateDeckNameException;
 import liquibase.exception.DatabaseException;
@@ -18,12 +19,31 @@ public class RestExceptionHandler {
 
     public static final String ERROR = "error";
 
+    // make generic not found handler that the other three use
+
+
     @ExceptionHandler(CardNotFoundException.class)
-    public ResponseEntity<Map<String, String>> handleNotFound(CardNotFoundException ex) {
+    public ResponseEntity<Map<String, String>> handleCardNotFound(CardNotFoundException ex) {
         return ResponseEntity
             .status(HttpStatus.NOT_FOUND)
             .contentType(MediaType.APPLICATION_JSON)
             .body(Map.of(ERROR, ex.getMessage()));
+    }
+
+    @ExceptionHandler(DeckNotFoundException.class)
+    public ResponseEntity<Map<String, String>> handleDeckNotFoundException(DeckNotFoundException ex) {
+        return ResponseEntity
+                .status(HttpStatus.NOT_FOUND)
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(Map.of(ERROR, ex.getMessage()));
+    }
+
+    @ExceptionHandler(SubjectNotFoundException.class)
+    public ResponseEntity<Map<String, String>> handleSubjectNotFound(SubjectNotFoundException ex) {
+        return ResponseEntity
+                .status(HttpStatus.NOT_FOUND)
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(Map.of(ERROR, ex.getMessage()));
     }
 
     @ExceptionHandler(DatabaseException.class)
@@ -40,14 +60,6 @@ public class RestExceptionHandler {
             .status(HttpStatus.INTERNAL_SERVER_ERROR)
             .contentType(MediaType.APPLICATION_JSON)
             .body(Map.of(ERROR, "Data access error occurred: " + ex.getMessage()));
-    }
-
-    @ExceptionHandler(DeckNotFoundException.class)
-    public ResponseEntity<Map<String, String>> handleDeckNotFoundException(DeckNotFoundException ex) {
-        return ResponseEntity
-            .status(HttpStatus.NOT_FOUND)
-            .contentType(MediaType.APPLICATION_JSON)
-            .body(Map.of(ERROR, ex.getMessage()));
     }
 
     @ExceptionHandler(IllegalArgumentException.class)
