@@ -2,6 +2,7 @@ package com.example.flashcards_backend.dto;
 
 import com.example.flashcards_backend.model.Card;
 import com.example.flashcards_backend.model.CardHistory;
+import com.example.flashcards_backend.model.Subject;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -21,7 +22,8 @@ class CardResponseTest {
 
     @Test
     void testCardResponseCreation() {
-        CardResponse cardResponse = new CardResponse( 1L, "Front Text", "Back Text", null, null, null, null, null);
+        SubjectSummary subjectSummary = SubjectSummary.of("Test Subject", 1L);
+        CardResponse cardResponse = new CardResponse( 1L, "Front Text", "Back Text", null, null, null, null, null, subjectSummary);
 
         assertThat(cardResponse.id()).isEqualTo(1L);
         assertThat(cardResponse.front()).isEqualTo("Front Text");
@@ -34,6 +36,7 @@ class CardResponseTest {
                 .id(2L)
                 .front("Card Front")
                 .back("Card Back")
+                .subject(Subject.builder().id(1L).name("Test Subject").build())
                 .build();
         LocalDateTime now = now();
         CardHistory cardHistory = CardHistory.builder()
@@ -52,6 +55,10 @@ class CardResponseTest {
         assertThat(cardResponse.viewCount()).isEqualTo(10);
         assertThat(cardResponse.lastViewed()).isEqualTo(now.toString());
         assertThat(cardResponse.lastRating()).isEqualTo(4);
+        assertThat(cardResponse.subject())
+                .isNotNull()
+                .extracting("name", "id")
+                .containsSequence("Test Subject", 1L);
     }
 
 }

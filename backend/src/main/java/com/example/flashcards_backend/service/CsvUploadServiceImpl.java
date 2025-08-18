@@ -2,8 +2,12 @@ package com.example.flashcards_backend.service;
 
 import com.example.flashcards_backend.dto.CardResponse;
 import com.example.flashcards_backend.dto.CsvUploadResponseDto;
+import com.example.flashcards_backend.exception.SubjectNotFoundException;
 import com.example.flashcards_backend.model.Card;
+import com.example.flashcards_backend.model.Subject;
 import com.example.flashcards_backend.repository.CardRepository;
+import com.example.flashcards_backend.repository.SubjectRepository;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.csv.CSVFormat;
@@ -24,9 +28,12 @@ public class CsvUploadServiceImpl implements CsvUploadService {
     public static final String FRONT = "front";
     public static final String BACK = "back";
     private final CardRepository cardRepository;
+    private final SubjectRepository subjectRepository;
 
+    @Transactional
     @Override
-    public CsvUploadResponseDto uploadCsv(InputStream csvStream) throws IOException {
+    public CsvUploadResponseDto uploadCsv(InputStream csvStream, Long subjectId) throws IOException, SubjectNotFoundException {
+        Subject subject = fetchSubject(subjectId);
         try (Reader reader = new BufferedReader(new InputStreamReader(csvStream, StandardCharsets.UTF_8))) {
             List<CSVRecord> all = parseAllRecords(reader);
 
@@ -35,8 +42,8 @@ public class CsvUploadServiceImpl implements CsvUploadService {
 
             Map<Boolean, List<CSVRecord>> byDup = partitionByDuplicate(valid);
 
-            List<Card> duplicates = buildCards(byDup.get(true));
-            List<Card> toSave = buildCards(byDup.get(false));
+            List<Card> duplicates = buildCards(byDup.get(true), subject);
+            List<Card> toSave = buildCards(byDup.get(false), subject);
 
             duplicates.forEach(d ->
                 log.info("Duplicate, skipping: front='{}', back='{}'", d.getFront(), d.getBack())
@@ -54,6 +61,10 @@ public class CsvUploadServiceImpl implements CsvUploadService {
             log.error("CSV processing error", e);
             throw e;
         }
+    }
+
+    private Subject fetchSubject(Long subjectId) throws SubjectNotFoundException {
+        return subjectRepository.findById(subjectId).orElseThrow(() -> new SubjectNotFoundException(subjectId));
     }
 
     private static List<CardResponse> generateResponses(List<Card> cards) {
@@ -100,11 +111,12 @@ public class CsvUploadServiceImpl implements CsvUploadService {
             ));
     }
 
-    private List<Card> buildCards(List<CSVRecord> csvRecords) {
+    private List<Card> buildCards(List<CSVRecord> csvRecords, Subject subject) {
         return csvRecords.stream()
             .map(r -> Card.builder()
                 .front(r.get(FRONT))
                 .back(r.get(BACK))
+                .subject(subject)
                 .build())
             .toList();
     }

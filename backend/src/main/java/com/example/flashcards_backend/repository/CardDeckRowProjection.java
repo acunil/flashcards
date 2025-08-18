@@ -16,4 +16,8 @@ public interface CardDeckRowProjection {
     Integer getViewCount();
     LocalDateTime getLastViewed();
     Integer getLastRating();
+
+    // subject is not null
+    String getSubjectName();
+    Long getSubjectId();
 }

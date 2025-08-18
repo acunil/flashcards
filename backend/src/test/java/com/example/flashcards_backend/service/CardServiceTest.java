@@ -3,8 +3,9 @@ package com.example.flashcards_backend.service;
 import com.example.flashcards_backend.dto.CardRequest;
 import com.example.flashcards_backend.exception.CardNotFoundException;
 import com.example.flashcards_backend.model.Card;
-import com.example.flashcards_backend.model.CardCreationResult;
+import com.example.flashcards_backend.dto.CardCreationResult;
 import com.example.flashcards_backend.model.Deck;
+import com.example.flashcards_backend.model.Subject;
 import com.example.flashcards_backend.repository.CardRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -24,6 +25,7 @@ class CardServiceTest {
     public static final long CARD_1_ID = 1L;
     public static final long CARD_2_ID = 2L;
     public static final long CARD_3_ID = 3L;
+    public static final long SUBJECT_ID = 1L;
     public static final double THRESHOLD = 3.0;
 
     private CardService cardService;
@@ -33,6 +35,7 @@ class CardServiceTest {
     private List<Card> originalCards;
     private Deck deck1;
     private Deck deck2;
+    private Subject subject1;
 
     @Mock
     private CardRepository cardRepository;
@@ -46,28 +49,34 @@ class CardServiceTest {
     @BeforeEach
     void setUp() {
         cardService = new CardService(cardRepository, cardHistoryService, cardDeckService);
+        subject1 = Subject.builder().name("Subject 1").id(1L).build();
         deck1 = Deck.builder()
             .id(1L)
             .name("Deck 1")
+            .subject(subject1)
             .build();
         deck2 = Deck.builder()
             .id(2L)
             .name("Deck 2")
+            .subject(subject1)
             .build();
         card1 = Card.builder()
             .id(CARD_1_ID)
             .front("Front 1")
             .back("Back 1")
+            .subject(subject1)
             .build();
         card2 = Card.builder()
             .id(CARD_2_ID)
             .front("Front 2")
             .back("Back 2")
+            .subject(subject1)
             .build();
         card3 = Card.builder()
             .id(CARD_3_ID)
             .front("Front 3")
             .back("Back 3")
+            .subject(subject1)
             .build();
         card1.addDecks(Set.of(deck1, deck2));
         card2.addDecks(Set.of(deck1));
@@ -101,7 +110,7 @@ class CardServiceTest {
                 "alreadyExisted", false
             ));
 
-        CardRequest request = CardRequest.of(newFront, newBack);
+        CardRequest request = CardRequest.of(newFront, newBack, SUBJECT_ID);
 
         CardCreationResult cardCreationResult = cardService.createCard(request);
         assertThat(cardCreationResult.card().getId()).isNotNull().isEqualTo(newId);
@@ -118,7 +127,7 @@ class CardServiceTest {
         when(cardDeckService.getOrCreateDecksByNames(any())).thenReturn(Set.of());
 
         // request contains empty deckNamesDto
-        CardRequest request = CardRequest.of("Updated Front", "Updated Back");
+        CardRequest request = CardRequest.of("Updated Front", "Updated Back", SUBJECT_ID);
         cardService.updateCard(CARD_1_ID, request);
 
         Card updatedCard = cardService.getCardById(CARD_1_ID);
@@ -134,7 +143,7 @@ class CardServiceTest {
         Set<Deck> decks = Set.of(deck2);
         when(cardDeckService.getOrCreateDecksByNames(any())).thenReturn(decks);
 
-        CardRequest updateRequest = CardRequest.of("Updated Front", "Updated Back", deck2.getName());
+        CardRequest updateRequest = CardRequest.of("Updated Front", "Updated Back", SUBJECT_ID, deck2.getName());
         cardService.updateCard(CARD_3_ID, updateRequest);
 
         Card updatedCard = cardService.getCardById(CARD_3_ID);
@@ -148,7 +157,7 @@ class CardServiceTest {
     @Test
     void testUpdateCard_doesNotUpdateDecks_whenSameDecks() {
         // card already has the same decks, so no need to update
-        CardRequest request = CardRequest.of("Front 1", "Back 1", deck1.getName(), deck2.getName());
+        CardRequest request = CardRequest.of("Front 1", "Back 1", SUBJECT_ID, deck1.getName(), deck2.getName());
         cardService.updateCard(CARD_1_ID, request);
 
         Card updatedCard = cardService.getCardById(CARD_1_ID);

@@ -12,10 +12,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.InputStream;
@@ -38,15 +35,15 @@ public class CsvUploadController {
         @ApiResponse(responseCode = "500", description = "Internal server error, could not process CSV",
             content = @Content(mediaType = "application/json"))
     })
-    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<CsvUploadResponseDto> uploadCsv(@RequestParam MultipartFile file) {
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, path = "/{subjectId}")
+    public ResponseEntity<CsvUploadResponseDto> uploadCsv(@RequestParam MultipartFile file, @PathVariable("subjectId") Long subjectId) {
         if (file.isEmpty()) {
             log.error("CSV upload failed: no file provided");
             return ResponseEntity.badRequest().build();
         }
 
         try (InputStream is = file.getInputStream()) {
-            CsvUploadResponseDto response = csvUploadService.uploadCsv(is);
+            CsvUploadResponseDto response = csvUploadService.uploadCsv(is, subjectId);
             return ResponseEntity.ok(response);
         } catch (Exception e) {
             log.error("Error importing CSV", e);

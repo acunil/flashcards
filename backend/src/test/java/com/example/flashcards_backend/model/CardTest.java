@@ -7,18 +7,21 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 class CardTest {
 
-    Card card;
-    Deck deck1;
-    Deck deck2;
+    private Card card;
+    private Deck deck1;
+    private Deck deck2;
+    private Subject subject;
 
     @BeforeEach
     void setUp() {
+        subject = Subject.builder().name("Subject 1").id(1L).build();
         card = Card.builder()
                 .front("Front text")
                 .back("Back text")
+                .subject(subject)
                 .build();
-        deck1 = Deck.builder().name("Deck 1").id(1L).build();
-        deck2 = Deck.builder().name("Deck 2").id(2L).build();
+        deck1 = Deck.builder().name("Deck 1").id(1L).subject(subject).build();
+        deck2 = Deck.builder().name("Deck 2").id(2L).subject(subject).build();
     }
 
     @Test

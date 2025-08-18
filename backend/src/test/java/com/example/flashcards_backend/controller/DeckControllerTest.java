@@ -5,6 +5,7 @@ import com.example.flashcards_backend.dto.DeckSummary;
 import com.example.flashcards_backend.exception.DeckNotFoundException;
 import com.example.flashcards_backend.exception.DuplicateDeckNameException;
 import com.example.flashcards_backend.model.Deck;
+import com.example.flashcards_backend.model.Subject;
 import com.example.flashcards_backend.service.CardDeckService;
 import com.example.flashcards_backend.service.DeckService;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -46,11 +47,13 @@ class DeckControllerTest {
 
     private Deck deck1;
     private Deck deck2;
+    private Subject subject1;
 
     @BeforeEach
     void setUp() {
-        deck1 = Deck.builder().id(1L).name("Deck 1").build();
-        deck2 = Deck.builder().id(2L).name("Deck 2").build();
+        subject1 = Subject.builder().id(1L).name("Subject 1").build();
+        deck1 = Deck.builder().id(1L).name("Deck 1").subject(subject1).build();
+        deck2 = Deck.builder().id(2L).name("Deck 2").subject(subject1).build();
     }
 
     @Test
@@ -73,10 +76,10 @@ class DeckControllerTest {
 
     @Test
     void createDeck() throws Exception {
-        Deck newDeck = Deck.builder().id(3L).name("New Deck").build();
+        Deck newDeck = Deck.builder().id(3L).name("New Deck").subject(subject1).build();
         when(cardDeckService.createDeck(any(CreateDeckRequest.class))).thenReturn(newDeck);
 
-        String content = "{\"name\": \"New Deck\"}";
+        String content = "{\"name\": \"New Deck\", \"subjectId\": 1}";
         mockMvc.perform(post(ENDPOINT + "/create")
                 .contentType("application/json")
                 .content(content))
@@ -101,7 +104,7 @@ class DeckControllerTest {
 
     @Test
     void updateDeckName() throws Exception {
-        Deck updatedDeck = Deck.builder().id(1L).name("Updated Deck").build();
+        Deck updatedDeck = Deck.builder().id(1L).name("Updated Deck").subject(subject1).build();
         when(deckService.renameDeck(1L, "Updated Deck")).thenReturn(updatedDeck);
 
         String content = "{\"newName\": \"Updated Deck\"}";

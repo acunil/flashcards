@@ -1,7 +1,8 @@
 package com.example.flashcards_backend.model;
 
+import com.example.flashcards_backend.annotations.CardContent;
 import jakarta.persistence.*;
-import jakarta.validation.constraints.Size;
+import jakarta.validation.constraints.NotNull;
 import lombok.*;
 import lombok.extern.slf4j.Slf4j;
 import org.hibernate.proxy.HibernateProxy;
@@ -24,11 +25,11 @@ public class Card {
     private Long id;
 
     @Column(nullable = false)
-    @Size(min = 1, max = 100, message = "Front text must be between 1 and 100 characters")
+    @CardContent
     private String front;
 
     @Column(nullable = false)
-    @Size(min = 1, max = 100, message = "Back text must be between 1 and 100 characters")
+    @CardContent
     private String back;
 
 
@@ -40,6 +41,11 @@ public class Card {
     @Builder.Default
     private Set<Deck> decks = new HashSet<>();
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "subject_id", nullable = false)
+    @NotNull
+    private Subject subject;
+
     @OneToMany(mappedBy = "card", cascade = CascadeType.REMOVE, orphanRemoval = true)
     @EqualsAndHashCode.Exclude
     @ToString.Exclude
@@ -47,6 +53,9 @@ public class Card {
     private final Set<CardHistory> cardHistories = new HashSet<>();
 
     public void addDeck(Deck deck) {
+        if (!deck.getSubject().equals(this.subject)) {
+            throw new IllegalArgumentException("Deck and Card must belong to the same Subject");
+        }
         decks.add(deck);
     }
 
@@ -108,6 +117,7 @@ public class Card {
         private String back;
         private Set<Deck> decks = new HashSet<>();
         private Set<CardHistory> cardHistories = new HashSet<>();
+        private Subject subject;
 
         public CardBuilder cardHistory(CardHistory cardHistory) {
             this.cardHistories.add(cardHistory);
@@ -120,6 +130,7 @@ public class Card {
             card.front = this.front;
             card.back = this.back;
             card.decks = this.decks;
+            card.subject = this.subject;
             for (CardHistory ch : this.cardHistories) {
                 card.addCardHistory(ch);
             }

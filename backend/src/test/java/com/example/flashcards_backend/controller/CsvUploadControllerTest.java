@@ -24,7 +24,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @WebMvcTest(CsvUploadController.class)
 class CsvUploadControllerTest {
 
-    public static final String PATH = "/csv";
+    public static final String PATH = "/csv/1";
 
     @MockitoBean
     private CsvUploadServiceImpl csvUploadService;
@@ -58,7 +58,7 @@ class CsvUploadControllerTest {
     void uploadCsv_serviceThrows_returnsInternalServerErrorAndLogsError() throws Exception {
         MockMultipartFile file = new MockMultipartFile("file", "test.csv", "text/csv", "a,b".getBytes());
         doThrow(new RuntimeException("Expected test exception"))
-            .when(csvUploadService).uploadCsv(any(InputStream.class));
+            .when(csvUploadService).uploadCsv(any(InputStream.class), anyLong());
         mockMvc.perform(multipart(PATH)
                 .file(file)
                 .contentType(MediaType.MULTIPART_FORM_DATA))
@@ -75,7 +75,7 @@ class CsvUploadControllerTest {
             .saved(List.of())
             .duplicates(List.of())
             .build();
-        when(csvUploadService.uploadCsv(any(InputStream.class))).thenReturn(response);
+        when(csvUploadService.uploadCsv(any(InputStream.class), anyLong())).thenReturn(response);
         mockMvc.perform(multipart(PATH)
                 .file(file)
                 .contentType(MediaType.MULTIPART_FORM_DATA))

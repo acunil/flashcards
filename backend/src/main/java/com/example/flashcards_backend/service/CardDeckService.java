@@ -4,6 +4,7 @@ import com.example.flashcards_backend.dto.CreateDeckRequest;
 import com.example.flashcards_backend.exception.DuplicateDeckNameException;
 import com.example.flashcards_backend.model.Card;
 import com.example.flashcards_backend.model.Deck;
+import com.example.flashcards_backend.model.Subject;
 import com.example.flashcards_backend.repository.CardRepository;
 import com.example.flashcards_backend.repository.DeckRepository;
 import jakarta.transaction.Transactional;
@@ -48,8 +49,10 @@ public class CardDeckService {
 
     @Transactional
     public Deck createDeck(CreateDeckRequest request) {
+        Subject subject = Subject.builder().id(request.subjectId()).build();
         Deck deck = Deck.builder()
             .name(request.name().trim())
+            .subject(subject)
             .build();
         try {
             deck = deckRepository.saveAndFlush(deck);

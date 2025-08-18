@@ -10,11 +10,14 @@ import org.springframework.core.io.ClassPathResource;
 import org.springframework.http.*;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
+import org.springframework.web.util.UriComponentsBuilder;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 class CsvUploadIT {
+
+    private static final Long SUBJECT_ID = 1L;
 
     @LocalServerPort
     private int port;
@@ -24,14 +27,19 @@ class CsvUploadIT {
 
     @Test
     void uploadCsv_fileOnClasspath_returns200() {
-        String url = "http://localhost:" + port + "/csv";
+        String uri = UriComponentsBuilder
+                .fromUriString("http://localhost")
+                .port(port)
+                .path("/csv/{id}")
+                .buildAndExpand(SUBJECT_ID)
+                .toUriString();
         ClassPathResource resource = new ClassPathResource("csv/vocab_upload_1.csv");
 
         MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
         body.add("file", resource);
 
         ResponseEntity<CsvUploadResponseDto> response = restTemplate.postForEntity(
-            url,
+            uri,
             new HttpEntity<>(body, createMultipartHeaders()),
             CsvUploadResponseDto.class
         );

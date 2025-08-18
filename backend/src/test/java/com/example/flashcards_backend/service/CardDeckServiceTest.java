@@ -4,6 +4,7 @@ import com.example.flashcards_backend.dto.CreateDeckRequest;
 import com.example.flashcards_backend.exception.DuplicateDeckNameException;
 import com.example.flashcards_backend.model.Card;
 import com.example.flashcards_backend.model.Deck;
+import com.example.flashcards_backend.model.Subject;
 import com.example.flashcards_backend.repository.CardRepository;
 import com.example.flashcards_backend.repository.DeckRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -24,6 +25,8 @@ import java.util.Set;
 
 @ExtendWith(SpringExtension.class)
 class CardDeckServiceTest {
+
+    private static final Long SUBJECT_ID = 1L;
 
     private CardDeckService cardDeckService;
 
@@ -87,7 +90,7 @@ class CardDeckServiceTest {
 
     @Test
     void testCreateDeck() {
-        CreateDeckRequest request = new CreateDeckRequest("New Deck", null);
+        CreateDeckRequest request = new CreateDeckRequest(SUBJECT_ID, "New Deck", null);
         ArgumentCaptor<Deck> captor = ArgumentCaptor.forClass(Deck.class);
         when(deckRepository.saveAndFlush(captor.capture())).thenAnswer(invocation -> invocation.getArgument(0));
 
@@ -97,8 +100,12 @@ class CardDeckServiceTest {
 
     @Test
     void testCreateDeck_withCards() {
-        Set<Card> cards = Set.of(Card.builder().id(1L).build(), Card.builder().id(2L).build());
-        CreateDeckRequest request = new CreateDeckRequest("New Deck", Set.of(1L, 2L));
+        Subject subject = Subject.builder().id(SUBJECT_ID).build();
+        Set<Card> cards = Set.of(
+                Card.builder().id(1L).subject(subject).build(),
+                Card.builder().id(2L).subject(subject).build()
+        );
+        CreateDeckRequest request = new CreateDeckRequest(SUBJECT_ID, "New Deck", Set.of(1L, 2L));
 
         when(cardRepository.findAllById(anySet())).thenReturn(cards.stream().toList());
 
@@ -115,7 +122,7 @@ class CardDeckServiceTest {
 
     @Test
     void testCreateDeck_withNoCards() {
-        CreateDeckRequest request = new CreateDeckRequest("New Deck", Set.of());
+        CreateDeckRequest request = new CreateDeckRequest(SUBJECT_ID, "New Deck", Set.of());
 
         ArgumentCaptor<Deck> captor = ArgumentCaptor.forClass(Deck.class);
         when(deckRepository.saveAndFlush(captor.capture())).thenAnswer(invocation -> invocation.getArgument(0));
@@ -130,7 +137,7 @@ class CardDeckServiceTest {
 
     @Test
     void testCreateDeck_withAlreadyExistingDeckName() {
-        CreateDeckRequest request = new CreateDeckRequest("Existing Deck", null);
+        CreateDeckRequest request = new CreateDeckRequest(SUBJECT_ID, "Existing Deck", null);
 
         when(deckRepository.saveAndFlush(any(Deck.class)))
                 .thenThrow(new DataIntegrityViolationException("Duplicate entry"));
