@@ -27,10 +27,13 @@ public interface CardRepository extends JpaRepository<Card, Long>, CardRepositor
             ch.avgRating AS avgRating,
             ch.viewCount AS viewCount,
             ch.lastViewed AS lastViewed,
-            ch.lastRating AS lastRating
+            ch.lastRating AS lastRating,
+            s.name AS subjectName,
+            s.id AS subjectId
         FROM Card c
         LEFT JOIN c.decks d
         LEFT JOIN c.cardHistories ch
+        LEFT JOIN c.subject s
         ORDER BY c.id
     """)
     List<CardDeckRowProjection> findAllCardDeckRows();

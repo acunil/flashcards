@@ -5,7 +5,7 @@ import com.example.flashcards_backend.dto.CardResponse;
 import com.example.flashcards_backend.dto.DeckSummary;
 import com.example.flashcards_backend.exception.CardNotFoundException;
 import com.example.flashcards_backend.model.Card;
-import com.example.flashcards_backend.model.CardCreationResult;
+import com.example.flashcards_backend.dto.CardCreationResult;
 import com.example.flashcards_backend.model.Deck;
 import com.example.flashcards_backend.repository.CardRepository;
 import com.example.flashcards_backend.repository.CardDeckRowProjection;
@@ -39,7 +39,7 @@ public class CardService {
             }
 
             if (row.getDeckId() != null) {
-                existing.decks().add(new DeckSummary(row.getDeckId(), row.getDeckName()));
+                existing.decks().add(new DeckSummary(row.getDeckId(), row.getDeckName(), row.getSubjectId()));
             }
         }
 

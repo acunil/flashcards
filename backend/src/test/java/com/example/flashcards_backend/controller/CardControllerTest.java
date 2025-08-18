@@ -3,8 +3,9 @@ package com.example.flashcards_backend.controller;
 import com.example.flashcards_backend.dto.CardRequest;
 import com.example.flashcards_backend.exception.CardNotFoundException;
 import com.example.flashcards_backend.model.Card;
-import com.example.flashcards_backend.model.CardCreationResult;
+import com.example.flashcards_backend.dto.CardCreationResult;
 import com.example.flashcards_backend.model.CardHistory;
+import com.example.flashcards_backend.model.Subject;
 import com.example.flashcards_backend.service.CardHistoryService;
 import com.example.flashcards_backend.service.CardService;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -48,6 +49,7 @@ class CardControllerTest {
 
     @BeforeEach
     void setUp() {
+        Subject subject1 = Subject.builder().id(1L).name("Subject 1").build();
         CardHistory history1 = CardHistory.builder()
             .id(1L)
             .avgRating(2.0)
@@ -55,8 +57,8 @@ class CardControllerTest {
             .lastViewed(LocalDateTime.parse("2023-10-01T12:00:00"))
             .lastRating(3)
             .build();
-        c1 = Card.builder().id(1L).front("f1").back("b1").cardHistory(history1).build();
-        c2 = Card.builder().id(2L).front("f2").back("b2").cardHistory(history1).build();
+        c1 = Card.builder().id(1L).front("f1").back("b1").subject(subject1).cardHistory(history1).build();
+        c2 = Card.builder().id(2L).front("f2").back("b2").subject(subject1).cardHistory(history1).build();
 
         objectMapper.registerModule(new JavaTimeModule());
     }
@@ -109,7 +111,7 @@ class CardControllerTest {
     @Test
     void update_existingId_returnsNoContent() throws Exception {
         String json = """
-            {"front":"newF","back":"newB","deckNamesDto":null}
+            {"front":"newF","back":"newB","deckNamesDto":null,"subjectId":1}
             """;
 
         mockMvc.perform(put(ENDPOINT + "/5")
@@ -117,7 +119,7 @@ class CardControllerTest {
                 .content(json))
             .andExpect(status().isNoContent());
 
-        verify(cardService).updateCard(5L, CardRequest.of("newF", "newB"));
+        verify(cardService).updateCard(5L, CardRequest.of("newF", "newB", 1L));
     }
 
     @Test

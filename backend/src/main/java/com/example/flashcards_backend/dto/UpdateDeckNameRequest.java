@@ -1,6 +1,6 @@
 package com.example.flashcards_backend.dto;
 
-import jakarta.validation.constraints.NotEmpty;
+import com.example.flashcards_backend.annotations.DeckName;
 
-public record UpdateDeckNameRequest(@NotEmpty String newName) {
+public record UpdateDeckNameRequest(@DeckName String newName) {
 }
