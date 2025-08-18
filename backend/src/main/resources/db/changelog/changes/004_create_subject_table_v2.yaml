@@ -80,3 +80,56 @@ databaseChangeLog:
               - column:
                   name: display_deck_names
                   valueBoolean: false
+  - changeSet:
+      id: 004_add_subject_to_card_and_deck
+      author: lucian
+      changes:
+        - addColumn:
+            tableName: card
+            columns:
+              - column:
+                  name: subject_id
+                  type: BIGINT
+
+        - addColumn:
+            tableName: deck
+            columns:
+              - column:
+                  name: subject_id
+                  type: BIGINT
+
+        - addForeignKeyConstraint:
+            baseTableName: card
+            baseColumnNames: subject_id
+            referencedTableName: subject
+            referencedColumnNames: id
+            constraintName: fk_card_subject
+
+        - addForeignKeyConstraint:
+            baseTableName: deck
+            baseColumnNames: subject_id
+            referencedTableName: subject
+            referencedColumnNames: id
+            constraintName: fk_deck_subject
+
+  - changeSet:
+      id: 004_backfill_subject_for_existing_cards_and_decks
+      author: lucian
+      changes:
+        - sql:
+            sql: |
+              UPDATE card SET subject_id = 1 WHERE subject_id IS NULL;
+              UPDATE deck SET subject_id = 1 WHERE subject_id IS NULL;
+              
+  - changeSet:
+      id: 004_make_subject_id_non_nullable
+      author: lucian
+      changes:
+        - addNotNullConstraint:
+            tableName: card
+            columnName: subject_id
+            columnDataType: BIGINT
+        - addNotNullConstraint:
+            tableName: deck
+            columnName: subject_id
+            columnDataType: BIGINT
