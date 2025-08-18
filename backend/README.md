@@ -6,7 +6,7 @@ The API documentation is available in OpenAPI format. You can find the latest ge
 - [OpenAPI JSON](target/openapi/openapi.json)
 
 To view the interactive Swagger UI, run the application and visit `/swagger-ui.html`.
-
+Click below for localhost link:
 - [Swagger UI](http://localhost:8080/swagger-ui.html)
 
 ## Building the Application
@@ -42,7 +42,9 @@ This will execute all the unit tests and integration tests defined in the projec
 ## CSV Upload
 The application supports uploading CSV files to create or update flashcards. 
 
-To upload a CSV file, you can use the `/csv` endpoint with a POST request. The request should include the CSV file in the body.
+To upload a CSV file, you can use the `/csv/{subjectId}` endpoint with a POST request. The request should include the CSV file in the body.
+
+`subjectId` must be of an existing subject.
 
 The CSV file should have the following format: `front,back`
 
@@ -85,4 +87,14 @@ spring.datasource.password=
 spring.h2.console.enabled=true
 spring.jpa.hibernate.ddl-auto=update
 spring.jpa.show-sql=true
+```
+
+## Liquibase
+The application uses Liquibase to manage database migrations.
+To run a migration or update the database with the changes defined in 
+`src/main/resources/db/changelog/db.changelog-master.yaml`
+
+Run this script
+```bash
+./liquibase-update.sh
 ```

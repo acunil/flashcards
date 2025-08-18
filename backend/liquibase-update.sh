@@ -1,6 +1,10 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# Clean the target dir to avoid conflict with past runs
+echo "Running mvn clean compile"
+./mvnw clean compile
+
 ENV_FILE=".env"
 
 if [[ ! -f "$ENV_FILE" ]]; then
