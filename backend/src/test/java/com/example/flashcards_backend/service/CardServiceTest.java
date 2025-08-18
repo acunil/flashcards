@@ -6,6 +6,7 @@ import com.example.flashcards_backend.model.Card;
 import com.example.flashcards_backend.dto.CardCreationResult;
 import com.example.flashcards_backend.model.Deck;
 import com.example.flashcards_backend.model.Subject;
+import com.example.flashcards_backend.repository.CardDeckRowProjection;
 import com.example.flashcards_backend.repository.CardRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -49,6 +50,15 @@ class CardServiceTest {
     @Mock
     private SubjectService subjectService;
 
+    @Mock
+    private CardDeckRowProjection cardDeckRowProjection1;
+
+    @Mock
+    private CardDeckRowProjection cardDeckRowProjection2;
+
+    @Mock
+    private CardDeckRowProjection cardDeckRowProjection3;
+
     @BeforeEach
     void setUp() {
         cardService = new CardService(cardRepository, cardHistoryService, cardDeckService, subjectService);
@@ -88,7 +98,26 @@ class CardServiceTest {
         when(cardRepository.findById(CARD_1_ID)).thenReturn(Optional.of(card1));
         when(cardRepository.findById(CARD_2_ID)).thenReturn(Optional.of(card2));
         when(cardRepository.findById(CARD_3_ID)).thenReturn(Optional.of(card3));
-        when(cardRepository.findAll()).thenReturn(originalCards);
+
+        // set up cardDeckRowProjections
+        when(cardDeckRowProjection1.getDeckId()).thenReturn(1L);
+        when(cardDeckRowProjection1.getDeckName()).thenReturn("Deck 1");
+        when(cardDeckRowProjection1.getCardId()).thenReturn(CARD_1_ID);
+        when(cardDeckRowProjection1.getFront()).thenReturn("Front 1");
+        when(cardDeckRowProjection1.getBack()).thenReturn("Back 1");
+        when(cardDeckRowProjection1.getAvgRating()).thenReturn(3.0);
+
+        when(cardDeckRowProjection2.getDeckId()).thenReturn(2L);
+        when(cardDeckRowProjection2.getDeckName()).thenReturn("Deck 2");
+        when(cardDeckRowProjection2.getCardId()).thenReturn(CARD_2_ID);
+
+        when(cardDeckRowProjection3.getDeckId()).thenReturn(1L);
+        when(cardDeckRowProjection3.getDeckName()).thenReturn("Deck 1");
+        when(cardDeckRowProjection3.getCardId()).thenReturn(CARD_3_ID);
+
+        when(cardRepository.findAllCardDeckRows())
+                .thenReturn(List.of(cardDeckRowProjection1, cardDeckRowProjection2, cardDeckRowProjection3));
+
     }
 
     @Test
@@ -98,6 +127,29 @@ class CardServiceTest {
 
         Card otherCard = cardService.getCardById(CARD_2_ID);
         assertThat(otherCard).isEqualTo(card2);
+    }
+
+    @Test
+    void testGetCardById_throwsExceptionIfCardNotFound() {
+        assertThatThrownBy(() -> cardService.getCardById(99L))
+            .isInstanceOf(CardNotFoundException.class)
+            .extracting("message")
+            .isEqualTo("Card not found with id: 99");
+    }
+
+    @Test
+    void testGetAllCards_noSubjectSpecified() {
+        var cards = cardService.getAllCardResponsesFromSubject(null);
+        assertThat(cards).hasSize(3);
+        verify(cardRepository).findAllCardDeckRows();
+    }
+
+    @Test
+    void testGetAllCards_withSubjectSpecified() {
+        when(cardRepository.findAllCardDeckRowsBySubjectId(SUBJECT_ID)).thenReturn(List.of(cardDeckRowProjection1, cardDeckRowProjection2));
+        var cards = cardService.getAllCardResponsesFromSubject(SUBJECT_ID);
+        assertThat(cards).hasSize(2);
+        verify(cardRepository).findAllCardDeckRowsBySubjectId(SUBJECT_ID);
     }
 
     @Test

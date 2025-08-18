@@ -25,29 +25,10 @@ public class CardService {
     private final CardDeckService cardDeckService;
     private final SubjectService subjectService;
 
-    public List<CardResponse> getAllCardResponses() {
-        List<CardDeckRowProjection> rows = cardRepository.findAllCardDeckRows();
-
-        Map<Long, CardResponse> cardMap = new LinkedHashMap<>();
-
-        for (CardDeckRowProjection row : rows) {
-            CardResponse existing = cardMap.get(row.getCardId());
-
-            if (existing == null) {
-                existing = CardResponse.fromEntity(row);
-                cardMap.put(row.getCardId(), existing);
-            }
-
-            if (row.getDeckId() != null) {
-                existing.decks().add(new DeckSummary(row.getDeckId(), row.getDeckName(), row.getSubjectId()));
-            }
-        }
-
-        return new ArrayList<>(cardMap.values());
-    }
-
     public List<CardResponse> getAllCardResponsesFromSubject(Long subjectId) {
-        List<CardDeckRowProjection> rows = cardRepository.findAllCardDeckRowsBySubjectId(subjectId);
+        List<CardDeckRowProjection> rows = subjectId == null
+                ? cardRepository.findAllCardDeckRows()
+                : cardRepository.findAllCardDeckRowsBySubjectId(subjectId);
         Map<Long, CardResponse> cardMap = new LinkedHashMap<>();
         for (CardDeckRowProjection row : rows) {
             CardResponse existing = cardMap.get(row.getCardId());
