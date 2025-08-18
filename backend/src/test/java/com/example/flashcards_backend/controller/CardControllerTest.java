@@ -94,7 +94,7 @@ class CardControllerTest {
             .thenReturn(new CardCreationResult(created, false));
 
         String json = """
-            {"front":"f","back":"b"}
+            {"front":"f","back":"b","subjectId":1}
             """;
 
         mockMvc.perform(post(ENDPOINT)
@@ -128,7 +128,7 @@ class CardControllerTest {
             .when(cardService).updateCard(anyLong(), any(CardRequest.class));
 
         String requestJson = """
-            {"front":"newF","back":"newB","deckNamesDto":null}
+            {"front":"newF","back":"newB","deckNamesDto":null,"subjectId":1}
             """;
 
         mockMvc.perform(put(ENDPOINT + "/7")

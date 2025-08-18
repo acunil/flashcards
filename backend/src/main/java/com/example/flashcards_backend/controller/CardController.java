@@ -43,10 +43,10 @@ public class CardController {
                             schema = @Schema(implementation = CardResponse[].class)))
     })
     @GetMapping
-    public ResponseEntity<List<CardResponse>> getAllCardResponses() {
-        log.info("GET /cards");
+    public ResponseEntity<List<CardResponse>> getAllCardResponses(@RequestParam(required = false) Long subjectId) {
+        log.info("GET /cards: subjectId={}", subjectId);
         Instant start = Instant.now();
-        var cards = cardService.getAllCardResponses();
+        var cards = cardService.getAllCardResponsesFromSubject(subjectId);
         Instant end = Instant.now();
         log.info("GET /cards: returned {} cards in {} seconds", cards.size(), (end.toEpochMilli() - start.toEpochMilli()) / 1000.0);
         return ResponseEntity.ok(cards);

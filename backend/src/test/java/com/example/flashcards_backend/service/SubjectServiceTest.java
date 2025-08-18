@@ -53,19 +53,16 @@ class SubjectServiceTest {
     void findByIdFound() {
         when(repository.findById(1L)).thenReturn(Optional.of(subject1));
 
-        Optional<Subject> result = service.findById(1L);
+        Subject result = service.findById(1L);
 
-        assertThat(result).isPresent();
-        assertThat(result.get().getName()).isEqualTo("Subject 1");
+        assertThat(result.getName()).isEqualTo("Subject 1");
     }
 
     @Test
     void findByIdNotFound() {
         when(repository.findById(1L)).thenReturn(Optional.empty());
 
-        Optional<Subject> result = service.findById(1L);
-
-        assertThat(result).isEmpty();
+        assertThatThrownBy(() -> service.findById(1L)).isInstanceOf(SubjectNotFoundException.class);
     }
 
     @Test

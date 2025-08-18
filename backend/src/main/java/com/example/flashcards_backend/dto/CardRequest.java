@@ -2,12 +2,14 @@ package com.example.flashcards_backend.dto;
 
 import com.example.flashcards_backend.annotations.CardContent;
 import com.example.flashcards_backend.annotations.DeckName;
+import lombok.NonNull;
 
 import java.util.Set;
 
 public record CardRequest(
     @CardContent String front,
     @CardContent String back,
+    @NonNull
     Long subjectId,
     Set<@DeckName String> deckNames
 ) {

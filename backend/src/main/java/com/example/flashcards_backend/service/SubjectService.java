@@ -9,7 +9,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -21,8 +20,9 @@ public class SubjectService {
         return repository.findAll();
     }
 
-    public Optional<Subject> findById(Long id) {
-        return repository.findById(id);
+    public Subject findById(Long id) {
+        return repository.findById(id)
+                .orElseThrow(() -> new SubjectNotFoundException(id));
     }
 
     @Transactional

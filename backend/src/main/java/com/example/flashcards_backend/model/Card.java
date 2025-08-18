@@ -6,6 +6,7 @@ import jakarta.validation.constraints.NotNull;
 import lombok.*;
 import lombok.extern.slf4j.Slf4j;
 import org.hibernate.proxy.HibernateProxy;
+import org.hibernate.validator.constraints.Length;
 
 import java.util.HashSet;
 import java.util.Objects;
@@ -32,6 +33,13 @@ public class Card {
     @CardContent
     private String back;
 
+    @Column(name = "hint_front")
+    @Length(max = 100, message = "Hint can be up to 100 characters")
+    private String hintFront;
+
+    @Column(name = "hint_back")
+    @Length(max = 100, message = "Hint can be up to 100 characters")
+    private String hintBack;
 
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(
@@ -115,6 +123,8 @@ public class Card {
         private Long id;
         private String front;
         private String back;
+        private String hintFront;
+        private String hintBack;
         private Set<Deck> decks = new HashSet<>();
         private Set<CardHistory> cardHistories = new HashSet<>();
         private Subject subject;
@@ -129,6 +139,8 @@ public class Card {
             card.id = this.id;
             card.front = this.front;
             card.back = this.back;
+            card.hintFront = this.hintFront;
+            card.hintBack = this.hintBack;
             card.decks = this.decks;
             card.subject = this.subject;
             for (CardHistory ch : this.cardHistories) {
