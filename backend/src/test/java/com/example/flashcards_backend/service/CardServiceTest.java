@@ -35,7 +35,7 @@ class CardServiceTest {
     private List<Card> originalCards;
     private Deck deck1;
     private Deck deck2;
-    private Subject subject1;
+    private Subject subject;
 
     @Mock
     private CardRepository cardRepository;
@@ -46,37 +46,40 @@ class CardServiceTest {
     @Mock
     private CardDeckService cardDeckService;
 
+    @Mock
+    private SubjectService subjectService;
+
     @BeforeEach
     void setUp() {
-        cardService = new CardService(cardRepository, cardHistoryService, cardDeckService);
-        subject1 = Subject.builder().name("Subject 1").id(1L).build();
+        cardService = new CardService(cardRepository, cardHistoryService, cardDeckService, subjectService);
+        subject = Subject.builder().name("Subject 1").id(1L).build();
         deck1 = Deck.builder()
             .id(1L)
             .name("Deck 1")
-            .subject(subject1)
+            .subject(subject)
             .build();
         deck2 = Deck.builder()
             .id(2L)
             .name("Deck 2")
-            .subject(subject1)
+            .subject(subject)
             .build();
         card1 = Card.builder()
             .id(CARD_1_ID)
             .front("Front 1")
             .back("Back 1")
-            .subject(subject1)
+            .subject(subject)
             .build();
         card2 = Card.builder()
             .id(CARD_2_ID)
             .front("Front 2")
             .back("Back 2")
-            .subject(subject1)
+            .subject(subject)
             .build();
         card3 = Card.builder()
             .id(CARD_3_ID)
             .front("Front 3")
             .back("Back 3")
-            .subject(subject1)
+            .subject(subject)
             .build();
         card1.addDecks(Set.of(deck1, deck2));
         card2.addDecks(Set.of(deck1));
@@ -98,28 +101,74 @@ class CardServiceTest {
     }
 
     @Test
-    void testCreateCard() {
-        String newFront = "New Front";
-        String newBack = "New Back";
-        long newId = 4L;
-        when(cardRepository.createIfUnique(newFront, newBack))
-            .thenReturn(Map.of(
-                "id",    newId,
-                "front", newFront,
-                "back",  newBack,
-                "alreadyExisted", false
-            ));
+    void createCard_whenCardAlreadyExists_returnsExistingCard() {
+        // given
+        String front = "Existing Front";
+        String back = "Existing Back";
+        Card existing = Card.builder()
+                .id(10L)
+                .front(front)
+                .back(back)
+                .subject(subject)
+                .build();
 
-        CardRequest request = CardRequest.of(newFront, newBack, SUBJECT_ID);
+        when(cardRepository.findBySubjectIdAndFrontAndBack(SUBJECT_ID, front, back))
+                .thenReturn(Optional.of(existing));
 
-        CardCreationResult cardCreationResult = cardService.createCard(request);
-        assertThat(cardCreationResult.card().getId()).isNotNull().isEqualTo(newId);
-        assertThat(cardCreationResult.card().getFront()).isEqualTo(newFront);
-        assertThat(cardCreationResult.card().getBack()).isEqualTo(newBack);
-        assertThat(cardCreationResult.alreadyExisted()).isFalse();
+        CardRequest request = CardRequest.of(front, back, SUBJECT_ID);
 
-        verify(cardRepository).createIfUnique(newFront, newBack);
-        verifyNoMoreInteractions(cardRepository);
+        // when
+        CardCreationResult result = cardService.createCard(request);
+
+        // then
+        assertThat(result.alreadyExisted()).isTrue();
+        assertThat(result.card()).isEqualTo(existing);
+
+        verify(cardRepository).findBySubjectIdAndFrontAndBack(SUBJECT_ID, front, back);
+        verifyNoMoreInteractions(cardRepository, subjectService, cardDeckService);
+    }
+
+    @Test
+    void createCard_whenNewCard_savesAndReturnsCard() {
+        // given
+        String front = "New Front";
+        String back = "New Back";
+
+        when(cardRepository.findBySubjectIdAndFrontAndBack(SUBJECT_ID, front, back))
+                .thenReturn(Optional.empty());
+
+        when(subjectService.findById(SUBJECT_ID)).thenReturn(subject);
+
+        Set<Deck> decks = Set.of(deck1, deck2);
+        when(cardDeckService.getOrCreateDecksByNames(anySet())).thenReturn(decks);
+
+        Card saved = Card.builder()
+                .id(20L)
+                .front(front)
+                .back(back)
+                .subject(subject)
+                .decks(decks)
+                .build();
+
+        when(cardRepository.saveAndFlush(any(Card.class))).thenReturn(saved);
+
+        CardRequest request = CardRequest.of(front, back, SUBJECT_ID, deck1.getName(), deck2.getName());
+
+        // when
+        CardCreationResult result = cardService.createCard(request);
+
+        // then
+        assertThat(result.alreadyExisted()).isFalse();
+        assertThat(result.card().getId()).isEqualTo(20L);
+        assertThat(result.card().getFront()).isEqualTo(front);
+        assertThat(result.card().getBack()).isEqualTo(back);
+        assertThat(result.card().getSubject()).isEqualTo(subject);
+        assertThat(result.card().getDecks()).containsExactlyElementsOf(decks);
+
+        verify(cardRepository).findBySubjectIdAndFrontAndBack(SUBJECT_ID, front, back);
+        verify(subjectService).findById(SUBJECT_ID);
+        verify(cardDeckService).getOrCreateDecksByNames(Set.of(deck1.getName(), deck2.getName()));
+        verify(cardRepository).saveAndFlush(any(Card.class));
     }
 
     @Test

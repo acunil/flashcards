@@ -43,9 +43,7 @@ public class SubjectController {
     })
     @GetMapping("/{id}")
     public ResponseEntity<SubjectDto> getById(@PathVariable Long id) {
-        return service.findById(id)
-            .map(subject -> ResponseEntity.ok(SubjectDto.fromEntity(subject)))
-            .orElse(ResponseEntity.notFound().build());
+        return ResponseEntity.ok(SubjectDto.fromEntity(service.findById(id)));
     }
 
     @Operation(summary = "Create a new subject", description = "Creates a new subject.")

@@ -1,16 +1,14 @@
 package com.example.flashcards_backend.service;
 
-import com.example.flashcards_backend.dto.CardRequest;
-import com.example.flashcards_backend.dto.CardResponse;
-import com.example.flashcards_backend.dto.DeckSummary;
+import com.example.flashcards_backend.dto.*;
 import com.example.flashcards_backend.exception.CardNotFoundException;
 import com.example.flashcards_backend.model.Card;
-import com.example.flashcards_backend.dto.CardCreationResult;
 import com.example.flashcards_backend.model.Deck;
 import com.example.flashcards_backend.repository.CardRepository;
 import com.example.flashcards_backend.repository.CardDeckRowProjection;
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataAccessException;
 import org.springframework.stereotype.Service;
 
@@ -18,12 +16,14 @@ import static com.example.flashcards_backend.utility.CardUtils.shuffleCards;
 
 import java.util.*;
 
+@Slf4j
 @Service
 @AllArgsConstructor
 public class CardService {
     private final CardRepository cardRepository;
     private final CardHistoryService cardHistoryService;
     private final CardDeckService cardDeckService;
+    private final SubjectService subjectService;
 
     public List<CardResponse> getAllCardResponses() {
         List<CardDeckRowProjection> rows = cardRepository.findAllCardDeckRows();
@@ -75,18 +75,18 @@ public class CardService {
 
     @Transactional
     public CardCreationResult createCard(CardRequest request) {
-        Map<String, Object> row = cardRepository.createIfUnique(
-            request.front(),
-            request.back()
-        );
-
-        Card card = Card.builder()
-            .id((Long) row.get("id"))
-            .front((String) row.get("front"))
-            .back((String) row.get("back"))
-            .build();
-        Boolean alreadyExisted = (Boolean) row.get("alreadyExisted");
-        return new CardCreationResult(card, alreadyExisted);
+        Optional<Card> exists = getExistingCard(request);
+        if (exists.isPresent()) {
+            return new CardCreationResult(exists.get(), true);
+        }
+        Card cardToCreate = Card.builder()
+                .front(request.front())
+                .back(request.back())
+                .build();
+        cardToCreate.setSubject(subjectService.findById(request.subjectId()));
+        Card saved = cardRepository.saveAndFlush(cardToCreate);
+        addDecksIfPresent(request, saved);
+        return new CardCreationResult(saved, false);
     }
 
     @Transactional
@@ -117,6 +117,22 @@ public class CardService {
     }
 
     /* Helpers */
+
+    private void addDecksIfPresent(CardRequest request, Card cardToCreate) {
+        if (request.deckNames() != null && !request.deckNames().isEmpty()) {
+            log.info("Adding decks {} to card {}", request.deckNames(), cardToCreate.getId());
+            cardToCreate.addDecks(cardDeckService.getOrCreateDecksByNames(getDeckNames(request)));
+        }
+    }
+
+    private Optional<Card> getExistingCard(CardRequest request) {
+        return cardRepository.findBySubjectIdAndFrontAndBack(
+                request.subjectId(),
+                request.front(),
+                request.back()
+        );
+    }
+
     private static Set<String> getDeckNames(CardRequest request) {
         return request.deckNames() == null
             ? Set.of()

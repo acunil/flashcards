@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface CardRepository extends JpaRepository<Card, Long>, CardRepositoryCustom {
     boolean existsByFrontAndBack(String front, String back);
@@ -41,4 +42,9 @@ public interface CardRepository extends JpaRepository<Card, Long>, CardRepositor
     @Modifying
     @Query("DELETE FROM Card c WHERE c.id IN :ids")
     void deleteCardsById(List<Long> ids);
+
+    List<Card>findBySubjectId(Long subjectId);
+
+    Optional<Card> findBySubjectIdAndFrontAndBack(Long subjectId, String front, String back);
+
 }

@@ -14,18 +14,19 @@ public class CardRepositoryImpl implements CardRepositoryCustom {
 
     @Override
     @Transactional
-    public Map<String, Object> createIfUnique(String front, String back) {
+    public Map<String, Object> createIfUnique(String front, String back, Long subjectId) {
         // Use a CTE to attempt the insert and fall back to selecting the existing row
         String sql = """
-        INSERT INTO card (front, back)
-        VALUES (:front, :back)
+        INSERT INTO card (front, back, subject_id)
+        VALUES (:front, :back, :subjectId)
         ON CONFLICT (front, back) DO UPDATE SET front = EXCLUDED.front
-        RETURNING id, front, back, (xmax != 0) AS already_existed
+        RETURNING id, front, back, subjectId (xmax != 0) AS already_existed
         """;
 
         Query query = entityManager.createNativeQuery(sql);
         query.setParameter("front", front);
         query.setParameter("back", back);
+        query.setParameter("subjectId", subjectId);
 
         Object[] result = (Object[]) query.getSingleResult();
 

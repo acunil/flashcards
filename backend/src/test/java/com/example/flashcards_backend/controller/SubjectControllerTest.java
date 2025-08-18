@@ -20,7 +20,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 
 import java.util.List;
-import java.util.Optional;
 
 import static org.mockito.Mockito.when;
 
@@ -59,7 +58,7 @@ class SubjectControllerTest {
 
     @Test
     void getSubjectByIdFound() throws Exception {
-        when(subjectService.findById(1L)).thenReturn(Optional.of(subject1));
+        when(subjectService.findById(1L)).thenReturn(subject1);
 
         mockMvc.perform(get(ENDPOINT + "/1"))
                 .andExpect(status().isOk())
@@ -70,7 +69,7 @@ class SubjectControllerTest {
 
     @Test
     void getSubjectByIdNotFound() throws Exception {
-        when(subjectService.findById(1L)).thenReturn(Optional.empty());
+        when(subjectService.findById(1L)).thenThrow(new SubjectNotFoundException(1L));
 
         mockMvc.perform(get(ENDPOINT + "/1"))
                 .andExpect(status().isNotFound());
