@@ -3,6 +3,7 @@ package com.example.flashcards_backend.controller;
 import com.example.flashcards_backend.dto.CardRequest;
 import com.example.flashcards_backend.dto.CardResponse;
 import com.example.flashcards_backend.dto.CreateCardResponse;
+import com.example.flashcards_backend.dto.HintRequest;
 import com.example.flashcards_backend.exception.CardNotFoundException;
 import com.example.flashcards_backend.model.Card;
 import com.example.flashcards_backend.model.CardHistory;
@@ -268,5 +269,25 @@ class CardControllerTest {
 
         verify(cardService, times(1)).deleteCards(ids);
         verifyNoInteractions(cardHistoryService);
+    }
+
+    @Test
+    void setHints_whenCardExists_updatesHints() throws Exception {
+        var hintRequest = HintRequest.builder()
+                .hintFront("f")
+                .hintBack("b")
+                .build();
+        when(cardService.setHints(hintRequest, 1L)).thenReturn(CardResponse.fromEntity(c1));
+
+        String content = """
+            {"hintFront":"f","hintBack":"b"}
+            """;
+
+        mockMvc.perform(patch(ENDPOINT + "/" + 1L + "/hints")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(content))
+                .andExpect(status().isOk());
+        verify(cardService, times(1)).setHints(hintRequest, 1L);
+
     }
 }

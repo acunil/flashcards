@@ -170,6 +170,20 @@ public class CardController {
         return ResponseEntity.noContent().build();
     }
 
+
+    @Operation(summary = "Update card hints", description = "Updates card hints by card ID.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Hints saved",
+                    content = @Content(mediaType = "application/json")),
+            @ApiResponse(responseCode = "404", description = "Card not found",
+                    content = @Content(mediaType = "application/json"))
+    })
+    @PatchMapping(value = "/{id}/hints")
+    public ResponseEntity<CardResponse> updateCardHints(@RequestBody HintRequest request, @PathVariable Long id) {
+        CardResponse response = cardService.setHints(request, id);
+        return ResponseEntity.ok(response);
+    }
+
     /* Helpers */
 
     private static List<CardResponse> generateResponse(List<Card> cards) {
