@@ -174,6 +174,13 @@ class CardServiceTest {
     }
 
     @Test
+    void testGetAllCards_withSubjectSpecified_andNoCards() {
+        when(cardRepository.findCardDeckRowsBySubjectId(SUBJECT_ID)).thenReturn(List.of());
+        var cards = cardService.getAllCardResponsesFromSubject(SUBJECT_ID);
+        assertThat(cards).isEmpty();
+    }
+
+    @Test
     void createCard_whenCardAlreadyExists_returnsExistingCard() {
         // given
         String front = "Existing Front";

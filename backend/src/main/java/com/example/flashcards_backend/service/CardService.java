@@ -28,9 +28,6 @@ public class CardService {
     @Transactional(readOnly = true)
     public List<CardResponse> getAllCardResponsesFromSubject(Long subjectId) {
         List<CardDeckRowProjection> rows = cardRepository.findCardDeckRowsBySubjectId(subjectId);
-        if (rows.isEmpty()) {
-            return List.of();
-        }
         return mapRowsToResponses(rows);
     }
 
