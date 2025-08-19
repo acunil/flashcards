@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import type { Card } from "../../types/card";
-
-const BASE_URL = "http://localhost:8080/cards";
+import { API_URL } from "../urls";
 
 const useCards = () => {
   const [cards, setCards] = useState<Card[]>([]);
@@ -16,7 +15,7 @@ const useCards = () => {
 
       try {
         setLoading(true);
-        const response = await fetch(BASE_URL);
+        const response = await fetch(`${API_URL}/cards`);
         if (!response.ok) {
           throw new Error("Failed to fetch cards");
         }

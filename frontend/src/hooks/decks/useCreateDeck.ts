@@ -1,7 +1,6 @@
 import { useState } from "react";
 import type { Deck } from "../../types/deck";
-
-const BASE_DECK_URL = "http://localhost:8080/decks";
+import { API_URL } from "../urls";
 
 const useCreateDeck = () => {
   const [loading, setLoading] = useState(false);
@@ -12,7 +11,7 @@ const useCreateDeck = () => {
     setError(null);
 
     try {
-      const response = await fetch(`${BASE_DECK_URL}/create`, {
+      const response = await fetch(`${API_URL}/decks/create`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name }),

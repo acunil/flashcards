@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { API_URL } from "../urls";
 
 interface UpdateCardPayload {
   id: number;
@@ -13,8 +14,6 @@ interface UpdateCardResult {
   updateCard: (data: UpdateCardPayload) => Promise<void>;
 }
 
-const API_URL = "http://localhost:8080/cards";
-
 const useUpdateCard = (): UpdateCardResult => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -24,7 +23,7 @@ const useUpdateCard = (): UpdateCardResult => {
     setError(null);
 
     try {
-      const response = await fetch(`${API_URL}/${data.id}`, {
+      const response = await fetch(`${API_URL}/cards/${data.id}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",

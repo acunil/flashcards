@@ -1,6 +1,5 @@
 import { useState } from "react";
-
-const BASE_DECK_URL = "http://localhost:8080/decks";
+import { API_URL } from "../urls";
 
 const useDeleteDeck = () => {
   const [loading, setLoading] = useState(false);
@@ -11,7 +10,7 @@ const useDeleteDeck = () => {
     setError(null);
 
     try {
-      const response = await fetch(`${BASE_DECK_URL}/${id}`, {
+      const response = await fetch(`${API_URL}/decks/${id}`, {
         method: "DELETE",
       });
       if (!response.ok) {
