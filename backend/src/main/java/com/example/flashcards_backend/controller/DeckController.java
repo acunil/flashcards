@@ -104,15 +104,18 @@ public class DeckController {
     }
 
     @Operation(summary = "Get or create decks by names",
-            description = "Returns or creates decks by their names.")
+            description = "Returns or creates decks by their names, optionally by subject ID.")
     @ApiResponses(value = {
         @ApiResponse(responseCode = "200", description = "Successful operation",
             content = @Content(mediaType = "application/json",
                 schema = @Schema(implementation = DeckSummary.class)))
     })
     @PostMapping
-    public ResponseEntity<Set<DeckSummary>> getDecksByNames(@RequestParam Set<@DeckName String> names) {
-        Set<Deck> decks = cardDeckService.getOrCreateDecksByNames(names);
+    public ResponseEntity<Set<DeckSummary>> upsertDecksByNamesAndSubjectId(
+            @RequestParam Set<@DeckName String> names,
+            @RequestParam(value = "subjectId", required = false) Long subjectId
+    ) {
+        Set<Deck> decks = cardDeckService.getOrCreateDecksByNamesAndSubjectId(names, subjectId);
         return ResponseEntity.ok(
             decks.stream()
                 .map(DeckSummary::fromEntity)

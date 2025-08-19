@@ -98,7 +98,8 @@ public class CardService {
         if (decksDiffer) {
             card.removeAllDecks();
             if (request.deckNames() != null && !request.deckNames().isEmpty()) {
-                Set<Deck> decks = cardDeckService.getOrCreateDecksByNames(request.deckNames());
+                Set<Deck> decks = cardDeckService.getOrCreateDecksByNamesAndSubjectId(
+                        request.deckNames(), request.subjectId());
                 card.addDecks(decks);
             }
         }
@@ -135,7 +136,8 @@ public class CardService {
     private void addDecksIfPresent(CardRequest request, Card cardToCreate) {
         if (request.deckNames() != null && !request.deckNames().isEmpty()) {
             log.info("Adding decks {} to card {}", request.deckNames(), cardToCreate.getId());
-            cardToCreate.addDecks(cardDeckService.getOrCreateDecksByNames(getDeckNames(request)));
+            cardToCreate.addDecks(cardDeckService.getOrCreateDecksByNamesAndSubjectId(
+                    getDeckNames(request), request.subjectId()));
         }
     }
 

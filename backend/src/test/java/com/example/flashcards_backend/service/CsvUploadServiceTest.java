@@ -3,6 +3,7 @@ package com.example.flashcards_backend.service;
 import com.example.flashcards_backend.dto.CardResponse;
 import com.example.flashcards_backend.dto.CsvUploadResponseDto;
 import com.example.flashcards_backend.model.Card;
+import com.example.flashcards_backend.model.Deck;
 import com.example.flashcards_backend.model.Subject;
 import com.example.flashcards_backend.repository.CardRepository;
 import com.example.flashcards_backend.repository.SubjectRepository;
@@ -20,6 +21,7 @@ import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -34,8 +36,12 @@ class CsvUploadServiceTest {
     @Mock
     private SubjectRepository subjectRepository;
 
+    @Mock
+    private CardDeckService cardDeckService;
+
     @InjectMocks
     private CsvUploadServiceImpl service;
+
 
     private LogCaptor logCaptor;
 
@@ -55,21 +61,32 @@ class CsvUploadServiceTest {
     void uploadCsv_filtersInvalidPartitionsDuplicatesAndSavesValid() throws Exception {
         when(subjectRepository.findById(1L)).thenReturn(Optional.of(subject));
         String csv = """
-            front,back
-            ,b1
-            f2,
-            f3,b3
-            f4,b4
+            front,back,decks
+            ,b1,
+            f2,,
+            f3,b3,d1;d2
+            f4,b4,
             """;
         InputStream is = new ByteArrayInputStream(csv.getBytes(StandardCharsets.UTF_8));
 
         when(cardRepository.existsByFrontAndBack("f3", "b3")).thenReturn(false);
         when(cardRepository.existsByFrontAndBack("f4", "b4")).thenReturn(true);
 
-        Card savedCard = Card.builder().front("f3").back("b3").id(1L).subject(subject).build();
+        Deck deck1 = Deck.builder().name("d1").subject(subject).build();
+        Deck deck2 = Deck.builder().name("d2").subject(subject).build();
+        when(cardDeckService.getOrCreateDecksByNamesAndSubjectId(Set.of("d1", "d2"), subject.getId()))
+                .thenReturn(Set.of(deck1, deck2));
+
+        Card savedCard = Card.builder()
+                .front("f3")
+                .back("b3")
+                .id(1L)
+                .subject(subject)
+                .decks(Set.of(deck1, deck2))
+                .build();
         when(cardRepository.saveAll(cardListCaptor.capture())).thenReturn(List.of(savedCard));
 
-        CsvUploadResponseDto csvUploadResponseDTO = service.uploadCsv(is, 1L);
+        CsvUploadResponseDto csvUploadResponseDTO = service.uploadCsv(is, subject.getId());
 
         assertThat(logCaptor.getWarnLogs()).hasSize(2)
             .allSatisfy(msg -> assertThat(msg).startsWith("Skipping invalid row:"));

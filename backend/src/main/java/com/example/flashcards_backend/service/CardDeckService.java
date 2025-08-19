@@ -28,8 +28,8 @@ public class CardDeckService {
     private final CardRepository cardRepository;
 
     @Transactional
-    public Set<Deck> getOrCreateDecksByNames(Set<String> names) {
-        Set<Deck> existingDecks = deckRepository.findByNameIn(names);
+    public Set<Deck> getOrCreateDecksByNamesAndSubjectId(Set<String> names, Long subjectId) {
+        Set<Deck> existingDecks = deckRepository.findByNameInAndSubjectId(names, subjectId);
         Set<String> existingNames = existingDecks.stream()
             .map(Deck::getName)
             .collect(toSet());
@@ -39,7 +39,10 @@ public class CardDeckService {
         Set<Deck> allDecks = new HashSet<>(existingDecks);
         if (!newNames.isEmpty()) {
             List<Deck> newDecks = newNames.stream()
-                .map(name -> Deck.builder().name(name).build())
+                .map(name -> Deck.builder()
+                        .name(name)
+                        .subject(Subject.builder().id(subjectId).build())
+                        .build())
                 .toList();
             deckRepository.saveAll(newDecks);
             allDecks.addAll(newDecks);

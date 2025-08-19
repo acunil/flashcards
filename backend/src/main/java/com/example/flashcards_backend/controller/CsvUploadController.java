@@ -3,6 +3,7 @@ package com.example.flashcards_backend.controller;
 import com.example.flashcards_backend.dto.CsvUploadResponseDto;
 import com.example.flashcards_backend.service.CsvUploadServiceImpl;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -16,12 +17,22 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.InputStream;
+import java.util.Objects;
 
 @AllArgsConstructor
 @RestController(value = "csvUploadController")
 @RequestMapping("/csv")
 @Slf4j
 public class CsvUploadController {
+    public static final String CSV_UPLOAD_FORMAT = """
+        CSV file to upload. Format: front,back,decks. Headers required. ; = separator for decks.
+        \s
+        Example:
+        \s
+        front,back,decks
+        die Katze,cat,Animals;German Basics
+        das Haus,house,Buildings;German Basics
+    """;
     private final CsvUploadServiceImpl csvUploadService;
 
     @Operation(summary = "Upload CSV file for card import",
@@ -36,8 +47,15 @@ public class CsvUploadController {
             content = @Content(mediaType = "application/json"))
     })
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, path = "/{subjectId}")
-    public ResponseEntity<CsvUploadResponseDto> uploadCsv(@RequestParam MultipartFile file, @PathVariable("subjectId") Long subjectId) {
-        if (file.isEmpty()) {
+    public ResponseEntity<CsvUploadResponseDto> uploadCsv(
+            @Parameter(
+                    description = CSV_UPLOAD_FORMAT,
+                    required = true,
+                    content = @Content(mediaType = "text/csv")
+            )
+            @RequestBody MultipartFile file,
+            @PathVariable("subjectId") Long subjectId) {
+        if (Objects.isNull(file) || file.isEmpty()) {
             log.error("CSV upload failed: no file provided");
             return ResponseEntity.badRequest().build();
         }
