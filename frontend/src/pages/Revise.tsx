@@ -71,11 +71,11 @@ const Revise = ({ hardMode = false, deckId }: ReviseProps) => {
         setCardDisplay={setCardDisplay}
         isRevising={true}
       />
-      <main className="flex flex-col items-center gap-6 p-6">
+      <main className="flex flex-col items-center">
         {loading && <p>Loading cards...</p>}
         {error && <p className="text-red-600">{error}</p>}
         {!loading && !error && cards.length > 0 && (
-          <>
+          <div className="w-full overflow-hidden flex flex-col items-center">
             <CardCarousel
               cards={revisionCards}
               showDecks={false}
@@ -84,7 +84,7 @@ const Revise = ({ hardMode = false, deckId }: ReviseProps) => {
               cardColors={cardColors}
             />
             <DifficultyButtons onSelectDifficulty={handleDifficultySelect} />
-          </>
+          </div>
         )}
         {!loading && !error && cards.length === 0 && <p>No cards available.</p>}
       </main>

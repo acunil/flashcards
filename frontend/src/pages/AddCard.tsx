@@ -90,7 +90,7 @@ const AddCard = () => {
       )}
 
       <Header />
-      <div className="flex relative justify-center items-start pt-10">
+      <div className="flex relative justify-center items-start pt-10 max-w-screen-sm m-4 px-2">
         <form
           onSubmit={handleSubmit}
           className="bg-white p-6 rounded shadow-md w-full max-w-md space-y-4 border-2 border-black"

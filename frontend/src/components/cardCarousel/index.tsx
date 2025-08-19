@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import FlipCard from "../flipCard";
 import type { Card } from "../../types/card";
 
@@ -15,14 +15,26 @@ const CardCarousel = ({
   cards,
   showDecks = false,
   currentIndex,
+  // setCurrentIndex,
   cardColors = {},
   cardDisplay = "Front",
 }: CardCarouselProps) => {
   const [flippedMap, setFlippedMap] = useState<Record<string, boolean>>({});
+  const [windowWidth, setWindowWidth] = useState(
+    typeof window !== "undefined" ? window.innerWidth : 1024
+  );
 
-  const cardWidth = 320;
-  const cardMargin = 16;
-  const previewWidth = 60;
+  useEffect(() => {
+    const handleResize = () => setWindowWidth(window.innerWidth);
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
+  // Dynamic card size and spacing
+  const maxCardWidth = 320;
+  const cardMargin = 8; // Fixed smaller margin for better mobile fit
+  const cardWidth = Math.min(maxCardWidth, windowWidth - 2 * cardMargin);
+  const fullCardWidth = cardWidth + cardMargin;
 
   const handleFlip = () => {
     const currentCardId = cards[currentIndex].id;
@@ -32,39 +44,31 @@ const CardCarousel = ({
     }));
   };
 
-  const fullCardWidth = cardWidth + cardMargin;
-  const visibleWidth = fullCardWidth + previewWidth * 2;
+  // Center the current card
   const translateX =
-    -currentIndex * fullCardWidth + previewWidth + cardMargin / 2;
+    -(currentIndex * fullCardWidth) + (windowWidth - cardWidth) / 2;
 
   return (
-    <div
-      className="relative mx-auto overflow-visible py-6"
-      style={{ width: visibleWidth, height: 220 }}
-    >
+    <div className="relative w-full py-6">
       <div
         className="flex transition-transform duration-500"
         style={{
-          width: cards.length * fullCardWidth,
           transform: `translateX(${translateX}px)`,
         }}
       >
         {cards.map((card, i) => {
           const isCurrent = i === currentIndex;
           const flipped = flippedMap[card.id] || false;
-
-          // Calculate distance from center
           const distance = Math.abs(i - currentIndex);
 
-          // Determine scale factor based on distance
-          // You can tweak these numbers as you like
-          let scale = 1 - distance * 0.15;
-          if (scale < 0.7) scale = 0.7; // minimum scale
+          // Scale side cards down for 3D effect
+          let scale = isCurrent ? 1 : 0.9;
+          if (!isCurrent && windowWidth < 640) scale = 0.8; // Smaller scale on mobile for side cards
 
-          // Optional: Slight vertical shift to add a 3D effect
-          const translateY = distance * 10; // pixels down for farther cards
+          // Slight vertical offset for depth
+          const translateY = isCurrent ? 0 : distance * 8;
 
-          // Logic for flip state and displayMode for FlipCard
+          // Flip card logic
           let flipState = false;
           let displayMode: "Front" | "Back" | "Any" = "Front";
 
@@ -85,11 +89,11 @@ const CardCarousel = ({
               className="flex-shrink-0"
               style={{
                 width: cardWidth,
-                margin: "0 8px",
+                margin: `0 ${cardMargin / 2}px`,
                 transform: `scale(${scale}) translateY(${translateY}px)`,
                 transition: "transform 0.5s ease",
                 cursor: isCurrent ? "pointer" : "default",
-                zIndex: isCurrent ? 10 : 1, // keep center card on top
+                zIndex: isCurrent ? 10 : 1,
               }}
             >
               <FlipCard
