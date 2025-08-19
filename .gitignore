@@ -13,6 +13,7 @@ node_modules/
 .expo/
 dist/
 *.log
+frontend/.env
 
 # Backend ignores
 backend/target/
