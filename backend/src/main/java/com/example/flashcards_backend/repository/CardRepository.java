@@ -9,7 +9,7 @@ import org.springframework.data.repository.query.Param;
 import java.util.List;
 import java.util.Optional;
 
-public interface CardRepository extends JpaRepository<Card, Long>, CardRepositoryCustom {
+public interface CardRepository extends JpaRepository<Card, Long> {
     boolean existsByFrontAndBack(String front, String back);
 
     @Query("SELECT c FROM Card c JOIN CardHistory h ON h.card = c WHERE h.avgRating >= :threshold")
@@ -23,5 +23,42 @@ public interface CardRepository extends JpaRepository<Card, Long>, CardRepositor
     void deleteCardsById(List<Long> ids);
 
     Optional<Card> findBySubjectIdAndFrontAndBack(Long subjectId, String front, String back);
+
+
+
+
+    @Query("""
+        SELECT
+            c.id AS cardId,
+            c.front AS front,
+            c.back AS back,
+            c.hintFront AS hintFront,
+            c.hintBack AS hintBack,
+            d.id AS deckId,
+            d.name AS deckName,
+            ch.avgRating AS avgRating,
+            ch.viewCount AS viewCount,
+            ch.lastViewed AS lastViewed,
+            ch.lastRating AS lastRating,
+            s.name AS subjectName,
+            s.id AS subjectId
+        FROM Card c
+        LEFT JOIN c.decks d
+        LEFT JOIN c.cardHistories ch
+        LEFT JOIN c.subject s
+        WHERE (:subjectId IS NULL OR s.id = :subjectId)
+          AND (:cardId IS NULL OR c.id = :cardId)
+        ORDER BY c.id
+    """)
+    List<CardDeckRowProjection> findCardDeckRows(@Param("subjectId") Long subjectId,
+                                                 @Param("cardId") Long cardId);
+
+    default List<CardDeckRowProjection> findCardDeckRowsBySubjectId(Long subjectId) {
+        return findCardDeckRows(subjectId, null);
+    }
+
+    default List<CardDeckRowProjection> findCardDeckRowsByCardId(Long cardId) {
+        return findCardDeckRows(null, cardId);
+    }
 
 }
