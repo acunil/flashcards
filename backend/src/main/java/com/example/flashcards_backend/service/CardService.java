@@ -6,11 +6,11 @@ import com.example.flashcards_backend.model.Card;
 import com.example.flashcards_backend.model.Deck;
 import com.example.flashcards_backend.repository.CardRepository;
 import com.example.flashcards_backend.repository.CardDeckRowProjection;
-import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataAccessException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import static com.example.flashcards_backend.utility.CardUtils.shuffleCards;
 
@@ -25,6 +25,7 @@ public class CardService {
     private final CardDeckService cardDeckService;
     private final SubjectService subjectService;
 
+    @Transactional(readOnly = true)
     public List<CardResponse> getAllCardResponsesFromSubject(Long subjectId) {
         List<CardDeckRowProjection> rows = cardRepository.findCardDeckRowsBySubjectId(subjectId);
         if (rows.isEmpty()) {
@@ -33,6 +34,7 @@ public class CardService {
         return mapRowsToResponses(rows);
     }
 
+    @Transactional(readOnly = true)
     public CardResponse getCardResponseById(Long id) {
         List<CardDeckRowProjection> rows = cardRepository.findCardDeckRowsByCardId(id);
         if (rows.isEmpty()) {
@@ -41,10 +43,12 @@ public class CardService {
         return mapRowsToResponses(rows).getFirst();
     }
 
+    @Transactional(readOnly = true)
     public List<Card> getCardsByMinAvgRating(double threshold) {
         return cardRepository.findByMinAvgRating(threshold);
     }
 
+    @Transactional(readOnly = true)
     public List<Card> getCardsByMinAvgRating(double threshold, boolean shuffled) {
         var cards = getCardsByMinAvgRating(threshold);
         return shuffled
@@ -52,10 +56,12 @@ public class CardService {
                : cards;
     }
 
+    @Transactional(readOnly = true)
     public List<Card> getCardsByMaxAvgRating(double threshold) {
         return cardRepository.findByMaxAvgRating(threshold);
     }
 
+    @Transactional(readOnly = true)
     public List<Card> getCardsByMaxAvgRating(double threshold, boolean shuffled) {
         var cards = getCardsByMaxAvgRating(threshold);
         return shuffled
@@ -79,15 +85,7 @@ public class CardService {
         return mapCardToCreateCardResponse(saved, false);
     }
 
-    private CreateCardResponse mapCardToCreateCardResponse(Card card, boolean alreadyExisted) {
-        return CreateCardResponse.builder()
-                .id(card.getId())
-                .front(card.getFront())
-                .back(card.getBack())
-                .decks(card.getDecks().stream().map(DeckSummary::fromEntity).toList())
-                .alreadyExisted(alreadyExisted)
-                .build();
-    }
+
 
     @Transactional
     public void updateCard(Long id, CardRequest request) {
@@ -120,12 +118,21 @@ public class CardService {
         cardRepository.deleteCardsById(ids);
     }
 
-    /* Helpers */
+    @Transactional
+    public CardResponse setHints(HintRequest request, Long id) {
+        Card card = fetchCardById(id);
+        card.setHintFront(request.hintFront());
+        card.setHintBack(request.hintBack());
+        return CardResponse.fromEntity(card);
+    }
 
-    private Card fetchCardById(Long id) {
+    @Transactional(readOnly = true)
+    public Card fetchCardById(Long id) {
         return cardRepository.findById(id)
                 .orElseThrow(() -> new CardNotFoundException(id));
     }
+
+    /* Helpers */
 
     private void addDecksIfPresent(CardRequest request, Card cardToCreate) {
         if (request.deckNames() != null && !request.deckNames().isEmpty()) {
@@ -163,4 +170,13 @@ public class CardService {
         return new ArrayList<>(cardMap.values());
     }
 
+    private CreateCardResponse mapCardToCreateCardResponse(Card card, boolean alreadyExisted) {
+        return CreateCardResponse.builder()
+                .id(card.getId())
+                .front(card.getFront())
+                .back(card.getBack())
+                .decks(card.getDecks().stream().map(DeckSummary::fromEntity).toList())
+                .alreadyExisted(alreadyExisted)
+                .build();
+    }
 }

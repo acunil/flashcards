@@ -3,6 +3,7 @@ package com.example.flashcards_backend.service;
 import com.example.flashcards_backend.dto.CardRequest;
 import com.example.flashcards_backend.dto.CardResponse;
 import com.example.flashcards_backend.dto.CreateCardResponse;
+import com.example.flashcards_backend.dto.HintRequest;
 import com.example.flashcards_backend.exception.CardNotFoundException;
 import com.example.flashcards_backend.model.Card;
 import com.example.flashcards_backend.model.Deck;
@@ -419,6 +420,30 @@ class CardServiceTest {
             .isInstanceOf(CardNotFoundException.class)
             .extracting("message")
             .isEqualTo("Card not found with id: " + CARD_3_ID);
+    }
+
+    @Test
+    void deleteCard_multipleCards_deletesCards() {
+        List<Long> ids = List.of(CARD_1_ID, CARD_2_ID);
+        cardService.deleteCards(ids);
+        verify(cardRepository).deleteCardsById(ids);
+    }
+
+    @Test
+    void setHints_whenCardExists_updatesHints() {
+        when(cardRepository.findById(CARD_1_ID)).thenReturn(Optional.of(card1));
+
+        var request = HintRequest.builder()
+                .hintFront("Front Hint")
+                .hintBack("Back Hint")
+                .build();
+
+        cardService.setHints(request, CARD_1_ID);
+
+        verify(cardRepository).findById(CARD_1_ID);
+
+        assertThat(card1.getHintFront()).isEqualTo("Front Hint");
+        assertThat(card1.getHintBack()).isEqualTo("Back Hint");
     }
 
 }
