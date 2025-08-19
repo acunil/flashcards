@@ -20,6 +20,12 @@ const DeckListItem = ({
 }: DeckListItemProps) => {
   const navigate = useNavigate();
 
+  const handleReviseClick = () => {
+    if (totalCards && totalCards > 0) {
+      navigate(`/revise/${deck.id}?hardMode=false`);
+    }
+  };
+
   return (
     <div className="flex flex-row gap-1 w-full">
       <button
@@ -38,7 +44,7 @@ const DeckListItem = ({
         )}
       </button>
       <button
-        onClick={() => navigate(`/revise/${deck.id}?hardMode=false`)}
+        onClick={handleReviseClick}
         className="relative flex items-center text-black py-3 px-4 rounded shadow-lg cursor-pointer hover:bg-yellow-200 border-black border-2"
       >
         <GraduationCap size={20} />
