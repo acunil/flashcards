@@ -1,9 +1,10 @@
 package com.example.flashcards_backend.service;
 
 import com.example.flashcards_backend.dto.CardRequest;
+import com.example.flashcards_backend.dto.CardResponse;
+import com.example.flashcards_backend.dto.CreateCardResponse;
 import com.example.flashcards_backend.exception.CardNotFoundException;
 import com.example.flashcards_backend.model.Card;
-import com.example.flashcards_backend.dto.CardCreationResult;
 import com.example.flashcards_backend.model.Deck;
 import com.example.flashcards_backend.model.Subject;
 import com.example.flashcards_backend.repository.CardDeckRowProjection;
@@ -11,6 +12,7 @@ import com.example.flashcards_backend.repository.CardRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
@@ -19,6 +21,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.*;
 
+import java.time.LocalDateTime;
 import java.util.*;
 
 @ExtendWith(SpringExtension.class)
@@ -98,39 +101,55 @@ class CardServiceTest {
         when(cardRepository.findById(CARD_2_ID)).thenReturn(Optional.of(card2));
         when(cardRepository.findById(CARD_3_ID)).thenReturn(Optional.of(card3));
 
-        // set up cardDeckRowProjections
+        // Card 1 has 2 decks, 1 with name Deck 1 and 1 with name Deck 2
+        when(cardDeckRowProjection1.getCardId()).thenReturn(CARD_1_ID);
         when(cardDeckRowProjection1.getDeckId()).thenReturn(1L);
         when(cardDeckRowProjection1.getDeckName()).thenReturn("Deck 1");
-        when(cardDeckRowProjection1.getCardId()).thenReturn(CARD_1_ID);
         when(cardDeckRowProjection1.getFront()).thenReturn("Front 1");
         when(cardDeckRowProjection1.getBack()).thenReturn("Back 1");
         when(cardDeckRowProjection1.getAvgRating()).thenReturn(3.0);
+        when(cardDeckRowProjection1.getViewCount()).thenReturn(2);
+        when(cardDeckRowProjection1.getLastViewed()).thenReturn(LocalDateTime.now());
 
+        when(cardDeckRowProjection2.getCardId()).thenReturn(CARD_1_ID);
         when(cardDeckRowProjection2.getDeckId()).thenReturn(2L);
         when(cardDeckRowProjection2.getDeckName()).thenReturn("Deck 2");
-        when(cardDeckRowProjection2.getCardId()).thenReturn(CARD_2_ID);
+        when(cardDeckRowProjection2.getFront()).thenReturn("Front 1");
+        when(cardDeckRowProjection2.getBack()).thenReturn("Back 1");
 
+        // Card 2 has 1 deck, 1 with name Deck 1
+        when(cardDeckRowProjection3.getCardId()).thenReturn(CARD_2_ID);
         when(cardDeckRowProjection3.getDeckId()).thenReturn(1L);
         when(cardDeckRowProjection3.getDeckName()).thenReturn("Deck 1");
-        when(cardDeckRowProjection3.getCardId()).thenReturn(CARD_3_ID);
 
-        when(cardRepository.findAllCardDeckRows())
+        when(cardRepository.findCardDeckRowsByCardId(CARD_1_ID)).thenReturn(List.of(cardDeckRowProjection1, cardDeckRowProjection2));
+
+        when(cardRepository.findCardDeckRows(null, null))
                 .thenReturn(List.of(cardDeckRowProjection1, cardDeckRowProjection2, cardDeckRowProjection3));
 
     }
 
     @Test
     void testGetCardById() {
-        Card foundCard = cardService.getCardById(CARD_1_ID);
-        assertThat(foundCard).isEqualTo(card1);
+        when(cardRepository.findCardDeckRowsByCardId(CARD_2_ID)).thenReturn(List.of(cardDeckRowProjection3));
 
-        Card otherCard = cardService.getCardById(CARD_2_ID);
-        assertThat(otherCard).isEqualTo(card2);
+
+        CardResponse foundCard = cardService.getCardResponseById(CARD_1_ID);
+        assertThat(foundCard.id()).isEqualTo(CARD_1_ID);
+        assertThat(foundCard.front()).isEqualTo("Front 1");
+        assertThat(foundCard.back()).isEqualTo("Back 1");
+        assertThat(foundCard.decks()).hasSize(2);
+        assertThat(foundCard.avgRating()).isEqualTo(3.0);
+        assertThat(foundCard.viewCount()).isEqualTo(2);
+        assertThat(foundCard.lastViewed()).isNotNull();
+
+        var otherCard = cardService.getCardResponseById(CARD_2_ID);
+        assertThat(otherCard.id()).isEqualTo(CARD_2_ID);
     }
 
     @Test
     void testGetCardById_throwsExceptionIfCardNotFound() {
-        assertThatThrownBy(() -> cardService.getCardById(99L))
+        assertThatThrownBy(() -> cardService.getCardResponseById(99L))
             .isInstanceOf(CardNotFoundException.class)
             .extracting("message")
             .isEqualTo("Card not found with id: 99");
@@ -138,17 +157,19 @@ class CardServiceTest {
 
     @Test
     void testGetAllCards_noSubjectSpecified() {
+        when(cardRepository.findCardDeckRowsBySubjectId(null))
+                .thenReturn(List.of(cardDeckRowProjection1, cardDeckRowProjection2, cardDeckRowProjection3));
         var cards = cardService.getAllCardResponsesFromSubject(null);
-        assertThat(cards).hasSize(3);
-        verify(cardRepository).findAllCardDeckRows();
+        assertThat(cards).hasSize(2);
+        verify(cardRepository).findCardDeckRowsBySubjectId(null);
     }
 
     @Test
     void testGetAllCards_withSubjectSpecified() {
-        when(cardRepository.findAllCardDeckRowsBySubjectId(SUBJECT_ID)).thenReturn(List.of(cardDeckRowProjection1, cardDeckRowProjection2));
+        when(cardRepository.findCardDeckRowsBySubjectId(SUBJECT_ID)).thenReturn(List.of(cardDeckRowProjection1, cardDeckRowProjection2, cardDeckRowProjection3));
         var cards = cardService.getAllCardResponsesFromSubject(SUBJECT_ID);
         assertThat(cards).hasSize(2);
-        verify(cardRepository).findAllCardDeckRowsBySubjectId(SUBJECT_ID);
+        verify(cardRepository).findCardDeckRowsBySubjectId(SUBJECT_ID);
     }
 
     @Test
@@ -169,11 +190,12 @@ class CardServiceTest {
         CardRequest request = CardRequest.of(front, back, SUBJECT_ID);
 
         // when
-        CardCreationResult result = cardService.createCard(request);
+        var  result = cardService.createCard(request);
 
         // then
         assertThat(result.alreadyExisted()).isTrue();
-        assertThat(result.card()).isEqualTo(existing);
+        assertThat(result.front()).isEqualTo(existing.getFront());
+        assertThat(result.back()).isEqualTo(existing.getBack());
 
         verify(cardRepository).findBySubjectIdAndFrontAndBack(SUBJECT_ID, front, back);
         verifyNoMoreInteractions(cardRepository, subjectService, cardDeckService);
@@ -206,15 +228,14 @@ class CardServiceTest {
         CardRequest request = CardRequest.of(front, back, SUBJECT_ID, deck1.getName(), deck2.getName());
 
         // when
-        CardCreationResult result = cardService.createCard(request);
+        CreateCardResponse result = cardService.createCard(request);
 
         // then
         assertThat(result.alreadyExisted()).isFalse();
-        assertThat(result.card().getId()).isEqualTo(20L);
-        assertThat(result.card().getFront()).isEqualTo(front);
-        assertThat(result.card().getBack()).isEqualTo(back);
-        assertThat(result.card().getSubject()).isEqualTo(subject);
-        assertThat(result.card().getDecks()).containsExactlyElementsOf(decks);
+        assertThat(result.id()).isEqualTo(20L);
+        assertThat(result.front()).isEqualTo(front);
+        assertThat(result.back()).isEqualTo(back);
+        assertThat(result.decks()).hasSize(decks.size());
 
         verify(cardRepository).findBySubjectIdAndFrontAndBack(SUBJECT_ID, front, back);
         verify(subjectService).findById(SUBJECT_ID);
@@ -224,24 +245,34 @@ class CardServiceTest {
 
     @Test
     void testUpdateCard_removesDecks_andDoesNotCallCardDeckService() {
+        when(cardRepository.findById(CARD_1_ID)).thenReturn(Optional.of(card1));
         when(cardDeckService.getOrCreateDecksByNames(any())).thenReturn(Set.of());
 
-        // request contains empty deckNamesDto
+        // request contains empty deckNamesDto, so expect decks to be cleared
         CardRequest request = CardRequest.builder()
                 .front("Updated Front")
                 .back("Updated Back")
                 .subjectId(SUBJECT_ID)
                 .hintFront("Updated Hint Front")
                 .hintBack("Updated Hint Back")
+                .deckNames(new HashSet<>())
                 .build();
         cardService.updateCard(CARD_1_ID, request);
 
-        Card updatedCard = cardService.getCardById(CARD_1_ID);
-        assertThat(updatedCard.getFront()).isEqualTo("Updated Front");
-        assertThat(updatedCard.getBack()).isEqualTo("Updated Back");
-        assertThat(updatedCard.getDecks()).isEmpty();
-        assertThat(updatedCard.getHintFront()).isEqualTo("Updated Hint Front");
-        assertThat(updatedCard.getHintBack()).isEqualTo("Updated Hint Back");
+        verify(cardRepository).findById(CARD_1_ID);
+
+        ArgumentCaptor<Card> captor = ArgumentCaptor.forClass(Card.class);
+        verify(cardRepository).saveAndFlush(captor.capture());
+        when(cardRepository.saveAndFlush(captor.capture())).thenReturn(card1);
+
+        // check that card has been updated, and decks have been cleared
+        Card updated = captor.getValue();
+        assertThat(updated.getFront()).isEqualTo("Updated Front");
+        assertThat(updated.getBack()).isEqualTo("Updated Back");
+        assertThat(updated.getHintFront()).isEqualTo("Updated Hint Front");
+        assertThat(updated.getHintBack()).isEqualTo("Updated Hint Back");
+        assertThat(updated.getDecks()).isEmpty();
+        assertThat(updated.getSubject()).isEqualTo(subject);
 
         // Service was not called with null deckNamesDto
         verifyNoMoreInteractions(cardDeckService);
@@ -249,18 +280,40 @@ class CardServiceTest {
 
     @Test
     void testUpdateCard_updatesDecks() {
-        Set<Deck> decks = Set.of(deck2);
-        when(cardDeckService.getOrCreateDecksByNames(any())).thenReturn(decks);
+        when(cardRepository.findById(CARD_1_ID)).thenReturn(Optional.of(card1));
+        when(cardDeckService.getOrCreateDecksByNames(any())).thenReturn(Set.of(deck2));
 
-        CardRequest updateRequest = CardRequest.of("Updated Front", "Updated Back", SUBJECT_ID, deck2.getName());
-        cardService.updateCard(CARD_3_ID, updateRequest);
+        // request contains different decks, so expect decks to be overwritten
+        CardRequest request = CardRequest.builder()
+                .front("Updated Front")
+                .back("Updated Back")
+                .subjectId(SUBJECT_ID)
+                .hintFront("Updated Hint Front")
+                .hintBack("Updated Hint Back")
+                .deckNames(Set.of("Deck 2"))
+                .build();
+        cardService.updateCard(CARD_1_ID, request);
 
-        Card updatedCard = cardService.getCardById(CARD_3_ID);
-        assertThat(updatedCard.getFront()).isEqualTo("Updated Front");
-        assertThat(updatedCard.getBack()).isEqualTo("Updated Back");
-        assertThat(updatedCard.getDecks()).containsExactly(deck2);
+        verify(cardRepository).findById(CARD_1_ID);
 
-        verify(cardDeckService).getOrCreateDecksByNames(Set.of(deck2.getName()));
+        ArgumentCaptor<Card> captor = ArgumentCaptor.forClass(Card.class);
+        verify(cardRepository).saveAndFlush(captor.capture());
+        when(cardRepository.saveAndFlush(captor.capture())).thenReturn(card1);
+
+        // check that card has been updated, including decks
+        Card updated = captor.getValue();
+        assertThat(updated.getFront()).isEqualTo("Updated Front");
+        assertThat(updated.getBack()).isEqualTo("Updated Back");
+        assertThat(updated.getHintFront()).isEqualTo("Updated Hint Front");
+        assertThat(updated.getHintBack()).isEqualTo("Updated Hint Back");
+        assertThat(updated.getDecks())
+                .hasSize(1)
+                .extracting("name")
+                .containsExactly("Deck 2");
+        assertThat(updated.getSubject()).isEqualTo(subject);
+
+        // Service was called with requested deck
+        verify(cardDeckService).getOrCreateDecksByNames(Set.of("Deck 2"));
     }
 
     @Test
@@ -269,10 +322,13 @@ class CardServiceTest {
         CardRequest request = CardRequest.of("Front 1", "Back 1", SUBJECT_ID, deck1.getName(), deck2.getName());
         cardService.updateCard(CARD_1_ID, request);
 
-        Card updatedCard = cardService.getCardById(CARD_1_ID);
-        assertThat(updatedCard.getFront()).isEqualTo("Front 1");
-        assertThat(updatedCard.getBack()).isEqualTo("Back 1");
-        assertThat(updatedCard.getDecks()).containsExactlyInAnyOrder(deck1, deck2);
+        CardResponse updatedCard = cardService.getCardResponseById(CARD_1_ID);
+        assertThat(updatedCard.front()).isEqualTo("Front 1");
+        assertThat(updatedCard.back()).isEqualTo("Back 1");
+        assertThat(updatedCard.decks())
+                .hasSize(2)
+                .extracting("name")
+                .containsExactlyInAnyOrder(deck1.getName(), deck2.getName());
 
         verifyNoMoreInteractions(cardDeckService);
     }

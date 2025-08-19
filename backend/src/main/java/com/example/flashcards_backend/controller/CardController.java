@@ -36,7 +36,7 @@ public class CardController {
     private final CardHistoryService cardHistoryService;
 
     @Operation(summary = "Get all cards",
-            description = "Returns all cards.")
+            description = "Returns all cards, optionally with subject ID specified.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Successful operation",
                     content = @Content(mediaType = "application/json",
@@ -48,7 +48,8 @@ public class CardController {
         Instant start = Instant.now();
         var cards = cardService.getAllCardResponsesFromSubject(subjectId);
         Instant end = Instant.now();
-        log.info("GET /cards: returned {} cards in {} seconds", cards.size(), (end.toEpochMilli() - start.toEpochMilli()) / 1000.0);
+        double duration = (end.toEpochMilli() - start.toEpochMilli()) / 1000.0;
+        log.info("GET /cards: returned {} cards in {} seconds", cards.size(), duration);
         return ResponseEntity.ok(cards);
     }
 
@@ -62,8 +63,7 @@ public class CardController {
     })
     @GetMapping("/{id}")
     public ResponseEntity<CardResponse> getById(@PathVariable Long id) {
-        Card card = cardService.getCardById(id); // throws CardNotFoundException if missing
-        return ResponseEntity.ok(CardResponse.fromEntity(card));
+        return ResponseEntity.ok(cardService.getCardResponseById(id)); // throws CardNotFoundException if missing
     }
 
     @Operation(summary = "Create a new card", description = "Creates a new card.")
@@ -74,14 +74,7 @@ public class CardController {
     })
     @PostMapping
     public ResponseEntity<CreateCardResponse> createCard(@Valid @RequestBody CardRequest request) {
-        var cardCreationResult = cardService.createCard(request);
-        CreateCardResponse response = CreateCardResponse
-            .builder()
-            .id(cardCreationResult.card().getId())
-            .front(cardCreationResult.card().getFront())
-            .back(cardCreationResult.card().getBack())
-            .alreadyExisted(cardCreationResult.alreadyExisted())
-            .build();
+        CreateCardResponse response = cardService.createCard(request);
         return ResponseEntity
             .created(URI.create(REQUEST_MAPPING + response.id()))
             .body(response);

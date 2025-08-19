@@ -1,7 +1,16 @@
 package com.example.flashcards_backend.repository;
 
-import java.util.Map;
+import org.springframework.data.repository.query.Param;
+
+import java.util.List;
 
 public interface CardRepositoryCustom {
-    Map<String, Object> createIfUnique(String front, String back, Long subjectId);
+    List<CardDeckRowProjection> findCardDeckRows(@Param("subjectId") Long subjectId, @Param("cardId") Long cardId);
+
+    List<CardDeckRowProjection> findCardDeckRowsBySubjectId(Long subjectId);
+
+    List<CardDeckRowProjection> findCardDeckRowsByCardId(Long cardId);
+
+    List<CardDeckRowProjection> findAllCardDeckRows();
+
 }

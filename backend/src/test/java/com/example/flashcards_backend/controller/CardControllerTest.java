@@ -1,9 +1,10 @@
 package com.example.flashcards_backend.controller;
 
 import com.example.flashcards_backend.dto.CardRequest;
+import com.example.flashcards_backend.dto.CardResponse;
+import com.example.flashcards_backend.dto.CreateCardResponse;
 import com.example.flashcards_backend.exception.CardNotFoundException;
 import com.example.flashcards_backend.model.Card;
-import com.example.flashcards_backend.dto.CardCreationResult;
 import com.example.flashcards_backend.model.CardHistory;
 import com.example.flashcards_backend.model.Subject;
 import com.example.flashcards_backend.service.CardHistoryService;
@@ -66,7 +67,7 @@ class CardControllerTest {
 
     @Test
     void getById_existingId_returnsCardResponse() throws Exception {
-        when(cardService.getCardById(1L)).thenReturn(c1);
+        when(cardService.getCardResponseById(1L)).thenReturn(CardResponse.fromEntity(c1));
 
         mockMvc.perform(get(ENDPOINT + "/1"))
             .andExpect(status().isOk())
@@ -79,7 +80,7 @@ class CardControllerTest {
     @Test
     void getById_missingId_returnsNotFound() throws Exception {
         doThrow( new CardNotFoundException(99L))
-            .when(cardService).getCardById(99L);
+            .when(cardService).getCardResponseById(99L);
 
         mockMvc.perform(get(ENDPOINT + "/99"))
             .andExpect(status().isNotFound())
@@ -89,9 +90,8 @@ class CardControllerTest {
 
     @Test
     void create_Card_validDto_returnsCreatedWithLocationAndBody() throws Exception {
-        Card created = Card.builder().id(10L).front("f").back("b").build();
         when(cardService.createCard(any(CardRequest.class)))
-            .thenReturn(new CardCreationResult(created, false));
+            .thenReturn(CreateCardResponse.builder().front("f").back("b").id(10L).build());
 
         String json = """
             {"front":"f","back":"b","subjectId":1}
