@@ -1,7 +1,6 @@
 import { useCallback, useState } from "react";
 import type { Deck } from "../../types/deck";
-
-const BASE_DECK_URL = "http://localhost:8080/decks";
+import { API_URL } from "../urls";
 
 const useGetOrCreateDecks = () => {
   const [decks, setDecks] = useState<Deck[]>([]);
@@ -13,7 +12,7 @@ const useGetOrCreateDecks = () => {
     setError(null);
 
     try {
-      const response = await fetch(BASE_DECK_URL, {
+      const response = await fetch(`${API_URL}/decks`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ names }),

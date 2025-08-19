@@ -1,12 +1,11 @@
 import { useState } from "react";
+import { API_URL } from "../urls";
 
 export type NewCard = {
   front: string;
   back: string;
   deckNames: string[];
 };
-
-const API_URL = "http://localhost:8080/cards";
 
 const useCreateCard = () => {
   const [creating, setCreating] = useState(false);
@@ -17,7 +16,7 @@ const useCreateCard = () => {
       setCreating(true);
       setError(null);
 
-      const response = await fetch(API_URL, {
+      const response = await fetch(`${API_URL}/cards`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(card),
