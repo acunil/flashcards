@@ -18,15 +18,16 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.util.List;
+import java.util.Set;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.tuple;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
-
-import java.util.List;
-import java.util.Set;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(DeckController.class)
 class DeckControllerTest {
@@ -68,10 +69,10 @@ class DeckControllerTest {
     @Test
     void getDeckById_NotFound() throws Exception {
         doThrow(new DeckNotFoundException(999L))
-            .when(deckService).getDeckById(999L);
+                .when(deckService).getDeckById(999L);
         mockMvc.perform(get(ENDPOINT + "/999"))
-            .andExpect(status().isNotFound())
-            .andExpect(jsonPath("$.error").value("Deck not found with id: 999"));
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.error").value("Deck not found with id: 999"));
     }
 
     @Test
@@ -81,8 +82,8 @@ class DeckControllerTest {
 
         String content = "{\"name\": \"New Deck\", \"subjectId\": 1}";
         mockMvc.perform(post(ENDPOINT + "/create")
-                .contentType("application/json")
-                .content(content))
+                        .contentType("application/json")
+                        .content(content))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.id").value(newDeck.getId()))
                 .andExpect(jsonPath("$.name").value(newDeck.getName()));
@@ -91,15 +92,15 @@ class DeckControllerTest {
     @Test
     void createDeck_Conflict() throws Exception {
         doThrow(new DuplicateDeckNameException("Existing Deck"))
-            .when(cardDeckService).createDeck(any(CreateDeckRequest.class));
+                .when(cardDeckService).createDeck(any(CreateDeckRequest.class));
 
         String content = "{\"name\": \"Existing Deck\"}";
         mockMvc.perform(post(ENDPOINT + "/create")
-                .contentType("application/json")
-                .content(content))
-            .andExpect(status().isConflict())
-            .andExpect(jsonPath("$.error")
-                .value("A deck with the name 'Existing Deck' already exists"));
+                        .contentType("application/json")
+                        .content(content))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.error")
+                        .value("A deck with the name 'Existing Deck' already exists"));
     }
 
     @Test
@@ -109,8 +110,8 @@ class DeckControllerTest {
 
         String content = "{\"newName\": \"Updated Deck\"}";
         mockMvc.perform(put(ENDPOINT + "/1")
-                .contentType("application/json")
-                .content(content))
+                        .contentType("application/json")
+                        .content(content))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(updatedDeck.getId()))
                 .andExpect(jsonPath("$.name").value(updatedDeck.getName()));
@@ -119,13 +120,13 @@ class DeckControllerTest {
     @Test
     void updateDeckName_NotFound() throws Exception {
         doThrow(new DeckNotFoundException(999L))
-            .when(deckService).renameDeck(999L, "Updated Deck");
+                .when(deckService).renameDeck(999L, "Updated Deck");
         String content = "{\"newName\": \"Updated Deck\"}";
         mockMvc.perform(put(ENDPOINT + "/999")
-                .contentType("application/json")
-                .content(content))
-            .andExpect(status().isNotFound())
-            .andExpect(jsonPath("$.error").value("Deck not found with id: 999"));
+                        .contentType("application/json")
+                        .content(content))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.error").value("Deck not found with id: 999"));
     }
 
     @Test
@@ -138,40 +139,64 @@ class DeckControllerTest {
     @Test
     void deleteDeck_NotFound() throws Exception {
         doThrow(new DeckNotFoundException(999L))
-            .when(deckService).deleteDeck(999L);
+                .when(deckService).deleteDeck(999L);
         mockMvc.perform(delete(ENDPOINT + "/999"))
-            .andExpect(status().isNotFound())
-            .andExpect(jsonPath("$.error").value("Deck not found with id: 999"));
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.error").value("Deck not found with id: 999"));
     }
 
 
     @Test
-    void getDecksByNames() throws Exception {
-        when(cardDeckService.getOrCreateDecksByNames(Set.of("Deck 1", "Deck 2")))
-            .thenReturn(Set.of(deck1, deck2));
+    void upsertDecksByNamesAndSubjectIdNull() throws Exception {
+        when(cardDeckService.getOrCreateDecksByNamesAndSubjectId(Set.of("Deck 1", "Deck 2"), null))
+                .thenReturn(Set.of(deck1, deck2));
 
         String json = mockMvc.perform(post(ENDPOINT)
-                .param("names", "Deck 1", "Deck 2"))
-            .andExpect(status().isOk())
-            .andReturn()
-            .getResponse()
-            .getContentAsString();
+                        .param("names", "Deck 1", "Deck 2"))
+                .andExpect(status().isOk())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
 
         List<DeckSummary> summaries = readSummaries(json);
 
         assertThat(summaries)
-            .extracting("id", "name")
-            .containsExactlyInAnyOrder(
-                tuple(deck1.getId(), deck1.getName()),
-                tuple(deck2.getId(), deck2.getName())
-            );
+                .extracting("id", "name")
+                .containsExactlyInAnyOrder(
+                        tuple(deck1.getId(), deck1.getName()),
+                        tuple(deck2.getId(), deck2.getName())
+                );
+    }
+
+    @Test
+    void upsertDecksByNamesAndSubjectId() throws Exception {
+        when(cardDeckService.getOrCreateDecksByNamesAndSubjectId(Set.of("Deck 1", "Deck 2"), 1L))
+                .thenReturn(Set.of(deck1, deck2));
+
+        String json = mockMvc.perform(post(ENDPOINT)
+                        .param("names", "Deck 1", "Deck 2")
+                        .param("subjectId", "1"))
+                .andExpect(status().isOk())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+
+        List<DeckSummary> summaries = readSummaries(json);
+
+        assertThat(summaries)
+                .extracting("id", "name")
+                .containsExactlyInAnyOrder(
+                        tuple(deck1.getId(), deck1.getName()),
+                        tuple(deck2.getId(), deck2.getName())
+                );
     }
 
 
     /* Helpers */
 
     private List<DeckSummary> readSummaries(String json) throws JsonProcessingException {
-        return objectMapper.readValue(json, new TypeReference<>() {});
+        return objectMapper.readValue(json, new TypeReference<>() {
+        });
     }
 
 }

@@ -221,7 +221,7 @@ class CardServiceTest {
         when(subjectService.findById(SUBJECT_ID)).thenReturn(subject);
 
         Set<Deck> decks = Set.of(deck1, deck2);
-        when(cardDeckService.getOrCreateDecksByNames(anySet())).thenReturn(decks);
+        when(cardDeckService.getOrCreateDecksByNamesAndSubjectId(anySet(), anyLong())).thenReturn(decks);
 
         Card saved = Card.builder()
                 .id(20L)
@@ -247,14 +247,14 @@ class CardServiceTest {
 
         verify(cardRepository).findBySubjectIdAndFrontAndBack(SUBJECT_ID, front, back);
         verify(subjectService).findById(SUBJECT_ID);
-        verify(cardDeckService).getOrCreateDecksByNames(Set.of(deck1.getName(), deck2.getName()));
+        verify(cardDeckService).getOrCreateDecksByNamesAndSubjectId(Set.of(deck1.getName(), deck2.getName()), SUBJECT_ID);
         verify(cardRepository).saveAndFlush(any(Card.class));
     }
 
     @Test
     void testUpdateCard_removesDecks_andDoesNotCallCardDeckService() {
         when(cardRepository.findById(CARD_1_ID)).thenReturn(Optional.of(card1));
-        when(cardDeckService.getOrCreateDecksByNames(any())).thenReturn(Set.of());
+        when(cardDeckService.getOrCreateDecksByNamesAndSubjectId(any(), anyLong())).thenReturn(Set.of());
 
         // request contains empty deckNamesDto, so expect decks to be cleared
         CardRequest request = CardRequest.builder()
@@ -289,7 +289,7 @@ class CardServiceTest {
     @Test
     void testUpdateCard_updatesDecks() {
         when(cardRepository.findById(CARD_1_ID)).thenReturn(Optional.of(card1));
-        when(cardDeckService.getOrCreateDecksByNames(any())).thenReturn(Set.of(deck2));
+        when(cardDeckService.getOrCreateDecksByNamesAndSubjectId(any(), anyLong())).thenReturn(Set.of(deck2));
 
         // request contains different decks, so expect decks to be overwritten
         CardRequest request = CardRequest.builder()
@@ -321,7 +321,7 @@ class CardServiceTest {
         assertThat(updated.getSubject()).isEqualTo(subject);
 
         // Service was called with requested deck
-        verify(cardDeckService).getOrCreateDecksByNames(Set.of("Deck 2"));
+        verify(cardDeckService).getOrCreateDecksByNamesAndSubjectId(Set.of("Deck 2"), SUBJECT_ID);
     }
 
     @Test

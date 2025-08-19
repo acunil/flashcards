@@ -9,7 +9,7 @@ import java.util.Optional;
 import java.util.Set;
 
 public interface DeckRepository extends JpaRepository<Deck, Long> {
-    Set<Deck> findByNameIn(Set<String> names);
+    Set<Deck> findByNameInAndSubjectId(Set<String> names, Long subjectId);
 
     boolean existsByName(String trim);
 

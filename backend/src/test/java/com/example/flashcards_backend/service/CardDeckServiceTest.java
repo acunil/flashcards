@@ -46,40 +46,41 @@ class CardDeckServiceTest {
     }
 
     @Test
-    void testGetOrCreateDecksByNames_withNoNewNames_doesNotSaveToRepo() {
+    void testGetOrCreateDecksByNames_withNoNewNames_AndSubject_doesNotSaveToRepo() {
         var expectedDecks = Set.of(deck1, deck2);
-        when(deckRepository.findByNameIn(anySet()))
+        when(deckRepository.findByNameInAndSubjectId(anySet(), anyLong()))
             .thenReturn(expectedDecks);
 
         var deckNames = Set.of("Deck 1", "Deck 2");
-        Set<Deck> actualDecks = cardDeckService.getOrCreateDecksByNames(deckNames);
+        Set<Deck> actualDecks = cardDeckService.getOrCreateDecksByNamesAndSubjectId(deckNames, SUBJECT_ID);
 
         assertThat(actualDecks)
             .isNotNull()
             .hasSize(2)
             .containsExactlyInAnyOrderElementsOf(expectedDecks);
-        verify(deckRepository).findByNameIn(deckNames);
+        verify(deckRepository).findByNameInAndSubjectId(deckNames, SUBJECT_ID);
         verify(deckRepository, never()).saveAll(anySet());
     }
 
     @Test
-    void testGetOrCreateDecksByNames_withNewNames_savesNewDecksToRepo() {
+    void testGetOrCreateDecksByNames_withNewNames_savesNewDecksToRepoAndSubject() {
         Set<String> deckNames = Set.of("Deck 1", "Deck 2", "Deck 3");
         Set<Deck> existingDecks = Set.of(deck1, deck2);
-        when(deckRepository.findByNameIn(anySet())).thenReturn(existingDecks);
+        when(deckRepository.findByNameInAndSubjectId(anySet(), anyLong())).thenReturn(existingDecks);
 
         Deck newDeck = Deck.builder().name("Deck 3").build();
         when(deckRepository.saveAll(anySet())).thenReturn(List.of(newDeck));
 
-        Set<Deck> actualDecks = cardDeckService.getOrCreateDecksByNames(deckNames);
+        Set<Deck> actualDecks = cardDeckService.getOrCreateDecksByNamesAndSubjectId(deckNames, SUBJECT_ID);
 
         assertThat(actualDecks)
             .isNotNull()
             .hasSize(3)
             .extracting("name")
             .containsExactlyInAnyOrder("Deck 1", "Deck 2", "Deck 3");
-        verify(deckRepository).findByNameIn(deckNames);
+        verify(deckRepository).findByNameInAndSubjectId(deckNames, SUBJECT_ID);
 
+        //noinspection unchecked
         ArgumentCaptor<List<Deck>> captor = ArgumentCaptor.forClass(List.class);
 
         verify(deckRepository).saveAll(captor.capture());

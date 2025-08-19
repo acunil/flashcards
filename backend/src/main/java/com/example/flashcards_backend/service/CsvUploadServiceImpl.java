@@ -4,6 +4,7 @@ import com.example.flashcards_backend.dto.CardResponse;
 import com.example.flashcards_backend.dto.CsvUploadResponseDto;
 import com.example.flashcards_backend.exception.SubjectNotFoundException;
 import com.example.flashcards_backend.model.Card;
+import com.example.flashcards_backend.model.Deck;
 import com.example.flashcards_backend.model.Subject;
 import com.example.flashcards_backend.repository.CardRepository;
 import com.example.flashcards_backend.repository.SubjectRepository;
@@ -27,8 +28,10 @@ public class CsvUploadServiceImpl implements CsvUploadService {
 
     public static final String FRONT = "front";
     public static final String BACK = "back";
+    public static final String DECKS = "decks";
     private final CardRepository cardRepository;
     private final SubjectRepository subjectRepository;
+    private final CardDeckService cardDeckService;
 
     @Transactional
     @Override
@@ -113,12 +116,26 @@ public class CsvUploadServiceImpl implements CsvUploadService {
 
     private List<Card> buildCards(List<CSVRecord> csvRecords, Subject subject) {
         return csvRecords.stream()
-            .map(r -> Card.builder()
-                .front(r.get(FRONT))
-                .back(r.get(BACK))
-                .subject(subject)
-                .build())
-            .toList();
+                .map(r -> {
+                    Set<String> deckNames = parseDecks(r.get(DECKS));
+                    Set<Deck> decks = cardDeckService.getOrCreateDecksByNamesAndSubjectId(deckNames, subject.getId());
+
+                    return Card.builder()
+                            .front(r.get(FRONT))
+                            .back(r.get(BACK))
+                            .subject(subject)
+                            .decks(decks)
+                            .build();
+                })
+                .toList();
+    }
+
+    private Set<String> parseDecks(String raw) {
+        if (raw == null || raw.isBlank()) return Set.of();
+        return Arrays.stream(raw.split(";"))
+                .map(String::trim)
+                .filter(s -> !s.isEmpty())
+                .collect(Collectors.toSet());
     }
 }
 
