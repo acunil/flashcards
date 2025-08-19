@@ -6,6 +6,8 @@ public interface CardDeckRowProjection {
     Long getCardId();
     String getFront();
     String getBack();
+    String getHintFront();
+    String getHintBack();
 
     // deck may be null
     Long getDeckId();

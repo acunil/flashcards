@@ -4,17 +4,17 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 class CardTest {
 
     private Card card;
     private Deck deck1;
     private Deck deck2;
-    private Subject subject;
 
     @BeforeEach
     void setUp() {
-        subject = Subject.builder().name("Subject 1").id(1L).build();
+        Subject subject = Subject.builder().name("Subject 1").id(1L).build();
         card = Card.builder()
                 .front("Front text")
                 .back("Back text")
@@ -38,6 +38,14 @@ class CardTest {
     void testAddDecks_null() {
         card.addDecks(null);
         assertThat(card.getDecks()).isEmpty();
+    }
+
+    @Test
+    void testAddDecks_wrongSubject() {
+        deck1.setSubject(Subject.builder().name("Wrong subject").id(2L).build());
+        assertThatThrownBy(() -> card.addDeck(deck1))
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessageContaining("Deck and Card must belong to the same Subject");
     }
 
     @Test

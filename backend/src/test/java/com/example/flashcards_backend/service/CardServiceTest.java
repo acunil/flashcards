@@ -32,7 +32,6 @@ class CardServiceTest {
     private CardService cardService;
     private Card card1;
     private Card card2;
-    private Card card3;
     private List<Card> originalCards;
     private Deck deck1;
     private Deck deck2;
@@ -85,12 +84,12 @@ class CardServiceTest {
             .back("Back 2")
             .subject(subject)
             .build();
-        card3 = Card.builder()
-            .id(CARD_3_ID)
-            .front("Front 3")
-            .back("Back 3")
-            .subject(subject)
-            .build();
+        Card card3 = Card.builder()
+                .id(CARD_3_ID)
+                .front("Front 3")
+                .back("Back 3")
+                .subject(subject)
+                .build();
         card1.addDecks(Set.of(deck1, deck2));
         card2.addDecks(Set.of(deck1));
         originalCards = List.of(card1, card2, card3);
@@ -228,12 +227,21 @@ class CardServiceTest {
         when(cardDeckService.getOrCreateDecksByNames(any())).thenReturn(Set.of());
 
         // request contains empty deckNamesDto
-        CardRequest request = CardRequest.of("Updated Front", "Updated Back", SUBJECT_ID);
+        CardRequest request = CardRequest.builder()
+                .front("Updated Front")
+                .back("Updated Back")
+                .subjectId(SUBJECT_ID)
+                .hintFront("Updated Hint Front")
+                .hintBack("Updated Hint Back")
+                .build();
         cardService.updateCard(CARD_1_ID, request);
 
         Card updatedCard = cardService.getCardById(CARD_1_ID);
         assertThat(updatedCard.getFront()).isEqualTo("Updated Front");
         assertThat(updatedCard.getBack()).isEqualTo("Updated Back");
+        assertThat(updatedCard.getDecks()).isEmpty();
+        assertThat(updatedCard.getHintFront()).isEqualTo("Updated Hint Front");
+        assertThat(updatedCard.getHintBack()).isEqualTo("Updated Hint Back");
 
         // Service was not called with null deckNamesDto
         verifyNoMoreInteractions(cardDeckService);

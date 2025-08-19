@@ -93,6 +93,8 @@ public class CardService {
         Card card = getCardById(id);
         card.setFront(request.front());
         card.setBack(request.back());
+        card.setHintFront(request.hintFront());
+        card.setHintBack(request.hintBack());
         boolean decksDiffer = !card.getDeckNames().equals(getDeckNames(request));
         if (decksDiffer) {
             card.removeAllDecks();

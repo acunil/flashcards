@@ -23,7 +23,7 @@ class CardResponseTest {
     @Test
     void testCardResponseCreation() {
         SubjectSummary subjectSummary = SubjectSummary.of("Test Subject", 1L);
-        CardResponse cardResponse = new CardResponse( 1L, "Front Text", "Back Text", null, null, null, null, null, subjectSummary);
+        CardResponse cardResponse = new CardResponse( 1L, "Front Text", "Back Text", null, null, null, null, null, null, null, subjectSummary);
 
         assertThat(cardResponse.id()).isEqualTo(1L);
         assertThat(cardResponse.front()).isEqualTo("Front Text");
