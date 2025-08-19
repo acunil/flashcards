@@ -453,4 +453,55 @@ class CardServiceTest {
         assertThat(card1.getHintBack()).isEqualTo("Back Hint");
     }
 
+    @Test
+    void setHints_whenCardDoesNotExist_throwsException() {
+        when(cardRepository.findById(CARD_1_ID)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> cardService.setHints(new HintRequest(null, null), CARD_1_ID))
+            .isInstanceOf(CardNotFoundException.class)
+            .extracting("message")
+            .isEqualTo("Card not found with id: " + CARD_1_ID);
+
+        verify(cardRepository).findById(CARD_1_ID);
+        verifyNoMoreInteractions(cardRepository);
+    }
+
+    @Test
+    void setHints_whenBlank_deletesExistingHints() {
+        when(cardRepository.findById(CARD_1_ID)).thenReturn(Optional.of(card1));
+        card1.setHintFront("Front Hint");
+        card1.setHintBack("Back Hint");
+
+        var request = HintRequest.builder()
+                .hintFront("")
+                .hintBack("")
+                .build();
+
+        cardService.setHints(request, CARD_1_ID);
+
+        verify(cardRepository).findById(CARD_1_ID);
+
+        assertThat(card1.getHintFront()).isNull();
+        assertThat(card1.getHintBack()).isNull();
+    }
+
+    @Test
+    void setHints_whenNull_deletesExistingHints() {
+        when(cardRepository.findById(CARD_1_ID)).thenReturn(Optional.of(card1));
+        card1.setHintFront("Front Hint");
+        card1.setHintBack("Back Hint");
+
+        var request = HintRequest.builder()
+                .hintFront(null)
+                .hintBack(null)
+                .build();
+
+        cardService.setHints(request, CARD_1_ID);
+
+        verify(cardRepository).findById(CARD_1_ID);
+
+        assertThat(card1.getHintFront()).isNull();
+        assertThat(card1.getHintBack()).isNull();
+    }
+
 }

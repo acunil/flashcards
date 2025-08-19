@@ -8,6 +8,7 @@ import com.example.flashcards_backend.repository.CardRepository;
 import com.example.flashcards_backend.repository.CardDeckRowProjection;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.logging.log4j.util.Strings;
 import org.springframework.dao.DataAccessException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -118,8 +119,8 @@ public class CardService {
     @Transactional
     public CardResponse setHints(HintRequest request, Long id) {
         Card card = fetchCardById(id);
-        card.setHintFront(request.hintFront());
-        card.setHintBack(request.hintBack());
+        card.setHintFront(Strings.trimToNull(request.hintFront()));
+        card.setHintBack(Strings.trimToNull(request.hintBack()));
         return CardResponse.fromEntity(card);
     }
 
