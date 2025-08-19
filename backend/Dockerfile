@@ -1,4 +1,4 @@
-FROM azul/zulu-openjdk:24-latest.env
+FROM amazoncorretto:24-alpine-jdk
 VOLUME /tmp
 COPY target/*.jar app.jar
 ENTRYPOINT ["java","-jar","/app.jar"]
