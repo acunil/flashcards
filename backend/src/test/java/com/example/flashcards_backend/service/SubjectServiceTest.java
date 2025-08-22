@@ -13,6 +13,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -22,6 +23,8 @@ import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class SubjectServiceTest {
+
+    static final UUID USER_ID = UUID.fromString("00000000-0000-0000-0000-000000000000");
 
     @Mock
     private SubjectRepository repository;
@@ -43,6 +46,17 @@ class SubjectServiceTest {
         when(repository.findAll()).thenReturn(List.of(subject1, subject2));
 
         List<Subject> result = service.findAll();
+
+        assertThat(result).hasSize(2);
+        assertThat(result.get(0).getName()).isEqualTo("Subject 1");
+        assertThat(result.get(1).getName()).isEqualTo("Subject 2");
+    }
+
+    @Test
+    void findByUserId() {
+        when(repository.findByUserId(USER_ID)).thenReturn(List.of(subject1, subject2));
+
+        List<Subject> result = service.findByUserId(USER_ID);
 
         assertThat(result).hasSize(2);
         assertThat(result.get(0).getName()).isEqualTo("Subject 1");

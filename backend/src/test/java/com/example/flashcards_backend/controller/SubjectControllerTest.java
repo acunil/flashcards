@@ -13,20 +13,19 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.util.List;
+import java.util.UUID;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-
-import java.util.List;
-
-import static org.mockito.Mockito.when;
-
 @WebMvcTest(SubjectController.class)
 class SubjectControllerTest {
 
     public static final String ENDPOINT = "/subjects";
+    static final UUID USER_ID = UUID.fromString("00000000-0000-0000-0000-000000000000");
 
     @MockitoBean
     private SubjectService subjectService;
@@ -44,10 +43,11 @@ class SubjectControllerTest {
     }
 
     @Test
-    void getAllSubjects() throws Exception {
-        when(subjectService.findAll()).thenReturn(List.of(subject1, subject2));
+    void getAllForUserSubjects() throws Exception {
 
-        mockMvc.perform(get(ENDPOINT))
+        when(subjectService.findByUserId(USER_ID)).thenReturn(List.of(subject1, subject2));
+
+        mockMvc.perform(get(ENDPOINT).param("userId", USER_ID.toString()))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$[0].id").value(1))
@@ -78,6 +78,7 @@ class SubjectControllerTest {
     @Test
     void createSubject() throws Exception {
         mockMvc.perform(post(ENDPOINT)
+                        .param("userId", USER_ID.toString())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"name\":\"Subject 3\"}"))
                 .andExpect(status().isOk());
@@ -92,6 +93,7 @@ class SubjectControllerTest {
         doThrow(new IllegalArgumentException("Invalid input")).when(subjectService).create(any(SubjectDto.class));
 
         mockMvc.perform(post(ENDPOINT)
+                        .param("userId", USER_ID.toString())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"name\":\"\"}"))
                 .andExpect(status().isBadRequest())

@@ -9,6 +9,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -18,6 +19,10 @@ public class SubjectService {
 
     public List<Subject> findAll() {
         return repository.findAll();
+    }
+
+    public List<Subject> findByUserId(UUID userId) {
+        return repository.findByUserId(userId);
     }
 
     public Subject findById(Long id) {
@@ -48,4 +53,5 @@ public class SubjectService {
     public void delete(Long id) {
         repository.deleteById(id);
     }
+
 }
