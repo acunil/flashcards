@@ -4,8 +4,8 @@ import com.example.flashcards_backend.dto.*;
 import com.example.flashcards_backend.exception.CardNotFoundException;
 import com.example.flashcards_backend.model.Card;
 import com.example.flashcards_backend.model.Deck;
-import com.example.flashcards_backend.repository.CardRepository;
 import com.example.flashcards_backend.repository.CardDeckRowProjection;
+import com.example.flashcards_backend.repository.CardRepository;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.logging.log4j.util.Strings;
@@ -13,9 +13,9 @@ import org.springframework.dao.DataAccessException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import static com.example.flashcards_backend.utility.CardUtils.shuffleCards;
-
 import java.util.*;
+
+import static com.example.flashcards_backend.utility.CardUtils.shuffleCards;
 
 @Slf4j
 @Service
@@ -50,8 +50,8 @@ public class CardService {
     public List<Card> getCardsByMinAvgRating(double threshold, boolean shuffled) {
         var cards = getCardsByMinAvgRating(threshold);
         return shuffled
-               ? shuffleCards(cards)
-               : cards;
+                ? shuffleCards(cards)
+                : cards;
     }
 
     @Transactional(readOnly = true)
@@ -63,8 +63,8 @@ public class CardService {
     public List<Card> getCardsByMaxAvgRating(double threshold, boolean shuffled) {
         var cards = getCardsByMaxAvgRating(threshold);
         return shuffled
-               ? shuffleCards(cards)
-               : cards;
+                ? shuffleCards(cards)
+                : cards;
     }
 
     @Transactional
@@ -82,7 +82,6 @@ public class CardService {
         addDecksIfPresent(request, saved);
         return mapCardToCreateCardResponse(saved, false);
     }
-
 
 
     @Transactional
@@ -151,8 +150,8 @@ public class CardService {
 
     private static Set<String> getDeckNames(CardRequest request) {
         return request.deckNames() == null
-            ? Set.of()
-            : request.deckNames();
+                ? Set.of()
+                : request.deckNames();
     }
 
     private List<CardResponse> mapRowsToResponses(List<CardDeckRowProjection> rows) {

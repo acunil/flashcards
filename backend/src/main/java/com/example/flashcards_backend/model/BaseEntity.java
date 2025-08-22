@@ -9,8 +9,6 @@ import java.util.Objects;
 
 @RequiredArgsConstructor
 @AllArgsConstructor
-@Getter
-@Setter
 @ToString
 @MappedSuperclass
 @SuperBuilder
@@ -18,6 +16,8 @@ public abstract class BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Getter
+    @Setter
     private Long id;
 
     @Override

@@ -18,7 +18,7 @@ import java.util.Set;
 @Setter
 @RequiredArgsConstructor
 @AllArgsConstructor
-@Builder(builderClassName = "CardBuilder")
+@Builder(builderClassName = "CardBuilder", toBuilder = true)
 @Table(name = "card", uniqueConstraints = @UniqueConstraint(columnNames = {"front", "back"}))
 public class Card {
     @Id
