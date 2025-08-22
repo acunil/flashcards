@@ -94,7 +94,7 @@ class DeckControllerTest {
         doThrow(new DuplicateDeckNameException("Existing Deck"))
                 .when(cardDeckService).createDeck(any(CreateDeckRequest.class));
 
-        String content = "{\"name\": \"Existing Deck\"}";
+        String content = "{\"name\": \"Existing Deck\", \"subjectId\": 1}";
         mockMvc.perform(post(ENDPOINT + "/create")
                         .contentType("application/json")
                         .content(content))

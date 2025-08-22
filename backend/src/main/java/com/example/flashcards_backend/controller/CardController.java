@@ -43,7 +43,7 @@ public class CardController {
                             schema = @Schema(implementation = CardResponse[].class)))
     })
     @GetMapping
-    public ResponseEntity<List<CardResponse>> getAllCardResponses(@RequestParam(required = false) Long subjectId) {
+    public ResponseEntity<List<CardResponse>> getAllCardResponses(@RequestParam Long subjectId) {
         log.info("GET /cards: subjectId={}", subjectId);
         Instant start = Instant.now();
         var cards = cardService.getAllCardResponsesFromSubject(subjectId);
