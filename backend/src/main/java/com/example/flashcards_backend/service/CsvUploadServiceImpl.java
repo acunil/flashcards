@@ -127,7 +127,7 @@ public class CsvUploadServiceImpl implements CsvUploadService {
                             .decks(decks)
                             .build();
                 })
-                .toList();
+                .collect(Collectors.toList());
     }
 
     private Set<String> parseDecks(String raw) {

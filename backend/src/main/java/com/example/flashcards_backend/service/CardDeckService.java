@@ -14,6 +14,7 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 
 import static java.util.Objects.isNull;
+import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
 
 import java.util.HashSet;
@@ -43,7 +44,7 @@ public class CardDeckService {
                         .name(name)
                         .subject(Subject.builder().id(subjectId).build())
                         .build())
-                .toList();
+                .collect(toList());
             deckRepository.saveAll(newDecks);
             allDecks.addAll(newDecks);
         }

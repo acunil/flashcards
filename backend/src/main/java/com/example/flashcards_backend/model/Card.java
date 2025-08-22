@@ -18,7 +18,7 @@ import java.util.Set;
 @Setter
 @RequiredArgsConstructor
 @AllArgsConstructor
-@Builder(builderClassName = "CardBuilder")
+@Builder(builderClassName = "CardBuilder", toBuilder = true)
 @Table(name = "card", uniqueConstraints = @UniqueConstraint(columnNames = {"front", "back"}))
 public class Card {
     @Id
@@ -59,6 +59,10 @@ public class Card {
     @ToString.Exclude
     @Singular
     private final Set<CardHistory> cardHistories = new HashSet<>();
+
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;
 
     public void addDeck(Deck deck) {
         if (!deck.getSubject().equals(this.subject)) {
