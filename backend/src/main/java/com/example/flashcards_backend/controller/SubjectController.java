@@ -1,7 +1,6 @@
 package com.example.flashcards_backend.controller;
 
 import com.example.flashcards_backend.dto.SubjectDto;
-import com.example.flashcards_backend.model.Subject;
 import com.example.flashcards_backend.service.SubjectService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -13,24 +12,25 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/subjects")
 @RequiredArgsConstructor
 public class SubjectController {
 
-    private final SubjectService service;
+    private final SubjectService subjectService;
 
-    @Operation(summary = "Get all subjects", description = "Returns all subjects.")
+    @Operation(summary = "Get all subjects", description = "Returns all subjects for a user.")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Successful operation", 
-                    content = @Content(mediaType = "application/json", 
+            @ApiResponse(responseCode = "200", description = "Successful operation",
+                    content = @Content(mediaType = "application/json",
                             schema = @Schema(implementation = SubjectDto.class)
-            ))
+                    ))
     })
     @GetMapping
-    public List<Subject> getAll() {
-        return service.findAll();
+    public List<SubjectDto> getAllForUser(@RequestParam UUID userId) {
+        return subjectService.findByUserId(userId).stream().map(SubjectDto::fromEntity).toList();
     }
 
     @Operation(summary = "Get subject by ID", description = "Returns a subject by its ID.")
@@ -43,7 +43,7 @@ public class SubjectController {
     })
     @GetMapping("/{id}")
     public ResponseEntity<SubjectDto> getById(@PathVariable Long id) {
-        return ResponseEntity.ok(SubjectDto.fromEntity(service.findById(id)));
+        return ResponseEntity.ok(SubjectDto.fromEntity(subjectService.findById(id)));
     }
 
     @Operation(summary = "Create a new subject", description = "Creates a new subject.")
@@ -54,8 +54,8 @@ public class SubjectController {
                     content = @Content)
     })
     @PostMapping
-    public ResponseEntity<Void> create(@RequestBody SubjectDto subject) {
-        service.create(subject);
+    public ResponseEntity<Void> create(@RequestBody SubjectDto subject, @RequestParam UUID userId) {
+        subjectService.create(subject);
         return ResponseEntity.ok().build();
     }
 
@@ -69,11 +69,7 @@ public class SubjectController {
     })
     @PutMapping("/{id}")
     public ResponseEntity<SubjectDto> update(@PathVariable Long id, @RequestBody SubjectDto subject) {
-        try {
-            return ResponseEntity.ok(SubjectDto.fromEntity(service.update(id, subject)));
-        } catch (RuntimeException e) {
-            return ResponseEntity.notFound().build();
-        }
+        return ResponseEntity.ok(SubjectDto.fromEntity(subjectService.update(id, subject)));
     }
 
     @Operation(summary = "Delete subject", description = "Deletes a subject by ID.")
@@ -84,7 +80,7 @@ public class SubjectController {
     })
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable Long id) {
-        service.delete(id);
+        subjectService.delete(id);
         return ResponseEntity.noContent().build();
     }
 }
