@@ -116,7 +116,8 @@ class SubjectControllerTest {
 
     @Test
     void updateSubjectNotFound() throws Exception {
-        when(subjectService.update(eq(1L), any(SubjectDto.class))).thenThrow(new RuntimeException("Subject not found"));
+        when(subjectService.update(eq(1L), any(SubjectDto.class)))
+                .thenThrow(new SubjectNotFoundException(1L));
 
         mockMvc.perform(put(ENDPOINT + "/1")
                         .contentType(MediaType.APPLICATION_JSON)

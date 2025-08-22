@@ -54,9 +54,7 @@ public class SubjectController {
                     content = @Content)
     })
     @PostMapping
-    public ResponseEntity<Void> create(
-            @RequestBody SubjectDto subject,
-            @RequestParam UUID userId) {
+    public ResponseEntity<Void> create(@RequestBody SubjectDto subject, @RequestParam UUID userId) {
         subjectService.create(subject);
         return ResponseEntity.ok().build();
     }
@@ -71,11 +69,7 @@ public class SubjectController {
     })
     @PutMapping("/{id}")
     public ResponseEntity<SubjectDto> update(@PathVariable Long id, @RequestBody SubjectDto subject) {
-        try {
-            return ResponseEntity.ok(SubjectDto.fromEntity(subjectService.update(id, subject)));
-        } catch (RuntimeException e) {
-            return ResponseEntity.notFound().build();
-        }
+        return ResponseEntity.ok(SubjectDto.fromEntity(subjectService.update(id, subject)));
     }
 
     @Operation(summary = "Delete subject", description = "Deletes a subject by ID.")
