@@ -12,6 +12,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
+import java.util.Optional;
 import java.util.UUID;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
@@ -65,8 +66,8 @@ class UserStatsServiceTest {
     @Test
     void testGetForUserId_returnsUserStatsResponse() {
         when(cardRepository.countByUserId(USER_ID)).thenReturn(100L);
-        when(cardRepository.findHardestByUserId(USER_ID)).thenReturn(hardestCard);
-        when(cardRepository.findMostViewedByUserId(USER_ID)).thenReturn(mostViewedCard);
+        when(cardRepository.findHardestByUserId(USER_ID)).thenReturn(Optional.of(hardestCard));
+        when(cardRepository.findMostViewedByUserId(USER_ID)).thenReturn(Optional.of(mostViewedCard));
 
         UserStatsResponse response = service.getForUserId(USER_ID);
         assertThat(response).isEqualTo(userStatsResponse);

@@ -8,6 +8,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -20,13 +21,16 @@ public class UserStatsService {
     public UserStatsResponse getForUserId(UUID userId) {
 
         Long totalCards = cardRepository.countByUserId(userId);
-        Card mostViewedCard = cardRepository.findMostViewedByUserId(userId);
-        Card hardestCard = cardRepository.findHardestByUserId(userId);
+        Optional<Card> mostViewedCard = cardRepository.findMostViewedByUserId(userId);
+        Optional<Card> hardestCard = cardRepository.findHardestByUserId(userId);
+
+        CardResponse hardestCardResponse = hardestCard.map(CardResponse::fromEntity).orElse(null);
+        CardResponse mostViewedCardResponse = mostViewedCard.map(CardResponse::fromEntity).orElse(null);
 
         return UserStatsResponse.builder()
                 .totalCards(totalCards)
-                .hardestCard(CardResponse.fromEntity(hardestCard))
-                .mostViewedCard(CardResponse.fromEntity(mostViewedCard))
+                .hardestCard(hardestCardResponse)
+                .mostViewedCard(mostViewedCardResponse)
                 .build();
     }
 }

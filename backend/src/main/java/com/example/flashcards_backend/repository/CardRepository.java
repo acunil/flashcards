@@ -65,24 +65,16 @@ public interface CardRepository extends JpaRepository<Card, Long> {
             """)
     long countByUserId(@Param("userId") UUID userId);
 
+    Optional<Card> findTopByCardHistories_User_IdOrderByCardHistories_AvgRatingDesc(UUID userId);
 
-    @Query("""
-            SELECT c
-            FROM Card c
-            JOIN c.cardHistories ch
-            WHERE ch.user.id = :userId
-            ORDER BY ch.avgRating DESC
-            """)
-    Card findHardestByUserId(@Param("userId") UUID userId);
+    default Optional<Card> findHardestByUserId(UUID userId) {
+        return findTopByCardHistories_User_IdOrderByCardHistories_AvgRatingDesc(userId);
+    }
 
+    Optional<Card> findTopByCardHistories_User_IdOrderByCardHistories_ViewCountDesc(UUID userId);
 
-    @Query("""
-            SELECT c
-            FROM Card c
-            JOIN c.cardHistories ch
-            WHERE ch.user.id = :userId
-            ORDER BY ch.viewCount DESC
-            """)
-    Card findMostViewedByUserId(@Param("userId") UUID userId);
+    default Optional<Card> findMostViewedByUserId(UUID userId) {
+        return findTopByCardHistories_User_IdOrderByCardHistories_ViewCountDesc(userId);
+    }
 
 }
