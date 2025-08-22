@@ -1,11 +1,10 @@
 package com.example.flashcards_backend.model;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import lombok.*;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 @Entity
@@ -18,7 +17,7 @@ import java.util.UUID;
 public class User {
 
     @Id
-    // No @GeneratedValue - manual assigned for now until later stages
+    // Assigned manually for now
     private UUID id;
 
     @Column(nullable = false, unique = true)
@@ -27,4 +26,15 @@ public class User {
     @Column(nullable = false)
     private boolean isActive = true;
 
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Card> cards = new ArrayList<>();
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Deck> decks = new ArrayList<>();
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<CardHistory> cardHistories = new ArrayList<>();
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Subject> subjects = new ArrayList<>();
 }

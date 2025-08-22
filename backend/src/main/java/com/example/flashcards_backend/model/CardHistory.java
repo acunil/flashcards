@@ -10,7 +10,6 @@ import java.time.LocalDateTime;
 @Entity
 @Getter
 @Setter
-@ToString
 @RequiredArgsConstructor
 @SuperBuilder
 @AllArgsConstructor
@@ -34,6 +33,10 @@ public class CardHistory  extends BaseEntity {
 
     @Column(name = "last_rating")
     private Integer lastRating;
+
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;
 
     public void setCard(Card card) {
         this.card = card;

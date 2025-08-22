@@ -60,6 +60,10 @@ public class Card {
     @Singular
     private final Set<CardHistory> cardHistories = new HashSet<>();
 
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;
+
     public void addDeck(Deck deck) {
         if (!deck.getSubject().equals(this.subject)) {
             throw new IllegalArgumentException("Deck and Card must belong to the same Subject");
