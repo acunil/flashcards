@@ -7,3 +7,5 @@ databaseChangeLog:
       file: db/changelog/changes/003_create_deck_table.yaml
   - include:
       file: db/changelog/changes/004_create_subject_table_v2.yaml
+  - include:
+      file: db/changelog/changes/005_create_user_table.yaml
