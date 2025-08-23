@@ -22,8 +22,7 @@ class CardResponseTest {
 
     @Test
     void testCardResponseCreation() {
-        SubjectSummary subjectSummary = SubjectSummary.of("Test Subject", 1L);
-        CardResponse cardResponse = new CardResponse( 1L, "Front Text", "Back Text", null, null, null, null, null, null, null, subjectSummary);
+        CardResponse cardResponse = new CardResponse( 1L, "Front Text", "Back Text", null, null, null, null, null, null, null, 1L);
 
         assertThat(cardResponse.id()).isEqualTo(1L);
         assertThat(cardResponse.front()).isEqualTo("Front Text");
@@ -55,10 +54,7 @@ class CardResponseTest {
         assertThat(cardResponse.viewCount()).isEqualTo(10);
         assertThat(cardResponse.lastViewed()).isEqualTo(now.toString());
         assertThat(cardResponse.lastRating()).isEqualTo(4);
-        assertThat(cardResponse.subject())
-                .isNotNull()
-                .extracting("name", "id")
-                .containsSequence("Test Subject", 1L);
+        assertThat(cardResponse.subjectId()).isEqualTo(1L);
     }
 
 }
