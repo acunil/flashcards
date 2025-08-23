@@ -10,7 +10,7 @@ const DifficultyButtons = ({ onSelectDifficulty }: DifficultyButtonsProps) => {
       {levels.map(({ label, Icon, buttonClassName, rating }) => (
         <button
           key={label}
-          className={`flex flex-col items-center p-2 border-2 rounded hover:bg-gray-100 w-full cursor-pointer ${buttonClassName} active:translate-y-1 active:shadow-inner active:bg-opacity-90 transition-transform duration-150`}
+          className={`flex flex-col items-center p-2 touch-manipulation border-2 rounded hover:bg-gray-100 w-full cursor-pointer ${buttonClassName} active:translate-y-1 active:shadow-inner active:bg-opacity-90 transition-transform duration-150`}
           onClick={() => onSelectDifficulty(rating)}
         >
           <Icon size={24} />
