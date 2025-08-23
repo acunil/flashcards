@@ -81,7 +81,7 @@ const CardList = ({ cards, isAllCardsList }: CardListProps) => {
               isEditing
                 ? "disabled bg-gray-100 cursor-not-allowed"
                 : "cursor-pointer bg-sky-200 hover:bg-sky-100"
-            } flex items-center text-black py-3 px-4 rounded shadow-lg   border-black border-2 select-none`}
+            } flex items-center text-black py-3 px-4 rounded shadow-lg   border-black border-2`}
           >
             Select...
           </button>

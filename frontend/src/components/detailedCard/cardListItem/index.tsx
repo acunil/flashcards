@@ -108,7 +108,7 @@ const CardListItem = ({
                   className="w-full resize-none border border-gray-300 rounded p-1 outline-none text-center font-semibold"
                   rows={2}
                 />
-                <label className="text-xs font-medium text-gray-500 select-none">
+                <label className="text-xs font-medium text-gray-500">
                   {`${selectedSubject?.frontLabel ?? "Front"} hint`}
                 </label>
                 <textarea
@@ -122,7 +122,7 @@ const CardListItem = ({
                 />
               </div>
             ) : (
-              <div className="flex flex-col gap-1 text-center select-none">
+              <div className="flex flex-col gap-1 text-center">
                 <p className="font-semibold">{frontValue}</p>
                 {hintFront && (
                   <div className="flex items-center justify-center gap-1 text-gray-600 font-light px-2 py-1 border border-gray-200 rounded-lg bg-gray-50">
@@ -165,7 +165,7 @@ const CardListItem = ({
                 />
               </div>
             ) : (
-              <div className="flex flex-col gap-1 text-center select-none">
+              <div className="flex flex-col gap-1 text-center">
                 <p className="font-semibold">{backValue}</p>
                 {hintBack && (
                   <div className="flex items-center justify-center gap-1 text-gray-600 font-light px-2 py-1 border border-gray-200 rounded-lg bg-gray-50">
@@ -180,7 +180,7 @@ const CardListItem = ({
 
         {/* Decks */}
         {isAllCardsList && decks.length > 0 && (
-          <div className="flex flex-row flex-wrap gap-2 mb-4 text-sm justify-center select-none">
+          <div className="flex flex-row flex-wrap gap-2 mb-4 text-sm justify-center">
             {decks.map((deck) => (
               <div
                 key={deck.id}
@@ -193,7 +193,7 @@ const CardListItem = ({
         )}
 
         {/* Bottom row: stats */}
-        <div className="flex flex-row justify-around items-center p-3 text-sm bg-gray-50 select-none border-t border-gray-200">
+        <div className="flex flex-row justify-around items-center p-3 text-sm bg-gray-50 border-t border-gray-200">
           <div className="flex items-center space-x-2">
             <span>views:</span>
             <span>{viewCount}</span>
