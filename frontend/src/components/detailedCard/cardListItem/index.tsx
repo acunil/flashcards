@@ -3,6 +3,7 @@ import { useState, useRef } from "react";
 import { Pencil, Check, LightbulbFilament } from "phosphor-react";
 import type { Card } from "../../../types/card";
 import { useNavigate } from "react-router-dom";
+import { useAppContext } from "../../../contexts";
 interface CardListItemProps extends Card {
   onUpdate?: (updated: { id: number; front: string; back: string }) => void;
   onDelete?: (id: number) => void;
@@ -32,6 +33,7 @@ const CardListItem = ({
 }: CardListItemProps) => {
   const lastLevel = getClosestLevel(lastRating);
   const avgLevel = getClosestLevel(avgRating);
+  const { selectedSubject } = useAppContext();
 
   const [frontValue, setFrontValue] = useState(front);
   const [backValue, setBackValue] = useState(back);
@@ -94,7 +96,7 @@ const CardListItem = ({
             {isEditingLocal ? (
               <div className="flex flex-col gap-2">
                 <label className="text-xs font-medium text-gray-500">
-                  Front
+                  {selectedSubject?.frontLabel || "Front"}
                 </label>
                 <textarea
                   ref={frontRef}
@@ -107,7 +109,7 @@ const CardListItem = ({
                   rows={2}
                 />
                 <label className="text-xs font-medium text-gray-500 select-none">
-                  Front Hint
+                  {`${selectedSubject?.frontLabel ?? "Front"} hint`}
                 </label>
                 <textarea
                   value={frontHint}
@@ -137,7 +139,7 @@ const CardListItem = ({
             {isEditingLocal ? (
               <div className="flex flex-col gap-2">
                 <label className="text-xs font-medium text-gray-500">
-                  Back
+                  {selectedSubject?.backLabel || "Back"}
                 </label>
                 <textarea
                   ref={backRef}
@@ -150,7 +152,7 @@ const CardListItem = ({
                   rows={2}
                 />
                 <label className="text-xs font-medium text-gray-500">
-                  Back Hint
+                  {`${selectedSubject?.backLabel ?? "Back"} hint`}
                 </label>
                 <textarea
                   value={backHint}
