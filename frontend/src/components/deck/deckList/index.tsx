@@ -12,7 +12,7 @@ export interface DeckListProps {
 
 const DeckList = ({ decks, onAddDeck }: DeckListProps) => {
   const navigate = useNavigate();
-  const { cards } = useAppContext();
+  const { cards, selectedSubjectId } = useAppContext();
 
   const handleDeckClick = (id: number) => {
     navigate(`/decks/${id}`);
@@ -28,7 +28,7 @@ const DeckList = ({ decks, onAddDeck }: DeckListProps) => {
   return (
     <div className="flex flex-col items-center gap-2 m-2 p-2 mb-4 max-w-xs mx-auto w-full">
       <DeckListItem
-        deck={{ id: 0, name: "all cards" }}
+        deck={{ id: 0, name: "all cards", subjectId: selectedSubjectId || 0 }}
         className={"bg-pink-200"}
         Icon={Cards}
         onClick={() => handleDeckClick(0)}

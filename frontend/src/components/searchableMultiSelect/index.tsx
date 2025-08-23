@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import type { Deck } from "../../types/deck";
 import { XCircle } from "phosphor-react";
+import { useAppContext } from "../../contexts";
 
 interface SearchableMultiSelectProps {
   options: Deck[];
@@ -16,6 +17,7 @@ const SearchableMultiSelect = ({
   const [query, setQuery] = useState("");
   const [open, setOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
+  const { selectedSubjectId } = useAppContext();
 
   const toggleDeck = (deck: Deck) => {
     if (selected.some((d) => d.id === deck.id)) {
@@ -34,7 +36,11 @@ const SearchableMultiSelect = ({
     const maxId =
       allDecks.length > 0 ? Math.max(...allDecks.map((d) => d.id)) : 0;
 
-    const newDeck: Deck = { id: maxId + 1, name };
+    const newDeck: Deck = {
+      id: maxId + 1,
+      name,
+      subjectId: selectedSubjectId || 0,
+    };
 
     if (!selected.some((d) => d.name.toLowerCase() === name.toLowerCase())) {
       onChange([...selected, newDeck]);
