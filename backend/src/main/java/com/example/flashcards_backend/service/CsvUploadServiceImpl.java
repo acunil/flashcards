@@ -67,7 +67,7 @@ public class CsvUploadServiceImpl implements CsvUploadService {
     }
 
     private Subject fetchSubject(Long subjectId) throws SubjectNotFoundException {
-        return subjectRepository.findById(subjectId).orElseThrow(() -> new SubjectNotFoundException(subjectId));
+        return subjectRepository.findByIdWithUserAndSubjects(subjectId).orElseThrow(() -> new SubjectNotFoundException(subjectId));
     }
 
     private static List<CardResponse> generateResponses(List<Card> cards) {
@@ -120,12 +120,14 @@ public class CsvUploadServiceImpl implements CsvUploadService {
                     Set<String> deckNames = parseDecks(r.get(DECKS));
                     Set<Deck> decks = cardDeckService.getOrCreateDecksByNamesAndSubjectId(deckNames, subject.getId());
 
-                    return Card.builder()
+                    Card card = Card.builder()
                             .front(r.get(FRONT))
                             .back(r.get(BACK))
                             .subject(subject)
                             .decks(decks)
+                            .user(subject.getUser())
                             .build();
+                    return cardRepository.saveAndFlush(card);
                 })
                 .collect(Collectors.toList());
     }
