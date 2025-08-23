@@ -32,19 +32,19 @@ public class CardDeckService {
     public Set<Deck> getOrCreateDecksByNamesAndSubjectId(Set<String> names, Long subjectId) {
         Set<Deck> existingDecks = deckRepository.findByNameInAndSubjectId(names, subjectId);
         Set<String> existingNames = existingDecks.stream()
-            .map(Deck::getName)
-            .collect(toSet());
+                .map(Deck::getName)
+                .collect(toSet());
         Set<String> newNames = names.stream()
-            .filter(name -> !existingNames.contains(name))
-            .collect(toSet());
+                .filter(name -> !existingNames.contains(name))
+                .collect(toSet());
         Set<Deck> allDecks = new HashSet<>(existingDecks);
         if (!newNames.isEmpty()) {
             List<Deck> newDecks = newNames.stream()
-                .map(name -> Deck.builder()
-                        .name(name)
-                        .subject(Subject.builder().id(subjectId).build())
-                        .build())
-                .collect(toList());
+                    .map(name -> Deck.builder()
+                            .name(name)
+                            .subject(Subject.builder().id(subjectId).build())
+                            .build())
+                    .collect(toList());
             deckRepository.saveAll(newDecks);
             allDecks.addAll(newDecks);
         }
@@ -55,14 +55,18 @@ public class CardDeckService {
     public Deck createDeck(CreateDeckRequest request) {
         Subject subject = Subject.builder().id(request.subjectId()).build();
         Deck deck = Deck.builder()
-            .name(request.name().trim())
-            .subject(subject)
-            .build();
+                .name(request.name().trim())
+                .subject(subject)
+                .build();
         try {
             deck = deckRepository.saveAndFlush(deck);
         } catch (DataIntegrityViolationException e) {
             log.error(e.getMessage(), e);
-            throw new DuplicateDeckNameException("A deck with the name '" + request.name() + "' already exists");
+            throw new DuplicateDeckNameException(
+                    "A deck with the name '"
+                            + request.name()
+                            + "' already exists in subject "
+                            + subject.getName());
         }
 
         if (!isNull(request.cardIds()) && !request.cardIds().isEmpty()) {
