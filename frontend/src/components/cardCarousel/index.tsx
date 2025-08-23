@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import FlipCard from "../flipCard";
 import type { Card } from "../../types/card";
 import { useReviseSettings } from "../../hooks/reviseSettings";
@@ -6,12 +6,14 @@ import { useReviseSettings } from "../../hooks/reviseSettings";
 interface CardCarouselProps {
   cards: Card[];
   currentIndex: number;
+  setCurrentIndex?: (index: number) => void; // optional callback to update parent
   cardColors?: Record<string, string>;
 }
 
 const CardCarousel = ({
   cards,
   currentIndex,
+  setCurrentIndex,
   cardColors = {},
 }: CardCarouselProps) => {
   const [flippedMap, setFlippedMap] = useState<Record<string, boolean>>({});
@@ -19,32 +21,42 @@ const CardCarousel = ({
     typeof window !== "undefined" ? window.innerWidth : 1024
   );
 
-  const { cardDisplay, showDeckNames } = useReviseSettings();
+  const { cardDisplay, showDeckNames, familiarity } = useReviseSettings();
 
-  // Initialize flippedMap whenever cardDisplay or cards change
+  // Memoize filtered cards
+  const filteredCards = useMemo(() => {
+    return cards.filter((card) => {
+      if (familiarity === "All") return true;
+      if (familiarity === "Hard") return card.avgRating >= 4;
+      if (familiarity === "Easy") return card.avgRating < 4;
+      return true;
+    });
+  }, [cards, familiarity]);
+
+  // Adjust currentIndex if the filtered cards remove the current card
   useEffect(() => {
-    if (cardDisplay === "Any") {
-      // Randomize all cards for "Any"
-      setFlippedMap(() => {
-        const newMap: Record<string, boolean> = {};
-        cards.forEach((card) => {
-          newMap[card.id] = Math.random() < 0.5;
-        });
-        return newMap;
-      });
-    } else {
-      // For Front or Back, set all cards accordingly
-      setFlippedMap(() => {
-        const newMap: Record<string, boolean> = {};
-        cards.forEach((card) => {
-          newMap[card.id] = cardDisplay === "Back";
-        });
-        return newMap;
-      });
+    if (currentIndex >= filteredCards.length && filteredCards.length > 0) {
+      const newIndex = filteredCards.length - 1;
+      setCurrentIndex?.(newIndex);
     }
-  }, [cards, cardDisplay]);
+  }, [filteredCards, currentIndex, setCurrentIndex]);
 
-  // Update window width for responsive sizing
+  // Initialize flippedMap
+  useEffect(() => {
+    setFlippedMap((prev) => {
+      const newMap: Record<string, boolean> = { ...prev };
+      filteredCards.forEach((card) => {
+        if (cardDisplay === "Front") newMap[card.id] = false;
+        else if (cardDisplay === "Back") newMap[card.id] = true;
+        else if (cardDisplay === "Any" && newMap[card.id] === undefined) {
+          newMap[card.id] = Math.random() < 0.5;
+        }
+      });
+      return newMap;
+    });
+  }, [filteredCards, cardDisplay]);
+
+  // Window resize
   useEffect(() => {
     const handleResize = () => setWindowWidth(window.innerWidth);
     window.addEventListener("resize", handleResize);
@@ -63,8 +75,9 @@ const CardCarousel = ({
     }));
   };
 
-  const translateX =
-    -(currentIndex * fullCardWidth) + (windowWidth - cardWidth) / 2;
+  const index =
+    filteredCards.length > 0 ? currentIndex % filteredCards.length : 0;
+  const translateX = -(index * fullCardWidth) + (windowWidth - cardWidth) / 2;
 
   return (
     <div className="relative w-full py-6">
@@ -72,13 +85,12 @@ const CardCarousel = ({
         className="flex transition-transform duration-500"
         style={{ transform: `translateX(${translateX}px)` }}
       >
-        {cards.map((card, i) => {
-          const distance = Math.abs(i - currentIndex);
-          const flipped = flippedMap[card.id] ?? false; // use state only
-
-          let scale = i === currentIndex ? 1 : 0.9;
-          if (i !== currentIndex && windowWidth < 640) scale = 0.8;
-          const translateY = i === currentIndex ? 0 : distance * 8;
+        {filteredCards.map((card, i) => {
+          const distance = Math.abs(i - index);
+          let scale = i === index ? 1 : 0.9;
+          if (i !== index && windowWidth < 640) scale = 0.8;
+          const translateY = i === index ? 0 : distance * 8;
+          const flipped = flippedMap[card.id] ?? false;
 
           return (
             <div
