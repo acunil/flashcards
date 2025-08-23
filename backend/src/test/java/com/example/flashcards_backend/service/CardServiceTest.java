@@ -438,7 +438,7 @@ class CardServiceTest {
     @Test
     void deleteCards_missingCard_throwsException() {
         List<Long> ids = List.of(CARD_3_ID);
-        doThrow(new CardNotFoundException(CARD_3_ID))
+        doThrow(new CardNotFoundException(ids))
                 .when(cardRepository).findAllById(ids);
         assertThatThrownBy(() -> cardService.deleteCards(ids))
                 .isInstanceOf(CardNotFoundException.class)
