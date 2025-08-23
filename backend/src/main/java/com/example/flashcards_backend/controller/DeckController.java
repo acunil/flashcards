@@ -39,9 +39,9 @@ public class DeckController {
                 schema = @Schema(implementation = DeckSummary.class)))
     })
     @GetMapping
-    public ResponseEntity<Set<DeckSummary>> getAll() {
-        log.info("GET /decks");
-        Set<DeckSummary> responses = deckService.getAllDeckSummaries();
+    public ResponseEntity<Set<DeckSummary>> getAllForSubject(@RequestParam Long subjectId) {
+        log.info("GET /decks from subjectId={}", subjectId);
+        Set<DeckSummary> responses = deckService.getDeckSummariesBySubjectId(subjectId);
         return ResponseEntity.ok(responses);
     }
 

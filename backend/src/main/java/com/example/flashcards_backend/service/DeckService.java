@@ -20,8 +20,8 @@ public class DeckService {
 
     private final DeckRepository deckRepository;
 
-    public Set<DeckSummary> getAllDeckSummaries() {
-        return deckRepository.findAllDecks().stream()
+    public Set<DeckSummary> getDeckSummariesBySubjectId(Long subjectId) {
+        return deckRepository.findBySubjectId(subjectId).stream()
                 .map(DeckSummary::fromEntity)
                 .collect(Collectors.toSet());
     }

@@ -15,6 +15,6 @@ public interface DeckRepository extends JpaRepository<Deck, Long> {
 
     Optional<Deck> findByName(String name);
 
-    @Query("select d from Deck d")
-    List<Deck> findAllDecks();
+    @Query("select d from Deck d where d.subject.id = :subjectId")
+    List<Deck> findBySubjectId(Long subjectId);
 }
