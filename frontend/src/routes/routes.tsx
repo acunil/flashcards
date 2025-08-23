@@ -4,6 +4,7 @@ import AddCard from "../pages/AddCard";
 import Decks from "../pages/Decks";
 import DeckDetails from "../pages/DeckDetails";
 import ReviseWrapper from "../components/reviseWrapper";
+import BulkUpload from "../pages/BulkUpload";
 
 export const AppRoutes = () => {
   return (
@@ -13,6 +14,7 @@ export const AppRoutes = () => {
       <Route path="/decks" element={<Decks />} />
       <Route path="/decks/:deckId" element={<DeckDetails />} />
       <Route path="/add-card/:cardId?" element={<AddCard />} />
+      <Route path="/upload" element={<BulkUpload />} />
     </Routes>
   );
 };
