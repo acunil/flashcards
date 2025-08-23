@@ -22,7 +22,7 @@ public record CardResponse(
     @JsonProperty("viewCount")  Integer viewCount,
     @JsonProperty("lastViewed") String  lastViewed,
     @JsonProperty("lastRating") Integer lastRating,
-    @JsonProperty("subject")    SubjectSummary  subject
+    @JsonProperty("subjectId")  Long    subjectId
 ) {
 
     @JsonCreator
@@ -50,7 +50,7 @@ public record CardResponse(
                 ch.getViewCount(),
                 ch.getLastViewed() != null ? ch.getLastViewed().toString() : null,
                 ch.getLastRating(),
-                SubjectSummary.fromEntity(card.getSubject())
+                card.getSubject().getId()
         );
     }
 
@@ -66,7 +66,7 @@ public record CardResponse(
                 cd.getViewCount(),
                 cd.getLastViewed() != null ? cd.getLastViewed().toString() : null,
                 cd.getLastRating(),
-                SubjectSummary.of(cd.getSubjectName(), cd.getSubjectId())
+                cd.getSubjectId()
         );
     }
 }
