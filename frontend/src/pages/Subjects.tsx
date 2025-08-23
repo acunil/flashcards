@@ -1,7 +1,7 @@
 import { CaretLeft, PencilSimple } from "phosphor-react";
 import Header from "../components/header";
 import { useNavigate } from "react-router-dom";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import SubjectForm from "../components/subjectForm";
 import { useAppContext } from "../contexts";
 import useUpdateSubject from "../hooks/subjects/useUpdateSubject";
@@ -18,6 +18,13 @@ const SubjectsPage = () => {
   const handleSelectSubject = (id: number) => {
     setSelectedSubjectId(id);
   };
+
+  useEffect(() => {
+    // If no subject is selected and there are subjects, select the first one
+    if (subjects.length > 0 && !selectedSubjectId) {
+      setSelectedSubjectId(subjects[0].id);
+    }
+  }, [subjects, selectedSubjectId, setSelectedSubjectId]);
 
   const handleSaveEdit = async (
     id: number,
@@ -61,17 +68,22 @@ const SubjectsPage = () => {
         <div className="bg-white w-full max-w-screen-sm border-black border-2 p-4 rounded m-4">
           {/* Header with Back Button */}
           <div className="relative flex items-center h-12 mb-4">
-            <div className="absolute left-0">
-              <button
-                id="decks-back-button"
-                className="cursor-pointer"
-                onClick={() => navigate(-1)}
-              >
-                <CaretLeft size={24} />
-              </button>
-            </div>
+            {subjects.length > 0 && (
+              <div className="absolute left-0">
+                <button
+                  id="decks-back-button"
+                  className="cursor-pointer"
+                  onClick={() => navigate(-1)}
+                >
+                  <CaretLeft size={24} />
+                </button>
+              </div>
+            )}
             <h1 className="text-xl font-bold text-center mx-auto">Subjects</h1>
           </div>
+          {subjects.length === 0 && (
+            <p className="text-center">Create a subject to begin studying</p>
+          )}
 
           {/* Subjects list */}
           <ul className="space-y-3">
