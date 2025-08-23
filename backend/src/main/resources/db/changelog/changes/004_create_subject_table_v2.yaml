@@ -19,6 +19,7 @@ databaseChangeLog:
       author: lucian
       changes:
         - createTable:
+            ifNotExists: true
             tableName: subject
             columns:
               - column:
@@ -85,6 +86,7 @@ databaseChangeLog:
       author: lucian
       changes:
         - addColumn:
+            ifNotExists: true
             tableName: card
             columns:
               - column:
@@ -93,6 +95,7 @@ databaseChangeLog:
 
         - addColumn:
             tableName: deck
+            ifNotExists: true
             columns:
               - column:
                   name: subject_id
