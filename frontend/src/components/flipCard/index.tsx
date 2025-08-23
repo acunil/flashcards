@@ -1,60 +1,26 @@
-import { useEffect, useState } from "react";
 import type { Card } from "../../types/card";
+import { useAppContext } from "../../contexts";
 
 interface FlipCardProps {
   card: Card;
-  flipped?: boolean;
+  flipped: boolean;
   onFlip?: () => void;
   displayMode?: "Front" | "Back" | "Any";
-  sideLabelFront?: string;
   cardBgColor?: string;
-  sideLabelBack?: string;
-  decks?: string;
   showDecks?: boolean;
 }
 
 const FlipCard = ({
   card,
-  flipped: flippedProp,
+  flipped,
   onFlip,
-  displayMode = "Front",
-  sideLabelFront = "front",
-  sideLabelBack = "back",
   showDecks = false,
-  decks,
   cardBgColor = "bg-white",
 }: FlipCardProps) => {
-  const [internalFlipped, setInternalFlipped] = useState(false);
-  const [internalCard, setInternalCard] = useState(card);
-
-  const isControlled = flippedProp !== undefined;
-  const flipped = isControlled ? flippedProp : internalFlipped;
-
-  useEffect(() => {
-    if (card.id !== internalCard.id) {
-      let defaultFlipped = false;
-
-      if (displayMode === "Back") defaultFlipped = true;
-      if (displayMode === "Any") defaultFlipped = Math.random() < 0.5;
-
-      if (!isControlled) {
-        setInternalFlipped(defaultFlipped);
-      }
-
-      const timeout = setTimeout(() => {
-        setInternalCard(card);
-      }, 500); // match transition duration (500ms)
-
-      return () => clearTimeout(timeout);
-    }
-  }, [card, displayMode, internalCard.id, isControlled]);
+  const { selectedSubject } = useAppContext();
 
   const handleClick = () => {
-    if (onFlip) {
-      onFlip();
-    } else {
-      setInternalFlipped((prev) => !prev);
-    }
+    if (onFlip) onFlip();
   };
 
   return (
@@ -72,14 +38,14 @@ const FlipCard = ({
             className={`absolute w-full h-full [backface-visibility:hidden] border-2 rounded-xl shadow p-4 ${cardBgColor}`}
           >
             <span className="absolute top-2 left-2 text-xs text-gray-400 select-none">
-              {sideLabelFront}
+              {selectedSubject?.frontLabel || "front"}
             </span>
             <div className="flex items-center justify-center h-full text-center px-2 select-none">
-              {internalCard.front}
+              {card.front}
             </div>
-            {showDecks && decks && (
+            {showDecks && card.decks.length > 0 && (
               <span className="absolute bottom-2 right-2 text-xs text-gray-400 select-none">
-                {decks}
+                {card.decks.map((d) => d.name).join(", ")}
               </span>
             )}
           </div>
@@ -89,14 +55,14 @@ const FlipCard = ({
             className={`absolute w-full h-full [backface-visibility:hidden] border-2 rounded-xl shadow p-4 [transform:rotateY(180deg)] ${cardBgColor}`}
           >
             <span className="absolute top-2 left-2 text-xs text-gray-400 select-none">
-              {sideLabelBack}
+              {selectedSubject?.backLabel || "back"}
             </span>
             <div className="flex items-center justify-center h-full text-center px-2 select-none">
-              {internalCard.back}
+              {card.back}
             </div>
-            {showDecks && decks && (
+            {showDecks && card.decks.length > 0 && (
               <span className="absolute bottom-2 right-2 text-xs text-gray-400 select-none">
-                {decks}
+                {card.decks.map((d) => d.name).join(", ")}
               </span>
             )}
           </div>

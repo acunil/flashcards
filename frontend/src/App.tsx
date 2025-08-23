@@ -1,6 +1,7 @@
 import { BrowserRouter } from "react-router-dom";
 import { AppRoutes } from "./routes/routes";
 import { AppProvider } from "./contexts";
+import { ReviseSettingsProvider } from "./contexts/ReviseSettingsProvider";
 
 function App() {
   return (
@@ -8,7 +9,9 @@ function App() {
       <div className="mx-auto overflow-visible">
         <BrowserRouter>
           <AppProvider>
-            <AppRoutes />
+            <ReviseSettingsProvider>
+              <AppRoutes />
+            </ReviseSettingsProvider>
           </AppProvider>
         </BrowserRouter>
       </div>
