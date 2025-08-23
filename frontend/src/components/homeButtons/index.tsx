@@ -5,6 +5,7 @@ import {
   Cards,
   FilePlus,
   ChartBar,
+  UploadSimple,
 } from "phosphor-react";
 
 const buttons = [
@@ -31,6 +32,12 @@ const buttons = [
     path: "/add-card",
     buttonClassName: "bg-yellow-200",
     Icon: FilePlus,
+  },
+  {
+    label: "bulk upload",
+    path: "/upload",
+    buttonClassName: "bg-green-200",
+    Icon: UploadSimple,
   },
   {
     label: "user stats",
