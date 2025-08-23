@@ -27,10 +27,10 @@ import java.util.*;
 
 @ExtendWith(SpringExtension.class)
 class CardServiceTest {
-    public static final long CARD_1_ID = 1L;
-    public static final long CARD_2_ID = 2L;
-    public static final long CARD_3_ID = 3L;
-    public static final long SUBJECT_ID = 1L;
+    public static final Long CARD_1_ID = 1L;
+    public static final Long CARD_2_ID = 2L;
+    public static final Long CARD_3_ID = 3L;
+    public static final Long SUBJECT_ID = 1L;
     public static final double THRESHOLD = 3.0;
 
     private CardService cardService;
@@ -413,27 +413,49 @@ class CardServiceTest {
     }
 
     @Test
-    void deleteCard_existingCard_deletesCard() {
+    void deleteCards_existingCard_deletesCard() {
         List<Long> ids = List.of(CARD_1_ID);
+        when(cardRepository.findAllById(ids)).thenReturn(List.of(card1));
+
         cardService.deleteCards(ids);
-        verify(cardRepository).deleteCardsById(ids);
+
+        verify(cardRepository).deleteByIds(ids);
+        verify(cardRepository).deleteDeckAssociationsByCardIds(ids);
+        verify(cardHistoryService).deleteByCardIds(ids);
     }
 
     @Test
-    void deleteCard_missingCard_throwsException() {
-        doThrow(new CardNotFoundException(CARD_3_ID))
-                .when(cardRepository).deleteCardsById(List.of(CARD_3_ID));
-        assertThatThrownBy(() -> cardService.deleteCards(List.of(CARD_3_ID)))
+    void deleteCards_missingCards_throwsException() {
+        List<Long> ids = List.of(CARD_1_ID, CARD_3_ID);
+        doThrow(new CardNotFoundException(ids))
+                .when(cardRepository).findAllById(ids);
+        assertThatThrownBy(() -> cardService.deleteCards(ids))
             .isInstanceOf(CardNotFoundException.class)
             .extracting("message")
-            .isEqualTo("Card not found with id: " + CARD_3_ID);
+            .isEqualTo("Cards not found with ids: [1, 3]");
+    }
+
+    @Test
+    void deleteCards_missingCard_throwsException() {
+        List<Long> ids = List.of(CARD_3_ID);
+        doThrow(new CardNotFoundException(CARD_3_ID))
+                .when(cardRepository).findAllById(ids);
+        assertThatThrownBy(() -> cardService.deleteCards(ids))
+                .isInstanceOf(CardNotFoundException.class)
+                .extracting("message")
+                .isEqualTo("Card not found with id: 3");
     }
 
     @Test
     void deleteCard_multipleCards_deletesCards() {
+        when(cardRepository.findAllById(List.of(CARD_1_ID, CARD_2_ID))).thenReturn(List.of(card1, card2));
         List<Long> ids = List.of(CARD_1_ID, CARD_2_ID);
+
         cardService.deleteCards(ids);
-        verify(cardRepository).deleteCardsById(ids);
+
+        verify(cardRepository).deleteByIds(ids);
+        verify(cardRepository).deleteDeckAssociationsByCardIds(ids);
+        verify(cardHistoryService).deleteByCardIds(ids);
     }
 
     @Test
@@ -457,7 +479,8 @@ class CardServiceTest {
     void setHints_whenCardDoesNotExist_throwsException() {
         when(cardRepository.findById(CARD_1_ID)).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> cardService.setHints(new HintRequest(null, null), CARD_1_ID))
+        HintRequest request = new HintRequest(null, null);
+        assertThatThrownBy(() -> cardService.setHints(request, CARD_1_ID))
             .isInstanceOf(CardNotFoundException.class)
             .extracting("message")
             .isEqualTo("Card not found with id: " + CARD_1_ID);
