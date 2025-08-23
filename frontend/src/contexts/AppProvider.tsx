@@ -3,59 +3,60 @@ import { AppContext } from "./AppContext";
 import { useAllDecks } from "../hooks/decks";
 import type { Deck } from "../types/deck";
 import useCards from "../hooks/cards/useCards";
-import type { Card } from "../types/card";
-import useSubjects from "../hooks/subjects/useSubjects";
+import useAllSubjects from "../hooks/subjects/useAllSubjects";
 
 export const AppProvider = ({ children }: { children: React.ReactNode }) => {
-  const { decks, fetchDecks } = useAllDecks();
-  const { cards, loading, error } = useCards();
-  const { subjects: subjectsFromHook } = useSubjects();
+  const { subjects: subjectsFromHook } = useAllSubjects();
+  const { decks: allDecksFromHook, fetchDecks } = useAllDecks();
 
-  // Keep the *global* data for all subjects, decks, and cards
-  const [allDecks, setAllDecks] = useState<Deck[]>(decks);
-  const [allCards, setAllCards] = useState<Card[]>(cards);
+  // Local state
+  const [allDecks, setAllDecks] = useState<Deck[]>(allDecksFromHook);
   const [allSubjects, setAllSubjects] = useState(subjectsFromHook);
-
   const [selectedSubjectId, setSelectedSubjectId] = useState<number | null>(
     null
   );
 
-  // ensure first subject is selected by default
+  // Fetch cards for the selected subject
+  const { cards, setCards, loading, error, refetch } =
+    useCards(selectedSubjectId);
+
+  // Ensure first subject is selected by default
   useEffect(() => {
     if (allSubjects.length > 0 && selectedSubjectId === null) {
-      setSelectedSubjectId(allSubjects[0]?.id);
+      setSelectedSubjectId(allSubjects[0].id);
     }
   }, [allSubjects, selectedSubjectId]);
 
-  // sync state with hook data
-  useEffect(() => setAllDecks(decks), [decks]);
-  useEffect(() => setAllCards(cards), [cards]);
+  // Sync decks and subjects with hooks
+  useEffect(() => setAllDecks(allDecksFromHook), [allDecksFromHook]);
   useEffect(() => setAllSubjects(subjectsFromHook), [subjectsFromHook]);
 
-  // ✅ Filtered data based on selected subject
+  // Refetch cards whenever selectedSubjectId changes
+  useEffect(() => {
+    if (selectedSubjectId !== null) {
+      refetch(selectedSubjectId);
+    } else {
+      setCards([]); // no subject selected
+    }
+  }, [selectedSubjectId, refetch, setCards]);
+
+  // Filter decks by selectedSubjectId
   const filteredDecks = useMemo<Deck[]>(() => {
     if (!selectedSubjectId) return [];
     return allDecks.filter((deck) => deck.subjectId === selectedSubjectId);
   }, [allDecks, selectedSubjectId]);
 
-  const filteredCards = useMemo<Card[]>(() => {
-    if (!selectedSubjectId) return [];
-    return allCards.filter((card) => card.subjectId === selectedSubjectId);
-  }, [allCards, selectedSubjectId]);
+  // Currently selected subject object
+  const selectedSubject = useMemo(
+    () => allSubjects.find((s) => s.id === selectedSubjectId) || null,
+    [allSubjects, selectedSubjectId]
+  );
 
-  // ✅ Wrappers so consumers can still set decks/cards/subjects
+  // Wrappers to allow updates
   const setDecks = (updater: Deck[] | ((prev: Deck[]) => Deck[])) => {
     setAllDecks((prev) =>
       typeof updater === "function"
         ? (updater as (prev: Deck[]) => Deck[])(prev)
-        : updater
-    );
-  };
-
-  const setCards = (updater: Card[] | ((prev: Card[]) => Card[])) => {
-    setAllCards((prev) =>
-      typeof updater === "function"
-        ? (updater as (prev: Card[]) => Card[])(prev)
         : updater
     );
   };
@@ -72,17 +73,11 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
     );
   };
 
-  // currently selected subject object
-  const selectedSubject = useMemo(
-    () => allSubjects.find((s) => s.id === selectedSubjectId) || null,
-    [allSubjects, selectedSubjectId]
-  );
-
   return (
     <AppContext.Provider
       value={{
         decks: filteredDecks,
-        cards: filteredCards,
+        cards,
         loading,
         error,
         fetchDecks,

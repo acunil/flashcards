@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { API_URL } from "../urls";
 import type { Subject } from "../../types/subject";
 
-const useSubjects = () => {
+const useAllSubjects = () => {
   const [subjects, setSubjects] = useState<Subject[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -44,4 +44,4 @@ const useSubjects = () => {
   return { subjects, selectedSubject, loading, error };
 };
 
-export default useSubjects;
+export default useAllSubjects;

@@ -1,41 +1,42 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import type { Card } from "../../types/card";
 import { API_URL } from "../urls";
 
-const useCards = () => {
+const useCards = (subjectId: number | null) => {
   const [cards, setCards] = useState<Card[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const hasFetched = useRef(false);
 
+  // Memoized fetch function
+  const fetchCards = useCallback(async (subjectIdParam: number) => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      const response = await fetch(
+        `${API_URL}/cards?subjectId=${subjectIdParam}`
+      );
+      if (!response.ok) throw new Error("Failed to fetch cards");
+      const data: Card[] = await response.json();
+      setCards(data);
+    } catch (err: unknown) {
+      if (err instanceof Error) setError(err.message);
+      else setError("Unknown error occurred");
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  // Re-fetch cards whenever the subjectId changes
   useEffect(() => {
-    const fetchCards = async () => {
-      if (hasFetched.current) return;
-      hasFetched.current = true;
+    if (subjectId !== null) {
+      fetchCards(subjectId);
+    } else {
+      setCards([]); // no subject selected, empty array
+    }
+  }, [subjectId, fetchCards]); // fetchCards is stable now
 
-      try {
-        setLoading(true);
-        const response = await fetch(`${API_URL}/cards?subjectId=1`);
-        if (!response.ok) {
-          throw new Error("Failed to fetch cards");
-        }
-        const data: Card[] = await response.json();
-        setCards(data);
-      } catch (err: unknown) {
-        if (err instanceof Error) {
-          setError(err.message);
-        } else {
-          setError("Unknown error occurred");
-        }
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchCards();
-  });
-
-  return { cards, loading, error };
+  return { cards, setCards, loading, error, refetch: fetchCards };
 };
 
 export default useCards;

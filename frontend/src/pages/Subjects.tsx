@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { useState } from "react";
 import SubjectForm from "../components/subjectForm";
 import { useAppContext } from "../contexts";
+import useUpdateSubject from "../hooks/subjects/useUpdateSubject";
 
 const SubjectsPage = () => {
   const navigate = useNavigate();
@@ -12,19 +13,33 @@ const SubjectsPage = () => {
 
   const [editSubjectId, setEditSubjectId] = useState<number | null>(null);
 
+  const { updateSubject } = useUpdateSubject();
+
   const handleSelectSubject = (id: number) => {
     setSelectedSubjectId(id);
   };
 
-  const handleSaveEdit = (
+  const handleSaveEdit = async (
     id: number,
     updated: { name: string; frontLabel: string; backLabel: string }
   ) => {
-    setSubjects((prev) =>
-      prev.map((s) => (s.id === id ? { ...s, ...updated } : s))
-    );
-    setEditSubjectId(null);
-    console.log("Saved subject:", id, updated);
+    try {
+      await updateSubject({
+        id,
+        frontLabel: updated.frontLabel,
+        backLabel: updated.backLabel,
+      });
+
+      // Update local state after successful API call
+      setSubjects((prev) =>
+        prev.map((s) => (s.id === id ? { ...s, ...updated } : s))
+      );
+
+      setEditSubjectId(null);
+      console.log("Saved subject:", id, updated);
+    } catch (err) {
+      console.error("Failed to update subject:", err);
+    }
   };
 
   const handleAddSubject = (newSub: {
@@ -50,7 +65,7 @@ const SubjectsPage = () => {
               <button
                 id="decks-back-button"
                 className="cursor-pointer"
-                onClick={() => navigate("/decks")}
+                onClick={() => navigate(-1)}
               >
                 <CaretLeft size={24} />
               </button>
