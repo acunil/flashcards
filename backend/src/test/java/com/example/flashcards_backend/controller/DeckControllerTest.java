@@ -17,6 +17,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.ResultActions;
 
 import java.util.List;
 import java.util.Set;
@@ -55,6 +56,26 @@ class DeckControllerTest {
         subject1 = Subject.builder().id(1L).name("Subject 1").build();
         deck1 = Deck.builder().id(1L).name("Deck 1").subject(subject1).build();
         deck2 = Deck.builder().id(2L).name("Deck 2").subject(subject1).build();
+    }
+
+    @Test
+    void getAllForSubject() throws Exception {
+        Subject subject2 = Subject.builder().id(2L).name("Subject 2").build();
+        deck2.setSubject(subject2);
+
+        when(deckService.getDeckSummariesBySubjectId(subject1.getId()))
+                .thenReturn(Set.of(DeckSummary.fromEntity(deck1)));
+
+        ResultActions resultActions = mockMvc.perform(get(ENDPOINT)
+                        .param("subjectId", "1"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].id").value(deck1.getId()))
+                .andExpect(jsonPath("$[0].name").value(deck1.getName()));
+
+        String contentAsString = resultActions.andReturn().getResponse().getContentAsString();
+
+        List<DeckSummary> deckSummaries = readSummaries(contentAsString);
+        assertThat(deckSummaries).singleElement().isEqualTo(DeckSummary.fromEntity(deck1));
     }
 
     @Test
@@ -195,8 +216,7 @@ class DeckControllerTest {
     /* Helpers */
 
     private List<DeckSummary> readSummaries(String json) throws JsonProcessingException {
-        return objectMapper.readValue(json, new TypeReference<>() {
-        });
+        return objectMapper.readValue(json, new TypeReference<>() {});
     }
 
 }

@@ -3,6 +3,7 @@ package com.example.flashcards_backend.service;
 import com.example.flashcards_backend.annotations.DeckName;
 import com.example.flashcards_backend.dto.DeckSummary;
 import com.example.flashcards_backend.exception.DeckNotFoundException;
+import com.example.flashcards_backend.exception.DuplicateDeckNameException;
 import com.example.flashcards_backend.model.Deck;
 import com.example.flashcards_backend.repository.DeckRepository;
 import jakarta.transaction.Transactional;
@@ -20,8 +21,8 @@ public class DeckService {
 
     private final DeckRepository deckRepository;
 
-    public Set<DeckSummary> getAllDeckSummaries() {
-        return deckRepository.findAllDecks().stream()
+    public Set<DeckSummary> getDeckSummariesBySubjectId(Long subjectId) {
+        return deckRepository.findBySubjectId(subjectId).stream()
                 .map(DeckSummary::fromEntity)
                 .collect(Collectors.toSet());
     }
@@ -39,9 +40,8 @@ public class DeckService {
     @Transactional
     public Deck renameDeck(Long id, @DeckName String name) {
         Deck deck = getDeckById(id);
-        // check that name is unique in database
-        if (deckRepository.existsByName(name.trim())) {
-            throw new IllegalArgumentException("Deck name must be unique: " + name);
+        if (deckRepository.existsByNameAndSubject(name.trim(), deck.getSubject())) {
+            throw new DuplicateDeckNameException("Deck name must be unique: " + name);
         }
         deck.setName(name.trim());
         return deck;
