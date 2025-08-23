@@ -5,7 +5,6 @@ databaseChangeLog:
       changes:
         - createTable:
             tableName: deck
-            ifNotExists: true
             columns:
               - column:
                   name: id
@@ -21,7 +20,6 @@ databaseChangeLog:
                     unique: true
         - createTable:
             tableName: cardDeck
-            ifNotExists: true
             columns:
               - column:
                   name: deckId
@@ -36,14 +34,12 @@ databaseChangeLog:
             primaryKey:
               columnNames: deckId, cardId
         - addForeignKeyConstraint:
-            ifNotExists: true
             baseTableName: cardDeck
             baseColumnNames: deckId
             referencedTableName: deck
             referencedColumnNames: id
             constraintName: fkCardDeckDeck
         - addForeignKeyConstraint:
-            ifNotExists: true
             baseTableName: cardDeck
             baseColumnNames: cardId
             referencedTableName: card

@@ -24,16 +24,6 @@ databaseChangeLog:
                   type: varchar(255)
                   constraints:
                     nullable: false
-              - column:
-                  name: hint_front
-                  type: varchar(255)
-                  constraints:
-                    nullable: true
-              - column:
-                  name: hint_back
-                  type: varchar(255)
-                  constraints:
-                    nullable: true
 
   - changeSet:
       id: 001_add_hints_to_card
@@ -41,7 +31,6 @@ databaseChangeLog:
       changes:
         - addColumn:
             tableName: card
-            ifNotExists: true
             columns:
               - column:
                   name: hint_front
