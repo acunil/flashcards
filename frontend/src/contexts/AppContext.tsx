@@ -9,6 +9,7 @@ export type AppContextType = {
   error: string | null;
   fetchDecks: () => Promise<void>;
   setDecks: React.Dispatch<React.SetStateAction<Deck[]>>;
+  setCards: React.Dispatch<React.SetStateAction<Card[]>>;
 };
 
 export const AppContext = createContext<AppContextType | undefined>(undefined);
