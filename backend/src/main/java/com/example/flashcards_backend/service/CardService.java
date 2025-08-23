@@ -14,6 +14,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 import static com.example.flashcards_backend.utility.CardUtils.shuffleCards;
 
@@ -113,7 +114,23 @@ public class CardService {
 
     @Transactional
     public void deleteCards(List<Long> ids) throws CardNotFoundException {
-        cardRepository.deleteCardsById(ids);
+        if (ids == null || ids.isEmpty()) {
+            return;
+        }
+
+        // Fetch to check existence (future-proof for partial failures)
+        List<Card> cards = fetchCardsByIds(ids);
+        if (cards.size() != ids.size()) {
+            Set<Long> foundIds = cards.stream().map(Card::getId).collect(Collectors.toSet());
+            List<Long> missingIds = ids.stream().filter(id -> !foundIds.contains(id)).toList();
+            throw new CardNotFoundException(missingIds);
+        }
+
+        cardHistoryService.deleteByCardIds(ids);
+
+        cardRepository.deleteDeckAssociationsByCardIds(ids);
+
+        cardRepository.deleteByIds(ids); // Or cardRepository.deleteAllById(ids) if using Spring Data's built-in
     }
 
     @Transactional
@@ -124,13 +141,16 @@ public class CardService {
         return CardResponse.fromEntity(card);
     }
 
-    @Transactional(readOnly = true)
-    public Card fetchCardById(Long id) {
+
+    /* Helpers */
+    private Card fetchCardById(Long id) {
         return cardRepository.findById(id)
                 .orElseThrow(() -> new CardNotFoundException(id));
     }
 
-    /* Helpers */
+    private List<Card> fetchCardsByIds(List<Long> ids) {
+        return cardRepository.findAllById(ids);
+    }
 
     private void addDecksIfPresent(CardRequest request, Card cardToCreate) {
         if (request.deckNames() != null && !request.deckNames().isEmpty()) {

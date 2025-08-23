@@ -21,7 +21,7 @@ public interface CardRepository extends JpaRepository<Card, Long> {
 
     @Modifying
     @Query("DELETE FROM Card c WHERE c.id IN :ids")
-    void deleteCardsById(List<Long> ids);
+    void deleteByIds(List<Long> ids);
 
     Optional<Card> findBySubjectIdAndFrontAndBack(Long subjectId, String front, String back);
 
@@ -76,5 +76,9 @@ public interface CardRepository extends JpaRepository<Card, Long> {
     default Optional<Card> findMostViewedByUserId(UUID userId) {
         return findTopByCardHistories_User_IdOrderByCardHistories_ViewCountDesc(userId);
     }
+
+    @Modifying
+    @Query(value = "DELETE FROM card_deck WHERE card_id IN :cardIds", nativeQuery = true)
+    void deleteDeckAssociationsByCardIds(@Param("cardIds") List<Long> cardIds);
 
 }

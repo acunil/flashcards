@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.sql.SQLException;
+import java.util.List;
 
 @Service
 @AllArgsConstructor
@@ -25,5 +26,10 @@ public class CardHistoryService {
             }
             throw new DataAccessException("Database error while recording card rating", e) {};
         }
+    }
+
+    @Transactional
+    public void deleteByCardIds(List<Long> ids) {
+        cardHistoryRepository.deleteByCardIds(ids);
     }
 }
