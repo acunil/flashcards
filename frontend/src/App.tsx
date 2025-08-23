@@ -5,7 +5,7 @@ import { ReviseSettingsProvider } from "./contexts/ReviseSettingsProvider";
 
 function App() {
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen select-none">
       <div className="mx-auto overflow-visible">
         <BrowserRouter>
           <AppProvider>

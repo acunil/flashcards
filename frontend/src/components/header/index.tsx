@@ -77,7 +77,7 @@ const Header = ({ isHomePage = false, isRevising = false }: HeaderProps) => {
           onClick={() => navigate("/subjects")}
           className="border-black border-2 rounded"
         >
-          <div className="flex-row flex items-center justify-center gap-1 select-none p-2 bg-white cursor-pointer">
+          <div className="flex-row flex items-center justify-center gap-1 p-2 bg-white cursor-pointer">
             <Books size={25} />
             {selectedSubject?.name || "Create subject"}
           </div>
