@@ -1,0 +1,17 @@
+databaseChangeLog:
+  - changeSet:
+      id: 006_drop_global_unique_deck_name
+      author: lucian
+      changes:
+        - dropUniqueConstraint:
+            tableName: deck
+            constraintName: deck_name_key
+
+  - changeSet:
+      id: 006_add_unique_subject_name
+      author: lucian
+      changes:
+        - addUniqueConstraint:
+            tableName: deck
+            columnNames: subject_id, name
+            constraintName: uq_deck_subject_name
