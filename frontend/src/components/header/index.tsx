@@ -2,6 +2,7 @@ import { Books, Cards, Gear, House } from "phosphor-react";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Toggle from "../toggle";
+import { useAppContext } from "../../contexts";
 
 interface HeaderProps {
   isHomePage?: boolean;
@@ -20,6 +21,9 @@ const Header = ({
   const [showDropdown, setShowDropdown] = useState(false);
   const [familiarity, setFamiliarity] = useState("All");
   const [showDeckNames, setShowDeckNames] = useState("Hide");
+  const { selectedSubjectId, subjects } = useAppContext();
+
+  const selectedSubject = subjects.find((sub) => sub.id === selectedSubjectId);
 
   return (
     <header className="relative h-16 flex items-center px-4 py-3 border-b shadow-sm">
@@ -50,7 +54,7 @@ const Header = ({
         >
           <div className="flex-row flex items-center justify-center gap-1 select-none p-2 bg-white cursor-pointer">
             <Books size={25} />
-            German
+            {selectedSubject?.name || "Create subject"}
           </div>
         </button>
       </div>

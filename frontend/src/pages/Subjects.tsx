@@ -3,28 +3,17 @@ import Header from "../components/header";
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
 import SubjectForm from "../components/subjectForm";
-
-interface Subject {
-  id: number;
-  name: string;
-  frontLabel: string;
-  backLabel: string;
-}
+import { useAppContext } from "../contexts";
 
 const SubjectsPage = () => {
   const navigate = useNavigate();
+  const { subjects, selectedSubjectId, setSelectedSubjectId, setSubjects } =
+    useAppContext();
 
-  const [subjects, setSubjects] = useState<Subject[]>([
-    { id: 1, name: "German", frontLabel: "English", backLabel: "Deutsch" },
-    { id: 2, name: "Spanish", frontLabel: "English", backLabel: "Español" },
-  ]);
-
-  const [currentSubjectId, setCurrentSubjectId] = useState<number>(1);
   const [editSubjectId, setEditSubjectId] = useState<number | null>(null);
 
   const handleSelectSubject = (id: number) => {
-    setCurrentSubjectId(id);
-    console.log("Selected subject:", id);
+    setSelectedSubjectId(id);
   };
 
   const handleSaveEdit = (
@@ -43,8 +32,9 @@ const SubjectsPage = () => {
     frontLabel: string;
     backLabel: string;
   }) => {
-    const newId = subjects.length + 1;
-    const subject: Subject = { id: newId, ...newSub };
+    const newId =
+      subjects.length > 0 ? Math.max(...subjects.map((s) => s.id)) + 1 : 1;
+    const subject = { id: newId, ...newSub };
     setSubjects((prev) => [...prev, subject]);
     console.log("Added subject:", subject);
   };
@@ -71,7 +61,7 @@ const SubjectsPage = () => {
           {/* Subjects list */}
           <ul className="space-y-3">
             {subjects.map((subject) => {
-              const isActive = subject.id === currentSubjectId;
+              const isActive = subject.id === selectedSubjectId;
               const isEditing = editSubjectId === subject.id;
 
               return (
@@ -83,7 +73,7 @@ const SubjectsPage = () => {
                   {isEditing ? (
                     <SubjectForm
                       mode="edit"
-                      initialValues={subject}
+                      subject={subject}
                       onSave={(values) => handleSaveEdit(subject.id, values)}
                       onCancel={() => setEditSubjectId(null)}
                     />
@@ -110,7 +100,7 @@ const SubjectsPage = () => {
                           e.stopPropagation();
                           setEditSubjectId(subject.id);
                         }}
-                        className="p-2 border-white border-2 hover:border-black hover:bg-yellow-200 rounded hover:cursor-pointer"
+                        className="p-2 border-inherit border-2 hover:border-black hover:bg-yellow-200 rounded hover:cursor-pointer"
                       >
                         <PencilSimple size={23} />
                       </button>

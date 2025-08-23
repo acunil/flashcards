@@ -1,13 +1,10 @@
 // SubjectForm.tsx
 import { Check, Plus } from "phosphor-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import type { Subject } from "../../types/subject";
 
 interface SubjectFormProps {
-  initialValues?: {
-    name: string;
-    frontLabel: string;
-    backLabel: string;
-  };
+  subject?: Subject;
   mode: "edit" | "add";
   onSave: (values: {
     name: string;
@@ -17,15 +14,22 @@ interface SubjectFormProps {
   onCancel?: () => void;
 }
 
-const SubjectForm = ({
-  initialValues,
-  mode,
-  onSave,
-  onCancel,
-}: SubjectFormProps) => {
-  const [values, setValues] = useState(
-    initialValues || { name: "", frontLabel: "", backLabel: "" }
-  );
+const SubjectForm = ({ subject, mode, onSave, onCancel }: SubjectFormProps) => {
+  const [values, setValues] = useState({
+    name: "",
+    frontLabel: "",
+    backLabel: "",
+  });
+
+  useEffect(() => {
+    if (subject) {
+      setValues({
+        name: subject?.name,
+        frontLabel: subject?.frontLabel || "",
+        backLabel: subject?.backLabel || "",
+      });
+    }
+  }, [subject]);
 
   const handleChange = (field: keyof typeof values, value: string) => {
     setValues((prev) => ({ ...prev, [field]: value }));
@@ -55,7 +59,7 @@ const SubjectForm = ({
             type="text"
             value={values.frontLabel}
             onChange={(e) => handleChange("frontLabel", e.target.value)}
-            className="border p-1 rounded flex-1 text-sm"
+            className="border p-1 rounded flex-1 text-sm border-gray-500"
             placeholder="Enter text..."
           />
         </div>
@@ -65,7 +69,7 @@ const SubjectForm = ({
             type="text"
             value={values.backLabel}
             onChange={(e) => handleChange("backLabel", e.target.value)}
-            className="border p-1 rounded flex-1 text-sm"
+            className="border p-1 rounded flex-1 text-sm border-gray-500"
             placeholder="Enter text..."
           />
         </div>

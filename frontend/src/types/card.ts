@@ -1,5 +1,4 @@
 import type { Deck } from "./deck";
-import type { Subject } from "./subject";
 
 export type Card = {
   id: number;
@@ -12,5 +11,5 @@ export type Card = {
   viewCount: number;
   lastViewed: string;
   lastRating: number;
-  subject: Subject;
+  subjectId: number;
 };
