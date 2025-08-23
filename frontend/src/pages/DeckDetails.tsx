@@ -35,7 +35,7 @@ const DeckDetails = () => {
   return (
     <div className="bg-sky-200">
       <Header />
-      <div className="min-h-screen flex justify-center max-w-screen-sm">
+      <div className="min-h-screen flex justify-center">
         <div className="bg-white w-full max-w-screen-sm border-black border-2 p-3 rounded m-4">
           <div className="relative flex items-center h-12">
             <div className="absolute left-0">

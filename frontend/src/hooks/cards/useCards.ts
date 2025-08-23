@@ -15,7 +15,7 @@ const useCards = () => {
 
       try {
         setLoading(true);
-        const response = await fetch(`${API_URL}/cards`);
+        const response = await fetch(`${API_URL}/cards?subjectId=1`);
         if (!response.ok) {
           throw new Error("Failed to fetch cards");
         }
