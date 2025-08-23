@@ -7,12 +7,14 @@ import ReviseWrapper from "../components/reviseWrapper";
 import BulkUpload from "../pages/BulkUpload";
 import Login from "../pages/Login";
 import SubjectsPage from "../pages/Subjects";
+import LandingWrapper from "../components/LandingWrapper";
 
 export const AppRoutes = () => {
   return (
     <Routes>
+      <Route path="/" element={<LandingWrapper />} />
       <Route path="/login" element={<Login />} />
-      <Route path="/" element={<Home />} />
+      <Route path="/home" element={<Home />} />
       <Route path="/revise/:deckId?" element={<ReviseWrapper />} />
       <Route path="/decks" element={<Decks />} />
       <Route path="/decks/:deckId" element={<DeckDetails />} />
