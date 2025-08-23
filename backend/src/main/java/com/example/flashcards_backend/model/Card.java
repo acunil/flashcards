@@ -11,7 +11,6 @@ import org.hibernate.validator.constraints.Length;
 import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 @Slf4j
 @Entity
@@ -65,22 +64,6 @@ public class Card {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "forked_from_card_id")
-    private Card forkedFrom;
-
-    @ManyToMany(fetch = FetchType.LAZY)
-    @JoinTable(
-            name = "card_shared_with",
-            joinColumns = @JoinColumn(name = "card_id"),
-            inverseJoinColumns = @JoinColumn(name = "user_id")
-    )
-    private Set<User> sharedWith = new HashSet<>();
-
-    public boolean isSharedWith(User user) {
-        return sharedWith.stream().anyMatch(u -> u.getId().equals(user.getId()));
-    }
-
     public void addDeck(Deck deck) {
         if (!deck.getSubject().equals(this.subject)) {
             throw new IllegalArgumentException("Deck and Card must belong to the same Subject");
@@ -129,19 +112,15 @@ public class Card {
     }
 
     public Set<String> getDeckNames() {
-        return decks.stream().map(Deck::getName).collect(Collectors.toSet());
+        Set<String> deckNames = new HashSet<>();
+        for (Deck deck : decks) {
+            deckNames.add(deck.getName());
+        }
+        return deckNames;
     }
 
     public void addCardHistory(CardHistory cardHistory) {
         cardHistory.setCard(this);
-    }
-
-    public void shareWith(User user) {
-        sharedWith.add(user);
-    }
-
-    public void unshareWith(User user) {
-        sharedWith.remove(user);
     }
 
     public static class CardBuilder {
@@ -153,33 +132,13 @@ public class Card {
         private Set<Deck> decks = new HashSet<>();
         private Set<CardHistory> cardHistories = new HashSet<>();
         private Subject subject;
-        private User user;
-        private Card forkedFrom;
-        private Set<User> sharedWith = new HashSet<>();
-
 
         public CardBuilder cardHistory(CardHistory cardHistory) {
             this.cardHistories.add(cardHistory);
             return this;
         }
 
-        public CardBuilder sharedWith(User user) {
-            this.sharedWith.add(user);
-            return this;
-        }
-
-        public CardBuilder sharedWith(Set<User> users) {
-            this.sharedWith.addAll(users);
-            return this;
-        }
-
-        public CardBuilder decks(Set<Deck> decks) {
-            this.decks.addAll(decks);
-            return this;
-        }
-
         public Card build() {
-            log.info("Building card with id {}", this.id);
             Card card = new Card();
             card.id = this.id;
             card.front = this.front;
@@ -188,16 +147,8 @@ public class Card {
             card.hintBack = this.hintBack;
             card.decks = this.decks;
             card.subject = this.subject;
-            card.user = this.user;
-            card.forkedFrom = this.forkedFrom;
             for (CardHistory ch : this.cardHistories) {
                 card.addCardHistory(ch);
-            }
-            for (User u : this.sharedWith) {
-                card.shareWith(u);
-            }
-            for (Deck d : this.decks) {
-                card.addDeck(d);
             }
             return card;
         }
