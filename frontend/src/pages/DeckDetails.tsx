@@ -11,9 +11,6 @@ const DeckDetails = () => {
   const { decks, cards } = useAppContext();
   const navigate = useNavigate();
 
-  // if deck id is 0, show all cards
-  // if deck id is not all, only include cards that have the deck id
-
   const filteredCards = useMemo(() => {
     if (effectiveDeckId === 0 || !deckId) {
       return cards;
@@ -35,7 +32,7 @@ const DeckDetails = () => {
   return (
     <div className="bg-sky-200">
       <Header />
-      <div className="min-h-screen flex justify-center max-w-screen-sm">
+      <div className="min-h-screen flex justify-center">
         <div className="bg-white w-full max-w-screen-sm border-black border-2 p-3 rounded m-4">
           <div className="relative flex items-center h-12">
             <div className="absolute left-0">
@@ -62,7 +59,10 @@ const DeckDetails = () => {
             </h1>
           </div>
           <div className="mt-6 flex justify-center mx-auto w-full">
-            <CardList cards={filteredCards} />
+            <CardList
+              cards={filteredCards}
+              isAllCardsList={effectiveDeckId === 0}
+            />
           </div>
         </div>
       </div>

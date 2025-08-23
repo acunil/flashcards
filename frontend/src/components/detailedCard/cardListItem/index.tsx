@@ -1,140 +1,233 @@
 import { getClosestLevel } from "../../difficultyButtons/levels";
-import { useState, useEffect, useRef } from "react";
+import { useState, useRef } from "react";
+import { Pencil, Check, LightbulbFilament } from "phosphor-react";
 import type { Card } from "../../../types/card";
-
+import { useNavigate } from "react-router-dom";
 interface CardListItemProps extends Card {
-  isEditing?: boolean;
   onUpdate?: (updated: { id: number; front: string; back: string }) => void;
-  onStartEditing?: () => void;
+  onDelete?: (id: number) => void;
+  isSelectMode?: boolean; // new prop
+  selected?: boolean; // new prop
+  onToggleSelect?: (id: number) => void; // new prop
+  onEditingChange?: (editing: boolean) => void;
+  isAllCardsList?: boolean;
 }
 
 const CardListItem = ({
   id,
   front,
   back,
+  decks,
+  hintFront,
+  hintBack,
   viewCount,
   avgRating,
   lastRating,
-  isEditing = false,
   onUpdate,
-  onStartEditing,
+  isSelectMode = false,
+  selected = false,
+  onToggleSelect,
+  onEditingChange,
+  isAllCardsList = true,
 }: CardListItemProps) => {
   const lastLevel = getClosestLevel(lastRating);
   const avgLevel = getClosestLevel(avgRating);
 
   const [frontValue, setFrontValue] = useState(front);
   const [backValue, setBackValue] = useState(back);
+  const [frontHint, setFrontHint] = useState(hintFront);
+  const [backHint, setBackHint] = useState(hintBack);
+  const [isEditingLocal, setIsEditingLocal] = useState(false);
 
   const frontRef = useRef<HTMLTextAreaElement>(null);
   const backRef = useRef<HTMLTextAreaElement>(null);
+  const navigate = useNavigate();
 
-  useEffect(() => {
-    // Only initialize when entering edit mode for the first time
-    if (isEditing && frontValue === front && backValue === back) {
-      setFrontValue(front);
-      setBackValue(back);
-    }
-  }, [isEditing, front, back, frontValue, backValue]);
-
-  useEffect(() => {
-    if (isEditing) {
-      const el = frontRef.current;
-      if (el) {
-        el.focus();
-        el.selectionStart = el.selectionEnd = el.value.length; // cursor at end
-        autoResize(el);
-      }
-      autoResize(backRef.current);
-    }
-  }, [isEditing]);
-
-  const handleClick = () => {
-    if (!isEditing && onStartEditing) onStartEditing();
-  };
-
-  const handleBlur = () => {
-    if (onUpdate && (frontValue !== front || backValue !== back)) {
-      onUpdate({ id, front: frontValue, back: backValue });
-    }
-  };
-
-  // Auto-resize function
   const autoResize = (textarea: HTMLTextAreaElement | null) => {
     if (!textarea) return;
     textarea.style.height = "auto";
     textarea.style.height = textarea.scrollHeight + "px";
   };
 
-  const handleFrontChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    setFrontValue(e.target.value);
-    autoResize(e.target);
+  const handleSave = () => {
+    onUpdate?.({ id, front: frontValue, back: backValue });
+    setIsEditingLocal(false);
+    onEditingChange?.(false);
   };
 
-  const handleBackChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    setBackValue(e.target.value);
-    autoResize(e.target);
+  const handleCardClick = () => {
+    if (isSelectMode) {
+      onToggleSelect?.(id);
+    }
   };
 
-  const seamlessStyle =
-    "w-full resize-none border-0 bg-transparent p-0 text-center font-semibold outline-none text-inherit overflow-hidden";
-  const seamlessBackStyle =
-    "w-full resize-none border-0 bg-transparent p-0 text-center text-gray-700 outline-none text-inherit overflow-hidden";
+  const handleEditClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    e.stopPropagation();
+    if (isAllCardsList) {
+      navigate(`/add-card/${id}`);
+    } else {
+      if (!isSelectMode) {
+        if (isEditingLocal) {
+          handleSave();
+        } else {
+          setIsEditingLocal(true);
+          onEditingChange?.(true);
+        }
+      }
+    }
+  };
 
   return (
     <div
-      onClick={handleClick}
-      className="flex border-2 rounded-lg overflow-hidden w-full mx-auto shadow-lg transition-shadow duration-100 cursor-pointer hover:shadow-2xl"
-      aria-label={`Card ${id}`}
+      onClick={handleCardClick}
+      className={`flex border-2 rounded-lg overflow-hidden w-full mx-auto shadow-lg transition-shadow duration-100 
+                
+                ${isSelectMode ? "cursor-pointer" : ""}
+                ${isSelectMode && selected ? "bg-red-50 border-red-400" : ""}`}
     >
-      {/* Left side */}
-      <div className="flex flex-col w-2/3 border-r border-gray-200">
-        {/* Front */}
-        <div className="p-4 border-b border-gray-200 flex-grow flex items-center justify-center">
-          {isEditing ? (
-            <textarea
-              ref={frontRef}
-              value={frontValue}
-              onChange={handleFrontChange}
-              onBlur={handleBlur}
-              className={seamlessStyle}
-              rows={1}
-            />
-          ) : (
-            <p className="font-semibold truncate">{frontValue}</p> // <-- use frontValue instead of front
-          )}
+      {/* Middle content */}
+      <div className="flex flex-col flex-1">
+        {/* Top row: front + back */}
+        <div className="flex flex-row w-full">
+          {/* Front */}
+          <div className="p-4 flex-1">
+            {isEditingLocal ? (
+              <div className="flex flex-col gap-2">
+                <label className="text-xs font-medium text-gray-500">
+                  Front
+                </label>
+                <textarea
+                  ref={frontRef}
+                  value={frontValue}
+                  onChange={(e) => {
+                    setFrontValue(e.target.value);
+                    autoResize(e.target);
+                  }}
+                  className="w-full resize-none border border-gray-300 rounded p-1 outline-none text-center font-semibold"
+                  rows={2}
+                />
+                <label className="text-xs font-medium text-gray-500 select-none">
+                  Front Hint
+                </label>
+                <textarea
+                  value={frontHint}
+                  onChange={(e) => {
+                    setFrontHint(e.target.value);
+                    autoResize(e.target);
+                  }}
+                  className="w-full resize-none border border-gray-300 rounded p-1 outline-none text-center text-gray-600"
+                  rows={1}
+                />
+              </div>
+            ) : (
+              <div className="flex flex-col gap-1 text-center select-none">
+                <p className="font-semibold">{frontValue}</p>
+                {hintFront && (
+                  <div className="flex items-center justify-center gap-1 text-gray-600 font-light px-2 py-1 border border-gray-200 rounded-lg bg-gray-50">
+                    <LightbulbFilament size={18} />
+                    {frontHint}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* Back */}
+          <div className="p-4 flex-1">
+            {isEditingLocal ? (
+              <div className="flex flex-col gap-2">
+                <label className="text-xs font-medium text-gray-500">
+                  Back
+                </label>
+                <textarea
+                  ref={backRef}
+                  value={backValue}
+                  onChange={(e) => {
+                    setBackValue(e.target.value);
+                    autoResize(e.target);
+                  }}
+                  className="w-full resize-none border border-gray-300 rounded p-1 outline-none text-center font-semibold"
+                  rows={2}
+                />
+                <label className="text-xs font-medium text-gray-500">
+                  Back Hint
+                </label>
+                <textarea
+                  value={backHint}
+                  onChange={(e) => {
+                    setBackHint(e.target.value);
+                    autoResize(e.target);
+                  }}
+                  className="w-full resize-none border border-gray-300 rounded p-1 outline-none text-center text-gray-600"
+                  rows={1}
+                />
+              </div>
+            ) : (
+              <div className="flex flex-col gap-1 text-center select-none">
+                <p className="font-semibold">{backValue}</p>
+                {hintBack && (
+                  <div className="flex items-center justify-center gap-1 text-gray-600 font-light px-2 py-1 border border-gray-200 rounded-lg bg-gray-50">
+                    <LightbulbFilament size={18} />
+                    {backHint}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
         </div>
 
-        {/* Back */}
-        <div className="p-4 flex-grow flex items-center justify-center">
-          {isEditing ? (
-            <textarea
-              ref={backRef}
-              value={backValue}
-              onChange={handleBackChange}
-              onBlur={handleBlur}
-              className={seamlessBackStyle}
-              rows={1}
+        {/* Decks */}
+        {isAllCardsList && decks.length > 0 && (
+          <div className="flex flex-row flex-wrap gap-2 mb-4 text-sm justify-center select-none">
+            {decks.map((deck) => (
+              <div
+                key={deck.id}
+                className="flex gap-1 text-sm bg-sky-200 font-light text-black px-3 py-1 rounded-full text-md border-none border-black"
+              >
+                {deck.name}
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Bottom row: stats */}
+        <div className="flex flex-row justify-around items-center p-3 text-sm bg-gray-50 select-none border-t border-gray-200">
+          <div className="flex items-center space-x-2">
+            <span>views:</span>
+            <span>{viewCount}</span>
+          </div>
+          <div className="flex items-center space-x-2">
+            <span>last:</span>
+            <lastLevel.Icon
+              size={20}
+              weight="duotone"
+              color={lastLevel.color}
             />
-          ) : (
-            <p className="text-gray-700 truncate">{backValue}</p> // <-- use backValue instead of back
-          )}
+          </div>
+          <div className="flex items-center space-x-2">
+            <span>avg:</span>
+            <avgLevel.Icon size={20} weight="duotone" color={avgLevel.color} />
+          </div>
         </div>
       </div>
 
-      {/* Right side */}
-      <div className="w-1/3 border-l border-gray-400 flex flex-col justify-center p-4 space-y-4 text-sm">
-        <div className="flex justify-between">
-          <span>views:</span>
-          <span className="mx-2">{viewCount}</span>
-        </div>
-        <div className="flex justify-between">
-          <span>last rating:</span>
-          <lastLevel.Icon size={24} weight="duotone" color={lastLevel.color} />
-        </div>
-        <div className="flex justify-between">
-          <span>avg rating:</span>
-          <avgLevel.Icon size={24} weight="duotone" color={avgLevel.color} />
-        </div>
+      {/* Right side: full-panel edit/save */}
+      <div
+        onClick={(e) => {
+          handleEditClick(e);
+        }}
+        className={`flex flex-col justify-center items-center p-2 min-w-1/10 cursor-pointer 
+                    ${
+                      isSelectMode
+                        ? "bg-gray-300"
+                        : "bg-yellow-100 hover:bg-yellow-200"
+                    }`}
+      >
+        {isEditingLocal ? (
+          <Check size={20} className="text-green-700" />
+        ) : (
+          <Pencil size={20} className="text-yellow-700" />
+        )}
       </div>
     </div>
   );

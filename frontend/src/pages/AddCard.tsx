@@ -12,6 +12,8 @@ import type { Card } from "../types/card";
 const AddCard = () => {
   const [front, setFront] = useState("");
   const [back, setBack] = useState("");
+  const [frontHint, setFrontHint] = useState("");
+  const [backHint, setBackHint] = useState("");
   const [selectedDecks, setSelectedDecks] = useState<Deck[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [showToast, setShowToast] = useState(false);
@@ -27,6 +29,8 @@ const AddCard = () => {
   const resetForm = () => {
     setFront("");
     setBack("");
+    setFrontHint("");
+    setBackHint("");
     setSelectedDecks([]);
     setError(null);
   };
@@ -38,6 +42,8 @@ const AddCard = () => {
       if (cardToEdit) {
         setFront(cardToEdit.front);
         setBack(cardToEdit.back);
+        setFrontHint(cardToEdit.hintFront);
+        setBackHint(cardToEdit.hintBack);
         setSelectedDecks(cardToEdit.decks);
       }
     }
@@ -90,7 +96,7 @@ const AddCard = () => {
       )}
 
       <Header />
-      <div className="flex relative justify-center items-start pt-10 max-w-screen-sm m-4 px-2">
+      <div className="flex relative justify-center items-start m-4 px-2">
         <form
           onSubmit={handleSubmit}
           className="bg-white p-6 rounded shadow-md w-full max-w-md space-y-4 border-2 border-black"
@@ -108,26 +114,60 @@ const AddCard = () => {
             </h1>
           </div>
 
-          <div className="pt-4">
-            <label className="block mb-1 font-medium">Front</label>
-            <textarea
-              value={front}
-              onChange={(e) => setFront(e.target.value)}
-              className="w-full p-2 border-2 rounded-md resize-none"
-              rows={4}
-              placeholder="Enter front text..."
-            />
+          <div className="pt-4 pb-4 space-y-4">
+            {/* Front Content */}
+            <div className="flex flex-col space-y-1">
+              <label className="block font-medium text-gray-700">Front</label>
+              <textarea
+                value={front}
+                onChange={(e) => setFront(e.target.value)}
+                className="w-full p-3 border-2 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-sky-300 border-black"
+                rows={4}
+                placeholder="Enter front text..."
+              />
+            </div>
+
+            {/* Front Hint */}
+            <div className="flex flex-col space-y-1">
+              <label className="block font-medium text-gray-700">
+                Front Hint
+              </label>
+              <textarea
+                value={frontHint}
+                onChange={(e) => setFrontHint(e.target.value)}
+                className="w-full p-2 border rounded-lg resize-none bg-gray-50 border-gray-300 text-gray-600 focus:outline-none focus:ring-2 focus:ring-sky-200"
+                rows={3}
+                placeholder="Optional hint..."
+              />
+            </div>
           </div>
 
-          <div>
-            <label className="block mb-2 font-medium">Back</label>
-            <textarea
-              value={back}
-              onChange={(e) => setBack(e.target.value)}
-              className="w-full p-2 border-2 rounded-md resize-none"
-              rows={4}
-              placeholder="Enter back text..."
-            />
+          <div className="pt-4 pb-4 space-y-4">
+            {/* Back Content */}
+            <div className="flex flex-col space-y-1">
+              <label className="block font-medium text-gray-700">Front</label>
+              <textarea
+                value={back}
+                onChange={(e) => setBack(e.target.value)}
+                className="w-full p-3 border-2 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-sky-300 border-black"
+                rows={4}
+                placeholder="Enter back text..."
+              />
+            </div>
+
+            {/* Back Hint */}
+            <div className="flex flex-col space-y-1">
+              <label className="block font-medium text-gray-700">
+                Back Hint
+              </label>
+              <textarea
+                value={backHint}
+                onChange={(e) => setBackHint(e.target.value)}
+                className="w-full p-2 border rounded-lg resize-none bg-gray-50 border-gray-300 text-gray-600 focus:outline-none focus:ring-2 focus:ring-sky-200"
+                rows={3}
+                placeholder="Optional hint..."
+              />
+            </div>
           </div>
 
           <div>
