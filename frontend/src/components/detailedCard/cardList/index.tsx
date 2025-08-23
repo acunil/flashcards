@@ -12,10 +12,11 @@ const CardList = ({ cards }: CardListProps) => {
   const { updateCard } = useUpdateCard();
   const [bulkSelectMode, setBulkSelectMode] = useState(false);
   const [selectedCards, setSelectedCards] = useState<Set<number>>(new Set());
-  const [editingCardId, setEditingCardId] = useState<number | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
+  const [isEditing, setIsEditing] = useState(false);
 
   const toggleBulkSelectMode = () => {
+    if (isEditing) return;
     setBulkSelectMode(true);
     setSelectedCards(new Set());
   };
@@ -41,7 +42,6 @@ const CardList = ({ cards }: CardListProps) => {
     front: string;
     back: string;
   }) => {
-    setEditingCardId(null);
     updateCard({ ...updated, deckNames: [] });
   };
 
@@ -69,7 +69,11 @@ const CardList = ({ cards }: CardListProps) => {
         {!bulkSelectMode ? (
           <button
             onClick={toggleBulkSelectMode}
-            className="flex items-center text-black py-3 px-4 rounded shadow-lg cursor-pointer bg-sky-200 hover:bg-sky-100 border-black border-2"
+            className={`${
+              isEditing
+                ? "disabled bg-gray-100 cursor-not-allowed"
+                : "cursor-pointer bg-sky-200 hover:bg-sky-100"
+            } flex items-center text-black py-3 px-4 rounded shadow-lg   border-black border-2 select-none`}
           >
             Select...
           </button>
@@ -92,13 +96,12 @@ const CardList = ({ cards }: CardListProps) => {
           <div key={card.id} className="relative group">
             {bulkSelectMode && (
               <div
-                onClick={() => toggleCardSelection(card.id)}
-                className={`absolute top-2 left-2 w-6 h-6 rounded-full border-2 border-gray-400 flex items-center justify-center cursor-pointer transition-all duration-100
-                  ${
-                    selectedCards.has(card.id)
-                      ? "bg-red-300 border-red-400"
-                      : "bg-white group-hover:bg-gray-100"
-                  }`}
+                className={`absolute top-2 left-2 w-6 h-6 rounded-full border-2 border-gray-400 flex items-center justify-center transition-all duration-100
+      ${
+        selectedCards.has(card.id)
+          ? "bg-red-300 border-red-400"
+          : "bg-white group-hover:bg-gray-100"
+      }`}
               >
                 {selectedCards.has(card.id) && (
                   <div className="w-3 h-3 bg-white rounded-full" />
@@ -107,9 +110,11 @@ const CardList = ({ cards }: CardListProps) => {
             )}
             <CardListItem
               {...card}
-              isEditing={editingCardId === card.id}
               onUpdate={saveCard}
-              onStartEditing={() => setEditingCardId(card.id)}
+              isSelectMode={bulkSelectMode}
+              selected={selectedCards.has(card.id)}
+              onToggleSelect={toggleCardSelection}
+              onEditingChange={setIsEditing}
             />
           </div>
         ))}

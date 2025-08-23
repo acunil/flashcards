@@ -1,11 +1,14 @@
 import { getClosestLevel } from "../../difficultyButtons/levels";
-import { useState, useEffect, useRef } from "react";
-import { Trash, Pencil, Check, LightbulbFilament } from "phosphor-react";
+import { useState, useRef } from "react";
+import { Pencil, Check, LightbulbFilament } from "phosphor-react";
 import type { Card } from "../../../types/card";
-
 interface CardListItemProps extends Card {
   onUpdate?: (updated: { id: number; front: string; back: string }) => void;
   onDelete?: (id: number) => void;
+  isSelectMode?: boolean; // new prop
+  selected?: boolean; // new prop
+  onToggleSelect?: (id: number) => void; // new prop
+  onEditingChange?: (editing: boolean) => void;
 }
 
 const CardListItem = ({
@@ -17,7 +20,12 @@ const CardListItem = ({
   lastRating,
   onUpdate,
   onDelete,
+  isSelectMode = false,
+  selected = false,
+  onToggleSelect,
+  onEditingChange,
 }: CardListItemProps) => {
+  console.log(onDelete);
   const lastLevel = getClosestLevel(lastRating);
   const avgLevel = getClosestLevel(avgRating);
 
@@ -30,18 +38,6 @@ const CardListItem = ({
   const frontRef = useRef<HTMLTextAreaElement>(null);
   const backRef = useRef<HTMLTextAreaElement>(null);
 
-  useEffect(() => {
-    if (isEditingLocal) {
-      frontRef.current?.focus();
-      if (frontRef.current) {
-        frontRef.current.selectionStart = frontRef.current.selectionEnd =
-          frontRef.current.value.length;
-        autoResize(frontRef.current);
-      }
-      autoResize(backRef.current);
-    }
-  }, [isEditingLocal]);
-
   const autoResize = (textarea: HTMLTextAreaElement | null) => {
     if (!textarea) return;
     textarea.style.height = "auto";
@@ -51,10 +47,23 @@ const CardListItem = ({
   const handleSave = () => {
     onUpdate?.({ id, front: frontValue, back: backValue });
     setIsEditingLocal(false);
+    onEditingChange?.(false);
+  };
+
+  const handleCardClick = () => {
+    if (isSelectMode) {
+      onToggleSelect?.(id);
+    }
   };
 
   return (
-    <div className="flex border-2 rounded-lg overflow-hidden w-full mx-auto shadow-lg transition-shadow duration-100 hover:shadow-2xl">
+    <div
+      onClick={handleCardClick}
+      className={`flex border-2 rounded-lg overflow-hidden w-full mx-auto shadow-lg transition-shadow duration-100 
+                
+                ${isSelectMode ? "cursor-pointer" : ""}
+                ${isSelectMode && selected ? "bg-red-50 border-red-400" : ""}`}
+    >
       {/* Middle content */}
       <div className="flex flex-col flex-1">
         {/* Top row: front + back */}
@@ -63,7 +72,6 @@ const CardListItem = ({
           <div className="p-4 flex-1">
             {isEditingLocal ? (
               <div className="flex flex-col gap-2">
-                {/* Front Text */}
                 <label className="text-xs font-medium text-gray-500">
                   Front
                 </label>
@@ -77,9 +85,7 @@ const CardListItem = ({
                   className="w-full resize-none border border-gray-300 rounded p-1 outline-none text-center font-semibold"
                   rows={2}
                 />
-
-                {/* Front Hint */}
-                <label className="text-xs font-medium text-gray-500">
+                <label className="text-xs font-medium text-gray-500 select-none">
                   Front Hint
                 </label>
                 <textarea
@@ -93,7 +99,7 @@ const CardListItem = ({
                 />
               </div>
             ) : (
-              <div className="flex flex-col gap-1 text-center">
+              <div className="flex flex-col gap-1 text-center select-none">
                 <p className="font-semibold mb-2">{frontValue}</p>
                 <div className="flex items-center justify-center gap-1 text-gray-600 font-light px-2 py-1 border border-gray-200 rounded-lg bg-gray-50">
                   <LightbulbFilament size={18} />
@@ -107,7 +113,6 @@ const CardListItem = ({
           <div className="p-4 flex-1">
             {isEditingLocal ? (
               <div className="flex flex-col gap-2">
-                {/* Back Text */}
                 <label className="text-xs font-medium text-gray-500">
                   Back
                 </label>
@@ -121,10 +126,8 @@ const CardListItem = ({
                   className="w-full resize-none border border-gray-300 rounded p-1 outline-none text-center font-semibold"
                   rows={2}
                 />
-
-                {/* Back Hint */}
                 <label className="text-xs font-medium text-gray-500">
-                  Hint
+                  Back Hint
                 </label>
                 <textarea
                   value={backHint}
@@ -137,7 +140,7 @@ const CardListItem = ({
                 />
               </div>
             ) : (
-              <div className="flex flex-col gap-1 text-center">
+              <div className="flex flex-col gap-1 text-center select-none">
                 <p className="font-semibold mb-2">{backValue}</p>
                 <div className="flex items-center justify-center gap-1 text-gray-600 font-light px-2 py-1 border border-gray-200 rounded-lg bg-gray-50">
                   <LightbulbFilament size={18} />
@@ -149,7 +152,7 @@ const CardListItem = ({
         </div>
 
         {/* Bottom row: stats */}
-        <div className="flex flex-row justify-around items-center p-3 text-sm bg-gray-50">
+        <div className="flex flex-row justify-around items-center p-3 text-sm bg-gray-50 select-none">
           <div className="flex items-center space-x-2">
             <span>views:</span>
             <span>{viewCount}</span>
@@ -169,29 +172,31 @@ const CardListItem = ({
         </div>
       </div>
 
-      {/* Right side: edit/save & delete */}
-      <div className="flex flex-col justify-center items-center space-y-2 p-2 bg-yellow-100 ">
-        {isEditingLocal && onDelete && (
-          <button
-            onClick={() => onDelete(id)}
-            className="flex items-center justify-center w-10 h-10 bg-red-100 rounded hover:bg-red-200"
-          >
-            <Trash size={20} className="text-red-600" />
-          </button>
+      {/* Right side: full-panel edit/save */}
+      <div
+        onClick={(e) => {
+          e.stopPropagation();
+          if (!isSelectMode) {
+            if (isEditingLocal) {
+              handleSave();
+            } else {
+              setIsEditingLocal(true);
+              onEditingChange?.(true);
+            }
+          }
+        }}
+        className={`flex flex-col justify-center items-center p-2 w-16 cursor-pointer 
+                    ${
+                      isSelectMode
+                        ? "bg-gray-300"
+                        : "bg-yellow-100 hover:bg-yellow-200"
+                    }`}
+      >
+        {isEditingLocal ? (
+          <Check size={20} className="text-green-700" />
+        ) : (
+          <Pencil size={20} className="text-yellow-700" />
         )}
-        <button
-          onClick={() => {
-            if (isEditingLocal) handleSave();
-            else setIsEditingLocal(true);
-          }}
-          className="flex items-center justify-center w-10 h-10 bg-yellow-100 rounded hover:bg-yellow-200"
-        >
-          {isEditingLocal ? (
-            <Check size={20} className="text-green-700" />
-          ) : (
-            <Pencil size={20} className="text-yellow-700" />
-          )}
-        </button>
       </div>
     </div>
   );
