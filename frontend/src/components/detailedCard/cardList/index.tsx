@@ -6,9 +6,10 @@ import useUpdateCard from "../../../hooks/cards/useUpdateCard"; // assuming you 
 
 interface CardListProps {
   cards: Card[];
+  isAllCardsList?: boolean;
 }
 
-const CardList = ({ cards }: CardListProps) => {
+const CardList = ({ cards, isAllCardsList }: CardListProps) => {
   const { updateCard } = useUpdateCard();
   const [bulkSelectMode, setBulkSelectMode] = useState(false);
   const [selectedCards, setSelectedCards] = useState<Set<number>>(new Set());
@@ -85,7 +86,12 @@ const CardList = ({ cards }: CardListProps) => {
               selectedCards.size === 0 ? "opacity-50 cursor-not-allowed" : ""
             }`}
           >
-            <Trash size={20} /> Remove {selectedCards.size} from deck
+            <Trash size={20} />
+            {isAllCardsList ? (
+              <span>Delete {selectedCards.size} cards</span>
+            ) : (
+              <span>Remove {selectedCards.size} from deck</span>
+            )}
           </button>
         )}
       </div>
@@ -115,6 +121,7 @@ const CardList = ({ cards }: CardListProps) => {
               selected={selectedCards.has(card.id)}
               onToggleSelect={toggleCardSelection}
               onEditingChange={setIsEditing}
+              isAllCardsList={isAllCardsList}
             />
           </div>
         ))}

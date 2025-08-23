@@ -2,6 +2,7 @@ import { getClosestLevel } from "../../difficultyButtons/levels";
 import { useState, useRef } from "react";
 import { Pencil, Check, LightbulbFilament } from "phosphor-react";
 import type { Card } from "../../../types/card";
+import { useNavigate } from "react-router-dom";
 interface CardListItemProps extends Card {
   onUpdate?: (updated: { id: number; front: string; back: string }) => void;
   onDelete?: (id: number) => void;
@@ -9,34 +10,38 @@ interface CardListItemProps extends Card {
   selected?: boolean; // new prop
   onToggleSelect?: (id: number) => void; // new prop
   onEditingChange?: (editing: boolean) => void;
+  isAllCardsList?: boolean;
 }
 
 const CardListItem = ({
   id,
   front,
   back,
+  decks,
+  hintFront,
+  hintBack,
   viewCount,
   avgRating,
   lastRating,
   onUpdate,
-  onDelete,
   isSelectMode = false,
   selected = false,
   onToggleSelect,
   onEditingChange,
+  isAllCardsList = true,
 }: CardListItemProps) => {
-  console.log(onDelete);
   const lastLevel = getClosestLevel(lastRating);
   const avgLevel = getClosestLevel(avgRating);
 
   const [frontValue, setFrontValue] = useState(front);
   const [backValue, setBackValue] = useState(back);
-  const [frontHint, setFrontHint] = useState("front hint");
-  const [backHint, setBackHint] = useState("back hint");
+  const [frontHint, setFrontHint] = useState(hintFront);
+  const [backHint, setBackHint] = useState(hintBack);
   const [isEditingLocal, setIsEditingLocal] = useState(false);
 
   const frontRef = useRef<HTMLTextAreaElement>(null);
   const backRef = useRef<HTMLTextAreaElement>(null);
+  const navigate = useNavigate();
 
   const autoResize = (textarea: HTMLTextAreaElement | null) => {
     if (!textarea) return;
@@ -56,6 +61,22 @@ const CardListItem = ({
     }
   };
 
+  const handleEditClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    e.stopPropagation();
+    if (isAllCardsList) {
+      navigate(`/add-card/${id}`);
+    } else {
+      if (!isSelectMode) {
+        if (isEditingLocal) {
+          handleSave();
+        } else {
+          setIsEditingLocal(true);
+          onEditingChange?.(true);
+        }
+      }
+    }
+  };
+
   return (
     <div
       onClick={handleCardClick}
@@ -67,7 +88,7 @@ const CardListItem = ({
       {/* Middle content */}
       <div className="flex flex-col flex-1">
         {/* Top row: front + back */}
-        <div className="flex flex-row w-full border-b border-gray-200">
+        <div className="flex flex-row w-full">
           {/* Front */}
           <div className="p-4 flex-1">
             {isEditingLocal ? (
@@ -100,11 +121,13 @@ const CardListItem = ({
               </div>
             ) : (
               <div className="flex flex-col gap-1 text-center select-none">
-                <p className="font-semibold mb-2">{frontValue}</p>
-                <div className="flex items-center justify-center gap-1 text-gray-600 font-light px-2 py-1 border border-gray-200 rounded-lg bg-gray-50">
-                  <LightbulbFilament size={18} />
-                  {frontHint}
-                </div>
+                <p className="font-semibold">{frontValue}</p>
+                {hintFront && (
+                  <div className="flex items-center justify-center gap-1 text-gray-600 font-light px-2 py-1 border border-gray-200 rounded-lg bg-gray-50">
+                    <LightbulbFilament size={18} />
+                    {frontHint}
+                  </div>
+                )}
               </div>
             )}
           </div>
@@ -141,18 +164,34 @@ const CardListItem = ({
               </div>
             ) : (
               <div className="flex flex-col gap-1 text-center select-none">
-                <p className="font-semibold mb-2">{backValue}</p>
-                <div className="flex items-center justify-center gap-1 text-gray-600 font-light px-2 py-1 border border-gray-200 rounded-lg bg-gray-50">
-                  <LightbulbFilament size={18} />
-                  {backHint}
-                </div>
+                <p className="font-semibold">{backValue}</p>
+                {hintBack && (
+                  <div className="flex items-center justify-center gap-1 text-gray-600 font-light px-2 py-1 border border-gray-200 rounded-lg bg-gray-50">
+                    <LightbulbFilament size={18} />
+                    {backHint}
+                  </div>
+                )}
               </div>
             )}
           </div>
         </div>
 
+        {/* Decks */}
+        {isAllCardsList && decks.length > 0 && (
+          <div className="flex flex-row flex-wrap gap-2 mb-4 text-sm justify-center select-none">
+            {decks.map((deck) => (
+              <div
+                key={deck.id}
+                className="flex gap-1 text-sm bg-sky-200 font-light text-black px-3 py-1 rounded-full text-md border-none border-black"
+              >
+                {deck.name}
+              </div>
+            ))}
+          </div>
+        )}
+
         {/* Bottom row: stats */}
-        <div className="flex flex-row justify-around items-center p-3 text-sm bg-gray-50 select-none">
+        <div className="flex flex-row justify-around items-center p-3 text-sm bg-gray-50 select-none border-t border-gray-200">
           <div className="flex items-center space-x-2">
             <span>views:</span>
             <span>{viewCount}</span>
@@ -175,17 +214,9 @@ const CardListItem = ({
       {/* Right side: full-panel edit/save */}
       <div
         onClick={(e) => {
-          e.stopPropagation();
-          if (!isSelectMode) {
-            if (isEditingLocal) {
-              handleSave();
-            } else {
-              setIsEditingLocal(true);
-              onEditingChange?.(true);
-            }
-          }
+          handleEditClick(e);
         }}
-        className={`flex flex-col justify-center items-center p-2 w-16 cursor-pointer 
+        className={`flex flex-col justify-center items-center p-2 min-w-1/10 cursor-pointer 
                     ${
                       isSelectMode
                         ? "bg-gray-300"
