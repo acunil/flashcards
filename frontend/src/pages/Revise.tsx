@@ -18,9 +18,6 @@ const Revise = ({ hardMode = false, deckId }: ReviseProps) => {
   const { cards, loading, error } = useAppContext();
 
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [cardDisplay, setCardDisplay] = useState<"Front" | "Back" | "Any">(
-    "Front"
-  );
 
   // filter all cards for the revision deck
   const revisionCards: Card[] = useMemo(() => {
@@ -65,25 +62,22 @@ const Revise = ({ hardMode = false, deckId }: ReviseProps) => {
 
   return (
     <div className={`min-h-screen ${hardMode ? "bg-pink-300" : "bg-pink-200"}`}>
-      <Header
-        cardDisplay={cardDisplay}
-        setCardDisplay={setCardDisplay}
-        isRevising={true}
-      />
+      <Header isRevising={true} />
       <main className="flex flex-col items-center">
         {loading && <p>Loading cards...</p>}
         {error && <p className="text-red-600">{error}</p>}
         {!loading && !error && cards.length > 0 && (
-          <div className="w-full overflow-hidden flex flex-col items-center">
-            <CardCarousel
-              cards={revisionCards}
-              showDecks={false}
-              currentIndex={currentIndex}
-              setCurrentIndex={setCurrentIndex}
-              cardColors={cardColors}
-            />
-            <DifficultyButtons onSelectDifficulty={handleDifficultySelect} />
-          </div>
+          <>
+            <div className="w-full overflow-hidden flex flex-col items-center">
+              <CardCarousel
+                cards={revisionCards}
+                currentIndex={currentIndex}
+                setCurrentIndex={setCurrentIndex}
+                cardColors={cardColors}
+              />
+              <DifficultyButtons onSelectDifficulty={handleDifficultySelect} />
+            </div>
+          </>
         )}
         {!loading && !error && cards.length === 0 && <p>No cards available.</p>}
       </main>
