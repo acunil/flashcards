@@ -1,15 +1,20 @@
 import { useNavigate } from "react-router-dom";
 import Header from "../components/header";
 import { CaretLeft, DownloadSimple } from "phosphor-react";
-import React from "react";
+import React, { useEffect, useState } from "react";
+import { useAppContext } from "../contexts";
+import useCsvUpload from "../hooks/cards/useCsvUpload";
 
-const sampleCsv = `front,back,frontHint,backHint,decks
-Hello,Hallo,Greeting word,Used when meeting someone,greetings
-Thank you,Danke,Expression of gratitude,
+const sampleCsv = `front,back,decks
+Hello,Hallo,greetings
+Thank you,Danke,
 `;
 
 const BulkUpload = () => {
   const navigate = useNavigate();
+  const { selectedSubjectId } = useAppContext();
+  const { uploadCsv } = useCsvUpload();
+  const [showToast, setShowToast] = useState(false);
 
   const downloadSample = () => {
     const blob = new Blob([sampleCsv], { type: "text/csv;charset=utf-8;" });
@@ -22,22 +27,32 @@ const BulkUpload = () => {
     document.body.removeChild(link);
   };
 
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (!file) return;
+    if (!file || !selectedSubjectId) return;
 
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      const text = event.target?.result;
-      console.log("CSV content:", text);
-      // TODO: parse CSV and send to backend
-    };
-    reader.readAsText(file);
+    const result = await uploadCsv(selectedSubjectId, file);
+    if (result) {
+      setShowToast(true);
+      e.target.value = ""; // reset input
+    }
   };
+
+  useEffect(() => {
+    if (showToast) {
+      const timer = setTimeout(() => setShowToast(false), 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [showToast]);
 
   return (
     <div className="bg-green-200 min-h-screen">
-      <Header isHomePage={true} />
+      {showToast && (
+        <div className="fixed top-20 left-1/2 -translate-x-1/2 bg-green-200 border-2 border-black px-4 py-2 rounded shadow transition-opacity z-50">
+          Cards uploaded successfully!
+        </div>
+      )}
+      <Header />
       <div className="flex justify-center">
         <div className="bg-white w-full max-w-screen-sm border-black border-2 p-4 rounded m-4">
           {/* Header with Back Button */}
@@ -61,8 +76,7 @@ const BulkUpload = () => {
           </p>
           <ul className="list-disc list-inside mb-4 text-sm">
             <li>
-              Columns: <code>front</code>, <code>back</code>,{" "}
-              <code>frontHint</code>, <code>backHint</code>, <code>decks</code>
+              Columns: <code>front</code>, <code>back</code>, <code>decks</code>
             </li>
             <li>
               <code>decks</code> can contain multiple decks separated by commas
@@ -83,12 +97,12 @@ const BulkUpload = () => {
           </button>
 
           {/* File Upload Input */}
-          <div>
+          <div className="flex flex-row justify-center gap-2 h-[45px]">
             <input
               type="file"
               accept=".csv"
               onChange={handleFileUpload}
-              className="border-2 p-2 rounded w-full"
+              className="border-2 p-2 rounded w-full h-full"
             />
           </div>
         </div>
