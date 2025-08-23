@@ -1,0 +1,257 @@
+databaseChangeLog:
+  # ------------------------------------------------------------
+  # 001: Base schema - Users
+  # ------------------------------------------------------------
+  - changeSet:
+      id: 001_create_app_user_table
+      author: lucian
+      changes:
+        - createTable:
+            tableName: app_user
+            ifNotExists: true
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: username
+                  type: varchar(255)
+                  constraints:
+                    unique: true
+                    nullable: false
+              - column:
+                  name: is_active
+                  type: boolean
+                  defaultValueBoolean: true
+
+  # ------------------------------------------------------------
+  # 002: Base schema - Subject + ENUM type
+  # ------------------------------------------------------------
+  - changeSet:
+      id: 002_create_side_enum
+      author: lucian
+      changes:
+        - sql:
+            splitStatements: false
+            sql: |
+              DO $$
+              BEGIN
+                IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'side') THEN
+                  CREATE TYPE side AS ENUM ('FRONT', 'BACK', 'ANY');
+                END IF;
+              END
+              $$;
+
+  - changeSet:
+      id: 002_create_subject_table
+      author: lucian
+      changes:
+        - createTable:
+            tableName: subject
+            ifNotExists: true
+            columns:
+              - column:
+                  name: id
+                  type: BIGSERIAL
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+              - column:
+                  name: name
+                  type: varchar(100)
+                  constraints:
+                    nullable: false
+                    unique: true
+              - column:
+                  name: front_label
+                  type: varchar(255)
+              - column:
+                  name: back_label
+                  type: varchar(255)
+              - column:
+                  name: default_side
+                  type: side
+                  defaultValue: "FRONT"
+              - column:
+                  name: display_deck_names
+                  type: boolean
+                  defaultValueBoolean: false
+              - column:
+                  name: user_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_subject_user
+                    references: app_user(id)
+                    onDelete: CASCADE
+
+  # ------------------------------------------------------------
+  # 003: Base schema - Card
+  # ------------------------------------------------------------
+  - changeSet:
+      id: 003_create_card_table
+      author: lucian
+      changes:
+        - createTable:
+            tableName: card
+            ifNotExists: true
+            columns:
+              - column:
+                  name: id
+                  type: BIGSERIAL
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+              - column:
+                  name: front
+                  type: varchar(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: back
+                  type: varchar(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: hint_front
+                  type: varchar(255)
+              - column:
+                  name: hint_back
+                  type: varchar(255)
+              - column:
+                  name: subject_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_card_subject
+                    references: subject(id)
+              - column:
+                  name: user_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_card_user
+                    references: app_user(id)
+                    onDelete: CASCADE
+
+  # ------------------------------------------------------------
+  # 004: Base schema - Deck + Join Table
+  # ------------------------------------------------------------
+  - changeSet:
+      id: 004_create_deck_table
+      author: lucian
+      changes:
+        - createTable:
+            tableName: deck
+            ifNotExists: true
+            columns:
+              - column:
+                  name: id
+                  type: BIGSERIAL
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+              - column:
+                  name: name
+                  type: varchar(40)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: subject_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_deck_subject
+                    references: subject(id)
+              - column:
+                  name: user_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_deck_user
+                    references: app_user(id)
+                    onDelete: CASCADE
+        - addUniqueConstraint:
+            tableName: deck
+            columnNames: subject_id, name
+            constraintName: uq_deck_subject_name
+
+  - changeSet:
+      id: 004_create_cardDeck_table
+      author: lucian
+      changes:
+        - createTable:
+            tableName: cardDeck
+            ifNotExists: true
+            columns:
+              - column:
+                  name: deckId
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_carddeck_deck
+                    references: deck(id)
+              - column:
+                  name: cardId
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_carddeck_card
+                    references: card(id)
+            primaryKey:
+              columnNames: deckId, cardId
+
+  # ------------------------------------------------------------
+  # 005: Base schema - Card History
+  # ------------------------------------------------------------
+  - changeSet:
+      id: 005_create_card_history_table
+      author: lucian
+      changes:
+        - createTable:
+            tableName: card_history
+            ifNotExists: true
+            columns:
+              - column:
+                  name: id
+                  type: BIGSERIAL
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+              - column:
+                  name: card_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_card_history_card
+                    references: card(id)
+              - column:
+                  name: avg_rating
+                  type: double precision
+              - column:
+                  name: view_count
+                  type: integer
+              - column:
+                  name: last_viewed
+                  type: timestamp
+              - column:
+                  name: last_rating
+                  type: integer
+              - column:
+                  name: subject_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_card_history_subject
+                    references: subject(id)
+              - column:
+                  name: user_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_card_history_user
+                    references: app_user(id)
+                    onDelete: CASCADE
