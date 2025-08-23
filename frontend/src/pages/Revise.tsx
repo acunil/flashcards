@@ -43,7 +43,6 @@ const Revise = ({ hardMode = false, deckId }: ReviseProps) => {
   const [cardColors, setCardColors] = useState<Record<string, string>>({});
 
   const handleDifficultySelect = (rating: number) => {
-    console.log("handle difficulty select");
     if (revisionCards.length === 0) return;
 
     const currentCard = revisionCards[currentIndex];

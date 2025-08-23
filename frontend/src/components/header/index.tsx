@@ -1,29 +1,54 @@
 import { Books, Cards, Gear, House } from "phosphor-react";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import Toggle from "../toggle";
+import Toggle, { type ToggleOption } from "../toggle";
 import { useAppContext } from "../../contexts";
+import { useReviseSettings } from "../../hooks/reviseSettings";
+import type {
+  CardDisplay,
+  DeckVisibility,
+  Familiarity,
+} from "../../contexts/ReviseSettingsContext";
 
 interface HeaderProps {
   isHomePage?: boolean;
   isRevising?: boolean;
-  cardDisplay?: "Front" | "Back" | "Any";
-  setCardDisplay?: (val: "Front" | "Back" | "Any") => void;
 }
 
-const Header = ({
-  isHomePage = false,
-  isRevising = false,
-  cardDisplay,
-  setCardDisplay,
-}: HeaderProps) => {
+const Header = ({ isHomePage = false, isRevising = false }: HeaderProps) => {
   const navigate = useNavigate();
   const [showDropdown, setShowDropdown] = useState(false);
-  const [familiarity, setFamiliarity] = useState("All");
-  const [showDeckNames, setShowDeckNames] = useState("Hide");
-  const { selectedSubjectId, subjects } = useAppContext();
+  const { selectedSubject } = useAppContext();
 
-  const selectedSubject = subjects.find((sub) => sub.id === selectedSubjectId);
+  // Get context values
+  const {
+    cardDisplay,
+    setCardDisplay,
+    familiarity,
+    setFamiliarity,
+    showDeckNames,
+    setShowDeckNames,
+  } = useReviseSettings();
+
+  const frontLabel = selectedSubject?.frontLabel || "Front";
+  const backLabel = selectedSubject?.backLabel || "Back";
+
+  const cardOptions: ToggleOption<CardDisplay>[] = [
+    { display: frontLabel, value: "Front" },
+    { display: backLabel, value: "Back" },
+    { display: "Any", value: "Any" },
+  ];
+
+  const familiarityOptions: ToggleOption<Familiarity>[] = [
+    { display: "All", value: "All" },
+    { display: "Hard", value: "Hard" },
+    { display: "Easy", value: "Easy" },
+  ];
+
+  const deckOptions: ToggleOption<DeckVisibility>[] = [
+    { display: "Show", value: "Show" },
+    { display: "Hide", value: "Hide" },
+  ];
 
   return (
     <header className="relative h-16 flex items-center px-4 py-3 border-b shadow-sm">
@@ -75,13 +100,14 @@ const Header = ({
           </div>
         )}
       </div>
-      {/* Dropdown positioned absolutely, outside normal header flow */}
+
+      {/* Dropdown */}
       {showDropdown && (
         <div className="absolute right-4 top-full mt-2 w-100 bg-white border-2 rounded z-10 text-sm p-3 space-y-2">
           <div className="flex items-center justify-between">
             <label>Card display:</label>
             <Toggle
-              options={["Front", "Back", "Any"]}
+              options={cardOptions}
               selected={cardDisplay}
               onChange={setCardDisplay}
             />
@@ -89,7 +115,7 @@ const Header = ({
           <div className="flex items-center justify-between">
             <label>Familiarity:</label>
             <Toggle
-              options={["All", "Hard", "Easy"]}
+              options={familiarityOptions}
               selected={familiarity}
               onChange={setFamiliarity}
             />
@@ -97,7 +123,7 @@ const Header = ({
           <div className="flex items-center justify-between">
             <label>Show decks:</label>
             <Toggle
-              options={["Show", "Hide"]}
+              options={deckOptions}
               selected={showDeckNames}
               onChange={setShowDeckNames}
             />
