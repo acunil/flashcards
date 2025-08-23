@@ -57,6 +57,7 @@ databaseChangeLog:
       author: lucian
       changes:
         - addColumn:
+            ifNotExists: true
             tableName: card
             columns:
               - column:
@@ -78,6 +79,7 @@ databaseChangeLog:
       author: lucian
       changes:
         - createTable:
+            ifNotExists: true
             tableName: card_shared_with
             columns:
               - column:
