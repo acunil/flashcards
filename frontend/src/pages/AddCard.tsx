@@ -18,7 +18,7 @@ const AddCard = () => {
   const [error, setError] = useState<string | null>(null);
   const [showToast, setShowToast] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-  const { decks, cards } = useAppContext();
+  const { decks, cards, selectedSubject } = useAppContext();
   const navigate = useNavigate();
   const { createCard } = useCreateCard();
   const { updateCard } = useUpdateCard();
@@ -117,7 +117,9 @@ const AddCard = () => {
           <div className="pt-4 pb-4 space-y-4">
             {/* Front Content */}
             <div className="flex flex-col space-y-1">
-              <label className="block font-medium text-gray-700">Front</label>
+              <label className="block font-medium text-gray-700">
+                {selectedSubject?.frontLabel || "Front"}
+              </label>
               <textarea
                 value={front}
                 onChange={(e) => setFront(e.target.value)}
@@ -130,7 +132,7 @@ const AddCard = () => {
             {/* Front Hint */}
             <div className="flex flex-col space-y-1">
               <label className="block font-medium text-gray-700">
-                Front Hint
+                {`${selectedSubject?.frontLabel ?? "Front"} hint`}
               </label>
               <textarea
                 value={frontHint}
@@ -145,7 +147,9 @@ const AddCard = () => {
           <div className="pt-4 pb-4 space-y-4">
             {/* Back Content */}
             <div className="flex flex-col space-y-1">
-              <label className="block font-medium text-gray-700">Front</label>
+              <label className="block font-medium text-gray-700">
+                {selectedSubject?.backLabel || "Back"}
+              </label>
               <textarea
                 value={back}
                 onChange={(e) => setBack(e.target.value)}
@@ -158,7 +162,7 @@ const AddCard = () => {
             {/* Back Hint */}
             <div className="flex flex-col space-y-1">
               <label className="block font-medium text-gray-700">
-                Back Hint
+                {`${selectedSubject?.backLabel ?? "Back"} hint`}
               </label>
               <textarea
                 value={backHint}
