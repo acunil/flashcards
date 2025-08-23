@@ -45,25 +45,3 @@ databaseChangeLog:
             referencedTableName: card
             referencedColumnNames: id
             constraintName: fkCardDeckCard
-  - changeSet:
-      id: 003_insert_initial_decks
-      author: lucian
-      changes:
-        - insert:
-            tableName: deck
-            columns:
-              - column:
-                  name: name
-                  value: "Default Deck"
-        - insert:
-            tableName: deck
-            columns:
-              - column:
-                  name: name
-                  value: "work"
-        - insert:
-            tableName: deck
-            columns:
-              - column:
-                  name: name
-                  value: "travel"

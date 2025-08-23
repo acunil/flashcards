@@ -24,59 +24,7 @@ databaseChangeLog:
                   type: varchar(255)
                   constraints:
                     nullable: false
-  - changeSet:
-      id: 001_insert_initial_cards
-      author: lucian
-      changes:
-        - insert:
-            tableName: card
-            columns:
-              - column:
-                  name: front
-                  value: "Hello"
-              - column:
-                  name: back
-                  value: "Hallo"
-        - insert:
-            tableName: card
-            columns:
-              - column:
-                  name: front
-                  value: "Big"
-              - column:
-                  name: back
-                  value: "Gross"
-        - insert:
-            tableName: card
-            columns:
-              - column:
-                  name: front
-                  value: "Thank you"
-              - column:
-                  name: back
-                  value: "Danke"
-        - insert:
-            tableName: card
-            columns:
-              - column:
-                  name: front
-                  value: "Goodbye"
-              - column:
-                  name: back
-                  value: "auf Wiedersehen"
-  - changeSet:
-      id: 001_insert_extra_card
-      author: lucian
-      changes:
-        - insert:
-            tableName: card
-            columns:
-              - column:
-                  name: front
-                  value: "Horse"
-              - column:
-                  name: back
-                  value: "Pferd"
+
   - changeSet:
       id: 001_add_hints_to_card
       author: lucian
