@@ -28,6 +28,7 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
         error,
         fetchDecks,
         setDecks,
+        setCards,
       }}
     >
       {children}

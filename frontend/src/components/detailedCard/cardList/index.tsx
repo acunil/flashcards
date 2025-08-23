@@ -3,6 +3,7 @@ import type { Card } from "../../../types/card";
 import CardListItem from "../cardListItem";
 import { Trash } from "phosphor-react";
 import useUpdateCard from "../../../hooks/cards/useUpdateCard"; // assuming you have this
+import useDeleteCards from "../../../hooks/cards/useDeleteCards";
 
 interface CardListProps {
   cards: Card[];
@@ -11,6 +12,7 @@ interface CardListProps {
 
 const CardList = ({ cards, isAllCardsList }: CardListProps) => {
   const { updateCard } = useUpdateCard();
+  const { deleteCards } = useDeleteCards();
   const [bulkSelectMode, setBulkSelectMode] = useState(false);
   const [selectedCards, setSelectedCards] = useState<Set<number>>(new Set());
   const [searchQuery, setSearchQuery] = useState("");
@@ -24,6 +26,11 @@ const CardList = ({ cards, isAllCardsList }: CardListProps) => {
 
   const handleDeleteSelected = () => {
     console.log("Deleting cards:", Array.from(selectedCards));
+
+    if (isAllCardsList) {
+      deleteCards(Array.from(selectedCards));
+    }
+
     setSelectedCards(new Set());
     setBulkSelectMode(false);
   };
