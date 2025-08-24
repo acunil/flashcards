@@ -1,6 +1,7 @@
 package com.example.flashcards_backend.service;
 
 import com.example.flashcards_backend.dto.CreateDeckRequest;
+import com.example.flashcards_backend.exception.DeckNotFoundException;
 import com.example.flashcards_backend.exception.DuplicateDeckNameException;
 import com.example.flashcards_backend.model.Card;
 import com.example.flashcards_backend.model.Deck;
@@ -22,6 +23,7 @@ import static org.mockito.ArgumentMatchers.anySet;
 import static org.mockito.Mockito.*;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 
@@ -160,6 +162,78 @@ class CardDeckServiceTest {
         assertThatThrownBy(() -> cardDeckService.createDeck(request))
                 .isInstanceOf(DuplicateDeckNameException.class)
                 .hasMessageContaining("A deck with the name 'Existing Deck' already exists");
+    }
+
+    @Test
+    void testAddDeckToCards() {
+        Card card1 = Card.builder().id(1L).subject(subject1).build();
+        Card card2 = Card.builder().id(2L).subject(subject1).build();
+        Set<Card> cards = Set.of(card1, card2);
+        when(cardRepository.findAllById(anySet())).thenReturn(cards.stream().toList());
+        when(deckRepository.findById(deck1.getId())).thenReturn(Optional.of(deck1));
+
+        cardDeckService.addDeckToCards(deck1.getId(), Set.of(1L, 2L));
+
+        verify(deckRepository).findById(deck1.getId());
+        verify(cardRepository).findAllById(anySet());
+
+        assertThat(card1.getDecks()).singleElement().isEqualTo(deck1);
+        assertThat(card2.getDecks()).singleElement().isEqualTo(deck1);
+    }
+
+    @Test
+    void testAddDeckToCards_DeckNotFound() {
+        when(deckRepository.findById(deck1.getId())).thenReturn(Optional.empty());
+        assertThatThrownBy(() -> cardDeckService.addDeckToCards(deck1.getId(), Set.of(1L, 2L)))
+                .isInstanceOf(DeckNotFoundException.class)
+                .hasMessageContaining("Deck not found with id: 1");
+        verify(deckRepository).findById(deck1.getId());
+        verifyNoInteractions(cardRepository);
+    }
+
+    @Test
+    void testAddDeckToCards_DifferentSubject() {
+        Card card1 = Card.builder().id(1L).subject(subject1).build();
+        Card card2 = Card.builder().id(2L).subject(subject1).build();
+        Set<Card> cards = Set.of(card1, card2);
+        when(cardRepository.findAllById(anySet())).thenReturn(cards.stream().toList());
+        when(deckRepository.findById(deck1.getId())).thenReturn(Optional.of(deck1));
+        Deck deck3 = Deck.builder().id(2L).name("Deck 2").subject(Subject.builder().id(2L).build()).build();
+        when(deckRepository.findById(deck3.getId())).thenReturn(Optional.of(deck3));
+        assertThatThrownBy(() -> cardDeckService.addDeckToCards(deck3.getId(), Set.of(1L, 2L)))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("Card ids must belong to the same subject as the deck");
+        verify(deckRepository).findById(deck3.getId());
+        verify(cardRepository).findAllById(Set.of(1L, 2L));
+    }
+
+    @Test
+    void testRemoveDeckFromCards() {
+        Card card1 = Card.builder().id(1L).subject(subject1).build();
+        Card card2 = Card.builder().id(2L).subject(subject1).build();
+        Set<Card> cards = Set.of(card1, card2);
+        when(cardRepository.findAllById(anySet())).thenReturn(cards.stream().toList());
+        when(deckRepository.findById(deck1.getId())).thenReturn(Optional.of(deck1));
+
+        cardDeckService.removeDeckFromCards(deck1.getId(), Set.of(1L, 2L));
+
+        verify(deckRepository).findById(deck1.getId());
+        verify(cardRepository).findAllById(anySet());
+
+        assertThat(card1.getDecks()).isEmpty();
+        assertThat(card2.getDecks()).isEmpty();
+    }
+
+    @Test
+    void testRemoveDeckFromCards_DeckNotFound() {
+        Long deckId = deck1.getId();
+        when(deckRepository.findById(deckId)).thenReturn(Optional.empty());
+        Set<Long> cardIds = Set.of(1L, 2L);
+        assertThatThrownBy(() -> cardDeckService.removeDeckFromCards(deckId, cardIds))
+                .isInstanceOf(DeckNotFoundException.class)
+                .hasMessageContaining("Deck not found with id: 1");
+        verify(deckRepository).findById(deckId);
+        verifyNoInteractions(cardRepository);
     }
 
 }

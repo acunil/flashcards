@@ -188,7 +188,7 @@ public class CardService {
                 cardMap.put(row.getCardId(), existing);
             }
             if (row.getDeckId() != null) {
-                existing.decks().add(new DeckSummary(row.getDeckId(), row.getDeckName(), row.getSubjectId()));
+                existing.decks().add(new DeckSummary(row.getDeckId(), row.getDeckName()));
             }
         }
         return new ArrayList<>(cardMap.values());

@@ -166,7 +166,6 @@ class DeckControllerTest {
                 .andExpect(jsonPath("$.error").value("Deck not found with id: 999"));
     }
 
-
     @Test
     void upsertDecksByNamesAndSubjectIdNull_returns400() throws Exception {
         when(cardDeckService.getOrCreateDecksByNamesAndSubjectId(Set.of("Deck 1", "Deck 2"), null))
@@ -207,6 +206,26 @@ class DeckControllerTest {
                         tuple(deck1.getId(), deck1.getName()),
                         tuple(deck2.getId(), deck2.getName())
                 );
+    }
+
+    @Test
+    void addCardsToDeck() throws Exception {
+        Set<Long> cardIds = Set.of(1L, 2L);
+        mockMvc.perform(patch(ENDPOINT + "/1/add-cards")
+                        .contentType("application/json")
+                        .content(objectMapper.writeValueAsString(cardIds)))
+                .andExpect(status().isNoContent());
+        verify(cardDeckService).addDeckToCards(1L, cardIds);
+    }
+
+    @Test
+    void removeCardsFromDeck() throws Exception {
+        Set<Long> cardIds = Set.of(1L, 2L);
+        mockMvc.perform(patch(ENDPOINT + "/1/remove-cards")
+                        .contentType("application/json")
+                        .content(objectMapper.writeValueAsString(cardIds)))
+                .andExpect(status().isNoContent());
+        verify(cardDeckService).removeDeckFromCards(1L, cardIds);
     }
 
 
