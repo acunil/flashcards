@@ -1,8 +1,11 @@
 package com.example.flashcards_backend.service;
+import com.example.flashcards_backend.dto.CreateSubjectRequest;
 import com.example.flashcards_backend.dto.SubjectDto;
 import com.example.flashcards_backend.exception.SubjectNotFoundException;
 import com.example.flashcards_backend.model.Subject;
+import com.example.flashcards_backend.model.User;
 import com.example.flashcards_backend.repository.SubjectRepository;
+import com.example.flashcards_backend.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -27,7 +30,10 @@ class SubjectServiceTest {
     static final UUID USER_ID = UUID.fromString("00000000-0000-0000-0000-000000000000");
 
     @Mock
-    private SubjectRepository repository;
+    private SubjectRepository subjectRepository;
+
+    @Mock
+    private UserRepository userRepository;
 
     @InjectMocks
     private SubjectService service;
@@ -43,7 +49,7 @@ class SubjectServiceTest {
 
     @Test
     void findAll() {
-        when(repository.findAll()).thenReturn(List.of(subject1, subject2));
+        when(subjectRepository.findAll()).thenReturn(List.of(subject1, subject2));
 
         List<Subject> result = service.findAll();
 
@@ -54,7 +60,7 @@ class SubjectServiceTest {
 
     @Test
     void findByUserId() {
-        when(repository.findByUserId(USER_ID)).thenReturn(List.of(subject1, subject2));
+        when(subjectRepository.findByUserId(USER_ID)).thenReturn(List.of(subject1, subject2));
 
         List<Subject> result = service.findByUserId(USER_ID);
 
@@ -65,7 +71,7 @@ class SubjectServiceTest {
 
     @Test
     void findByIdFound() {
-        when(repository.findById(1L)).thenReturn(Optional.of(subject1));
+        when(subjectRepository.findById(1L)).thenReturn(Optional.of(subject1));
 
         Subject result = service.findById(1L);
 
@@ -74,30 +80,34 @@ class SubjectServiceTest {
 
     @Test
     void findByIdNotFound() {
-        when(repository.findById(1L)).thenReturn(Optional.empty());
+        when(subjectRepository.findById(1L)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> service.findById(1L)).isInstanceOf(SubjectNotFoundException.class);
     }
 
     @Test
     void create() {
-        SubjectDto dto = new SubjectDto(null, "New Subject", null, null, null, null);
-        Subject entity = dto.toEntity();
-        when(repository.save(any(Subject.class))).thenReturn(entity);
+        when(userRepository.findById(USER_ID)).thenReturn(Optional.of(new User()));
 
-        Subject result = service.create(dto);
+        CreateSubjectRequest request = CreateSubjectRequest.builder()
+                .name("New Subject")
+                .build();
+        Subject entity = request.toEntity();
+        when(subjectRepository.save(any(Subject.class))).thenReturn(entity);
+
+        Subject result = service.create(request, USER_ID);
 
         assertThat(result.getName()).isEqualTo("New Subject");
 
         ArgumentCaptor<Subject> captor = ArgumentCaptor.forClass(Subject.class);
-        verify(repository).save(captor.capture());
+        verify(subjectRepository).save(captor.capture());
     }
 
     @Test
     void updateFound() {
         SubjectDto updatedDto = new SubjectDto(1L, "Updated Subject", "Front", "Back", Subject.Side.FRONT, true);
-        when(repository.findById(1L)).thenReturn(Optional.of(subject1));
-        when(repository.save(any(Subject.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        when(subjectRepository.findById(1L)).thenReturn(Optional.of(subject1));
+        when(subjectRepository.save(any(Subject.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         Subject result = service.update(1L, updatedDto);
 
@@ -107,13 +117,13 @@ class SubjectServiceTest {
         assertThat(result.getBackLabel()).isEqualTo("Back");
         assertThat(result.getDefaultSide()).isEqualTo(Subject.Side.FRONT);
         assertThat(result.getDisplayDeckNames()).isTrue();
-        verify(repository).save(subject1);
+        verify(subjectRepository).save(subject1);
     }
 
     @Test
     void updateNotFound() {
         SubjectDto updatedDto = new SubjectDto(1L, "Updated Subject", null, null, null, null);
-        when(repository.findById(1L)).thenReturn(Optional.empty());
+        when(subjectRepository.findById(1L)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> service.update(1L, updatedDto))
                 .isInstanceOf(SubjectNotFoundException.class);
@@ -123,6 +133,6 @@ class SubjectServiceTest {
     void delete() {
         service.delete(1L);
 
-        verify(repository).deleteById(1L);
+        verify(subjectRepository).deleteById(1L);
     }
 }

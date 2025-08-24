@@ -1,5 +1,6 @@
 package com.example.flashcards_backend.controller;
 
+import com.example.flashcards_backend.dto.CreateSubjectRequest;
 import com.example.flashcards_backend.dto.SubjectDto;
 import com.example.flashcards_backend.service.SubjectService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -54,8 +55,8 @@ public class SubjectController {
                     content = @Content)
     })
     @PostMapping
-    public ResponseEntity<Void> create(@RequestBody SubjectDto subject, @RequestParam UUID userId) {
-        subjectService.create(subject);
+    public ResponseEntity<Void> create(@RequestBody CreateSubjectRequest subjectRequest, @RequestParam UUID userId) {
+        subjectService.create(subjectRequest, userId);
         return ResponseEntity.ok().build();
     }
 
