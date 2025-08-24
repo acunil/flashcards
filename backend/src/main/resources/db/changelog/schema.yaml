@@ -232,15 +232,33 @@ databaseChangeLog:
                     references: card(id)
                     onDelete: CASCADE
               - column:
-                  name: reviewed_at
-                  type: timestamp
+                  name: avg_rating
+                  type: DOUBLE PRECISION
                   constraints:
-                    nullable: false
+                    nullable: true
               - column:
-                  name: result
-                  type: varchar(20)
+                  name: view_count
+                  type: INTEGER
+                  constraints:
+                    nullable: true
+              - column:
+                  name: last_viewed
+                  type: TIMESTAMP
+                  constraints:
+                    nullable: true
+              - column:
+                  name: last_rating
+                  type: INTEGER
+                  constraints:
+                    nullable: true
+              - column:
+                  name: user_id
+                  type: uuid
                   constraints:
                     nullable: false
+                    foreignKeyName: fk_card_history_user
+                    references: app_user(id)
+                    onDelete: CASCADE
         - createIndex:
             indexName: idx_card_history_card
             tableName: card_history
@@ -248,13 +266,19 @@ databaseChangeLog:
               - column:
                   name: card_id
         - createIndex:
-            indexName: idx_card_history_reviewed_at
+            indexName: idx_card_history_user
             tableName: card_history
             columns:
               - column:
-                  name: reviewed_at
+                  name: user_id
+        - createIndex:
+            indexName: idx_card_history_last_viewed
+            tableName: card_history
+            columns:
+              - column:
+                  name: last_viewed
 
-  # --- CARD_DECK (join table) ---
+      # --- CARD_DECK (join table) ---
   - changeSet:
       id: 006_create_card_deck_table
       author: lucian

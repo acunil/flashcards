@@ -15,7 +15,6 @@ const useCreateDeck = (subjectId: number | null) => {
       setError("No subject selected");
       return null;
     }
-    console.log(subjectId);
 
     setLoading(true);
     setError(null);
