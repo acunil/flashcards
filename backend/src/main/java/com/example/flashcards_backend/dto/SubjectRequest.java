@@ -6,7 +6,7 @@ import jakarta.validation.constraints.NotEmpty;
 import lombok.Builder;
 
 @Builder
-public record CreateSubjectRequest(
+public record SubjectRequest(
         @NotEmpty
         String name,
         String frontLabel,

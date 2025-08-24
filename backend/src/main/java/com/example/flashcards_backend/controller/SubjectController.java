@@ -1,6 +1,6 @@
 package com.example.flashcards_backend.controller;
 
-import com.example.flashcards_backend.dto.CreateSubjectRequest;
+import com.example.flashcards_backend.dto.SubjectRequest;
 import com.example.flashcards_backend.dto.SubjectDto;
 import com.example.flashcards_backend.service.SubjectService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -55,7 +55,7 @@ public class SubjectController {
                     content = @Content)
     })
     @PostMapping
-    public ResponseEntity<Void> create(@RequestBody CreateSubjectRequest subjectRequest, @RequestParam UUID userId) {
+    public ResponseEntity<Void> create(@RequestBody SubjectRequest subjectRequest, @RequestParam UUID userId) {
         subjectService.create(subjectRequest, userId);
         return ResponseEntity.ok().build();
     }
@@ -69,8 +69,8 @@ public class SubjectController {
                     content = @Content)
     })
     @PutMapping("/{id}")
-    public ResponseEntity<SubjectDto> update(@PathVariable Long id, @RequestBody SubjectDto subject) {
-        return ResponseEntity.ok(SubjectDto.fromEntity(subjectService.update(id, subject)));
+    public ResponseEntity<SubjectDto> update(@PathVariable Long id, @RequestBody SubjectRequest subjectRequest) {
+        return ResponseEntity.ok(SubjectDto.fromEntity(subjectService.update(id, subjectRequest)));
     }
 
     @Operation(summary = "Delete subject", description = "Deletes a subject by ID.")
