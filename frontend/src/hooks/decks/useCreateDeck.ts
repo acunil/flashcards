@@ -23,7 +23,7 @@ const useCreateDeck = (subjectId: number | null) => {
       const response = await fetch(`${API_URL}/decks?subjectId=${subjectId}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name }),
+        body: JSON.stringify({ names: [name] }),
       });
 
       if (!response.ok) {
