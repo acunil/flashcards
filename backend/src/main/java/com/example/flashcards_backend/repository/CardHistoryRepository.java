@@ -30,4 +30,13 @@ public interface CardHistoryRepository extends JpaRepository<CardHistory, Long> 
             """)
     Long totalViewCountByUserId(@Param("userId") UUID userId);
 
+    @Query("""
+            SELECT ch.lastRating, COUNT(ch)
+            FROM CardHistory ch
+            WHERE ch.user.id = :userId
+            GROUP BY ch.lastRating
+            ORDER BY ch.lastRating
+            """)
+    List<Object[]> countByLastRatingForUser(@Param("userId") UUID userId);
+
 }

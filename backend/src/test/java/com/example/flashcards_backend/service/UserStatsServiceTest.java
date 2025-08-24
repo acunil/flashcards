@@ -13,6 +13,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -33,7 +34,6 @@ class UserStatsServiceTest {
     @Mock
     CardHistoryRepository cardHistoryRepository;
 
-    UserStatsResponse userStatsResponse;
     Card hardestCard;
     Card mostViewedCard;
     User user;
@@ -59,13 +59,6 @@ class UserStatsServiceTest {
                 .back("Back 2")
                 .subject(subject)
                 .build();
-
-        userStatsResponse = UserStatsResponse.builder()
-                .hardestCard(CardResponse.fromEntity(hardestCard))
-                .mostViewedCard(CardResponse.fromEntity(mostViewedCard))
-                .totalCards(100L)
-                .totalCardViews(250L)
-                .build();
     }
 
     @Test
@@ -74,9 +67,29 @@ class UserStatsServiceTest {
         when(cardRepository.findHardestByUserId(USER_ID)).thenReturn(Optional.of(hardestCard));
         when(cardRepository.findMostViewedByUserId(USER_ID)).thenReturn(Optional.of(mostViewedCard));
         when(cardHistoryRepository.totalViewCountByUserId(USER_ID)).thenReturn(250L);
+        when(cardRepository.countUnviewedByUserId(USER_ID)).thenReturn(99L);
+        List<Object[]> lastRatingCounts = List.of(
+                new Object[] { 1, 50L },
+                new Object[] { 2, 20L },
+                new Object[] { 3, 10L },
+                new Object[] { 4, 5L },
+                new Object[] { 5, 1L },
+                new Object[] { 0, 30L }
+        );
+        when(cardHistoryRepository.countByLastRatingForUser(USER_ID)).thenReturn(lastRatingCounts);
 
         UserStatsResponse response = service.getForUserId(USER_ID);
-        assertThat(response).isEqualTo(userStatsResponse);
+
+        assertThat(response.hardestCard()).isEqualTo(CardResponse.fromEntity(hardestCard));
+        assertThat(response.mostViewedCard()).isEqualTo(CardResponse.fromEntity(mostViewedCard));
+        assertThat(response.totalCards()).isEqualTo(100L);
+        assertThat(response.totalCardViews()).isEqualTo(250L);
+        assertThat(response.totalLastRating1()).isEqualTo(50L);
+        assertThat(response.totalLastRating2()).isEqualTo(20L);
+        assertThat(response.totalLastRating3()).isEqualTo(10L);
+        assertThat(response.totalLastRating4()).isEqualTo(5L);
+        assertThat(response.totalLastRating5()).isEqualTo(1L);
+        assertThat(response.totalUnviewedCards()).isEqualTo(99L);
     }
 
     @Test
