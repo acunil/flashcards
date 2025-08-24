@@ -81,4 +81,5 @@ public interface CardRepository extends JpaRepository<Card, Long> {
     @Query(value = "DELETE FROM card_deck WHERE card_id IN :cardIds", nativeQuery = true)
     void deleteDeckAssociationsByCardIds(@Param("cardIds") List<Long> cardIds);
 
+    boolean existsByFrontAndBackAndSubjectId(String front, String back, Long subjectId);
 }

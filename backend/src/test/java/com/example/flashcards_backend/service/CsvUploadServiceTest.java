@@ -48,6 +48,9 @@ class CsvUploadServiceTest {
     @Captor
     private ArgumentCaptor<List<Card>> cardListCaptor;
 
+    @Captor
+    private ArgumentCaptor<Card> cardCaptor;
+
     private Subject subject;
 
     @BeforeEach
@@ -59,7 +62,7 @@ class CsvUploadServiceTest {
 
     @Test
     void uploadCsv_filtersInvalidPartitionsDuplicatesAndSavesValid() throws Exception {
-        when(subjectRepository.findById(1L)).thenReturn(Optional.of(subject));
+        when(subjectRepository.findByIdWithUserAndSubjects(1L)).thenReturn(Optional.of(subject));
         String csv = """
             front,back,decks
             ,b1,
@@ -69,12 +72,12 @@ class CsvUploadServiceTest {
             """;
         InputStream is = new ByteArrayInputStream(csv.getBytes(StandardCharsets.UTF_8));
 
-        when(cardRepository.existsByFrontAndBack("f3", "b3")).thenReturn(false);
-        when(cardRepository.existsByFrontAndBack("f4", "b4")).thenReturn(true);
+        when(cardRepository.existsByFrontAndBackAndSubjectId("f3", "b3", 1L)).thenReturn(false);
+        when(cardRepository.existsByFrontAndBackAndSubjectId("f4", "b4", 1L)).thenReturn(true);
 
-        Deck deck1 = Deck.builder().name("d1").subject(subject).build();
-        Deck deck2 = Deck.builder().name("d2").subject(subject).build();
-        when(cardDeckService.getOrCreateDecksByNamesAndSubjectId(Set.of("d1", "d2"), subject.getId()))
+        Deck deck1 = Deck.builder().name("d1").id(1L).subject(subject).build();
+        Deck deck2 = Deck.builder().name("d2").id(2L).subject(subject).build();
+        when(cardDeckService.getOrCreateDecksByNamesAndSubjectId(Set.of("d1", "d2"), 1L))
                 .thenReturn(Set.of(deck1, deck2));
 
         Card savedCard = Card.builder()
@@ -84,7 +87,7 @@ class CsvUploadServiceTest {
                 .subject(subject)
                 .decks(Set.of(deck1, deck2))
                 .build();
-        when(cardRepository.saveAll(cardListCaptor.capture())).thenReturn(List.of(savedCard));
+        when(cardRepository.saveAllAndFlush(cardListCaptor.capture())).thenReturn(List.of(savedCard));
 
         CsvUploadResponseDto csvUploadResponseDTO = service.uploadCsv(is, subject.getId());
 
@@ -101,7 +104,9 @@ class CsvUploadServiceTest {
         assertThat(toSaveCaptured).hasSize(1);
         assertThat(toSaveCaptured.getFirst().getFront()).isEqualTo("f3");
         assertThat(toSaveCaptured.getFirst().getBack()).isEqualTo("b3");
-        verify(cardRepository).existsByFrontAndBack("f3", "b3");
+//        assertThat(toSaveCaptured.getFirst().getDecks()).hasSize(2);
+//        assertThat(toSaveCaptured.getFirst().getDecks()).containsExactlyInAnyOrder(deck1, deck2);
+        verify(cardRepository).existsByFrontAndBackAndSubjectId("f3", "b3", 1L);
 
         assertThat(csvUploadResponseDTO.saved()).containsExactly(CardResponse.fromEntity(savedCard));
         Card expectedDuplicate = Card.builder().front("f4").back("b4").subject(subject).build();
@@ -110,7 +115,7 @@ class CsvUploadServiceTest {
 
     @Test
     void uploadCsv_ioExceptionIsLoggedAndRethrown() throws Exception {
-        when(subjectRepository.findById(1L)).thenReturn(Optional.of(subject));
+        when(subjectRepository.findByIdWithUserAndSubjects(1L)).thenReturn(Optional.of(subject));
         try (InputStream badStream = new InputStream() {
             @Override
             public int read() throws IOException {
