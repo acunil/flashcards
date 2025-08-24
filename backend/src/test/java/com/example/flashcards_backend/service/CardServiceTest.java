@@ -15,6 +15,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import static com.example.flashcards_backend.testutils.ShuffleTestUtils.assertEventuallyReorders;
@@ -128,6 +129,105 @@ class CardServiceTest {
         when(cardRepository.findCardDeckRows(null, null))
                 .thenReturn(List.of(cardDeckRowProjection1, cardDeckRowProjection2, cardDeckRowProjection3));
 
+    }
+
+    @Test
+    void createCards_allNew_withDecks_linksOnceAndSaves() {
+        CardRequest req1 = new CardRequest("F1", "B1", null, null, 1L, Set.of("Deck 1", "Deck 2"));
+        CardRequest req2 = new CardRequest("F2", "B2", null, null, 1L, Set.of("Deck 1"));
+        List<CardRequest> requests = List.of(req1, req2);
+
+        when(cardDeckService.getOrCreateDecksByNamesAndSubjectId(Set.of("Deck 1", "Deck 2"), 1L))
+                .thenReturn(Set.of(deck1, deck2));
+        when(subjectService.findById(1L)).thenReturn(subject);
+
+        // no existing cards
+        when(cardRepository.saveAllAndFlush(anyList())).thenAnswer(inv -> inv.getArgument(0));
+
+        List<CreateCardResponse> responses = cardService.createCards(requests);
+
+        // verify deck lookup batched once
+        verify(cardDeckService).getOrCreateDecksByNamesAndSubjectId(Set.of("Deck 1", "Deck 2"), 1L);
+        // verify saves twice (initial + after linking)
+        verify(cardRepository, times(2)).saveAllAndFlush(anyList());
+
+        assertThat(responses).hasSize(2);
+        assertThat(responses).allSatisfy(r -> assertThat(r.alreadyExisted()).isFalse());
+    }
+
+    @Test
+    void createCards_mixedExistingAndNew() {
+        Card existingCard = Card.builder().id(100L).front("F1").back("B1").subject(subject).build();
+
+        CardRequest req1 = new CardRequest("F1", "B1", null, null, 1L, null);
+        CardRequest req2 = new CardRequest("F2", "B2", null, null, 1L, null);
+        List<CardRequest> requests = List.of(req1, req2);
+
+        when(cardRepository.saveAllAndFlush(anyList())).thenAnswer(inv -> inv.getArgument(0));
+        when(subjectService.findById(1L)).thenReturn(subject);
+
+        // create ONE spy instance
+        CardService spy = spyService();
+
+        // Simulate getExistingCard returning for first request
+        doReturn(Optional.of(existingCard)).when(spy).getExistingCard(req1);
+
+        List<CreateCardResponse> responses = spy.createCards(requests);
+
+        assertThat(responses).hasSize(2);
+        assertThat(responses.get(0).alreadyExisted()).isTrue();
+        assertThat(responses.get(1).alreadyExisted()).isFalse();
+    }
+
+    @Test
+    void createCards_emptyListThrows() {
+        assertThatThrownBy(() -> cardService.createCards(List.of()))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("No card requests provided");
+    }
+
+    @Test
+    void createCards_multipleSubjectsThrows() {
+        List<CardRequest> bad = List.of(
+                new CardRequest("F1", "B1", null, null, 1L, null),
+                new CardRequest("F2", "B2", null, null, 2L, null)
+        );
+
+        assertThatThrownBy(() -> cardService.createCards(bad))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("All CardRequests must share the same subjectId");
+    }
+
+    @Test
+    void createCards_noDecks_skipsDeckLinking() {
+        CardRequest req1 = new CardRequest("F1", "B1", null, null, 1L, null);
+        List<CardRequest> requests = List.of(req1);
+
+        when(subjectService.findById(1L)).thenReturn(subject);
+        when(cardRepository.saveAllAndFlush(anyList())).thenAnswer(inv -> inv.getArgument(0));
+
+        List<CreateCardResponse> responses = cardService.createCards(requests);
+
+        verify(cardDeckService, never()).getOrCreateDecksByNamesAndSubjectId(anySet(), anyLong());
+        assertThat(responses).hasSize(1);
+    }
+
+    // helper to spy CardService to override getExistingCard
+    private CardService spyService() {
+        CardService spy = Mockito.spy(cardService);
+        doReturn(Optional.empty()).when(spy).getExistingCard(any());
+        doAnswer(inv -> {
+            Card c = inv.getArgument(0);
+            boolean already = inv.getArgument(1);
+            return CreateCardResponse.builder()
+                    .id(c.getId())
+                    .front(c.getFront())
+                    .back(c.getBack())
+                    .alreadyExisted(already)
+                    .decks(new ArrayList<>())
+                    .build();
+        }).when(spy).mapCardToCreateCardResponse(any(), anyBoolean());
+        return spy;
     }
 
     @Test

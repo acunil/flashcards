@@ -89,6 +89,103 @@ public class CardService {
         return mapCardToCreateCardResponse(saved, false);
     }
 
+    @Transactional
+    public List<CreateCardResponse> createCards(List<CardRequest> requests) {
+        if (requests == null || requests.isEmpty()) {
+            throw new IllegalArgumentException("No card requests provided");
+        }
+
+        Set<Long> subjectIds = enforceSingleSubjectId(requests);
+
+        Long subjectId = subjectIds.iterator().next();
+        Subject subject = subjectService.findById(subjectId);
+
+        List<CreateCardResponse> responses = new ArrayList<>();
+        List<Card> toPersist = new ArrayList<>();
+
+        Map<String, Deck> decksByName = fetchOrCreateDecks(requests, subjectId);
+
+        // First pass: build cards or mark as existing
+        for (CardRequest req : requests) {
+            Optional<Card> existing = getExistingCard(req);
+            if (existing.isPresent()) {
+                responses.add(mapCardToCreateCardResponse(existing.get(), true));
+            } else {
+                Card card = Card.builder()
+                        .front(req.front())
+                        .back(req.back())
+                        .hintFront(req.hintFront())
+                        .hintBack(req.hintBack())
+                        .subject(subject)
+                        .user(subject.getUser())
+                        .build();
+                toPersist.add(card);
+                responses.add(mapCardToCreateCardResponse(card, false));
+            }
+        }
+
+        // Persist all new cards in bulk
+        cardRepository.saveAllAndFlush(toPersist);
+
+        // Link decks using the pre‑fetched map
+        for (int i = 0; i < requests.size(); i++) {
+            CardRequest req = requests.get(i);
+            CreateCardResponse resp = responses.get(i);
+
+            if (!resp.alreadyExisted()
+                    && req.deckNames() != null
+                    && !req.deckNames().isEmpty()) {
+
+                Card card = toPersist.stream()
+                        .filter(c -> c.getFront().equals(req.front()) && c.getBack().equals(req.back()))
+                        .findFirst()
+                        .orElseThrow();
+
+                Set<Deck> resolvedDecks = req.deckNames().stream()
+                        .map(decksByName::get)
+                        .filter(Objects::nonNull)
+                        .collect(Collectors.toSet());
+
+                card.addDecks(resolvedDecks);
+            }
+        }
+
+        // Persist the deck links in bulk
+        cardRepository.saveAllAndFlush(toPersist);
+
+        return responses;
+    }
+
+    private Map<String, Deck> fetchOrCreateDecks(List<CardRequest> requests, Long subjectId) {
+        // 1️⃣ Collect all deck names from *new* card requests
+        Set<String> allDeckNames = requests.stream()
+                .map(CardRequest::deckNames)
+                .filter(Objects::nonNull)
+                .flatMap(Set::stream)
+                .collect(Collectors.toSet());
+
+        // 2️⃣ Resolve all required decks in one go
+        Map<String, Deck> decksByName = allDeckNames.isEmpty()
+                ? Collections.emptyMap()
+                : cardDeckService.getOrCreateDecksByNamesAndSubjectId(allDeckNames, subjectId)
+                .stream()
+                .collect(Collectors.toMap(Deck::getName, d -> d));
+        return decksByName;
+    }
+
+    private static Set<Long> enforceSingleSubjectId(List<CardRequest> requests) {
+        Set<Long> subjectIds = requests.stream()
+                .map(CardRequest::subjectId)
+                .collect(Collectors.toSet());
+
+        if (subjectIds.size() != 1) {
+            throw new IllegalArgumentException(
+                    "All CardRequests must share the same subjectId. Found: " + subjectIds
+            );
+        }
+        return subjectIds;
+    }
+
 
     @Transactional
     public void updateCard(Long id, CardRequest request) {
@@ -165,7 +262,7 @@ public class CardService {
         }
     }
 
-    private Optional<Card> getExistingCard(CardRequest request) {
+    protected Optional<Card> getExistingCard(CardRequest request) {
         return cardRepository.findBySubjectIdAndFrontAndBack(
                 request.subjectId(),
                 request.front(),
@@ -194,7 +291,7 @@ public class CardService {
         return new ArrayList<>(cardMap.values());
     }
 
-    private CreateCardResponse mapCardToCreateCardResponse(Card card, boolean alreadyExisted) {
+    protected CreateCardResponse mapCardToCreateCardResponse(Card card, boolean alreadyExisted) {
         return CreateCardResponse.builder()
                 .id(card.getId())
                 .front(card.getFront())

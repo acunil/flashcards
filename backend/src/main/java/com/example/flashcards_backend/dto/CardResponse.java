@@ -10,7 +10,9 @@ import java.util.stream.Collectors;
 import com.example.flashcards_backend.repository.CardDeckRowProjection;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import lombok.Builder;
 
+@Builder
 public record CardResponse(
     @JsonProperty("id")         Long    id,
     @JsonProperty("front")      String  front,
@@ -68,5 +70,14 @@ public record CardResponse(
                 cd.getLastRating(),
                 cd.getSubjectId()
         );
+    }
+
+    public static CardResponse fromEntity(CreateCardResponse ccr) {
+        return CardResponse.builder()
+                .id(ccr.id())
+                .front(ccr.front())
+                .back(ccr.back())
+                .decks(new HashSet<>(ccr.decks()))
+                .build();
     }
 }
