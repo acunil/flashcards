@@ -18,7 +18,6 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
-import static com.example.flashcards_backend.testutils.ShuffleTestUtils.assertEventuallyReorders;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.*;
@@ -32,12 +31,10 @@ class CardServiceTest {
     public static final Long CARD_2_ID = 2L;
     public static final Long CARD_3_ID = 3L;
     public static final Long SUBJECT_ID = 1L;
-    public static final double THRESHOLD = 3.0;
 
     private CardService cardService;
     private Card card1;
     private Card card2;
-    private List<Card> originalCards;
     private Deck deck1;
     private Deck deck2;
     private Subject subject;
@@ -97,7 +94,6 @@ class CardServiceTest {
                 .build();
         card1.addDecks(Set.of(deck1, deck2));
         card2.addDecks(Set.of(deck1));
-        originalCards = List.of(card1, card2, card3);
 
         when(cardRepository.findById(CARD_1_ID)).thenReturn(Optional.of(card1));
         when(cardRepository.findById(CARD_2_ID)).thenReturn(Optional.of(card2));
@@ -456,61 +452,6 @@ class CardServiceTest {
                 .isInstanceOf(CardNotFoundException.class)
                 .extracting("message")
                 .isEqualTo("Card not found with id: 99");
-    }
-
-    @Test
-    void getCardsByMinAvgRating_returnsCardsAboveThreshold() {
-        when(cardRepository.findByMinAvgRating(THRESHOLD)).thenReturn(List.of(card1));
-        List<Card> result = cardService.getCardsByMinAvgRating(THRESHOLD);
-        assertThat(result).containsExactly(card1);
-    }
-
-    @Test
-    void getCardsByMinAvgRating_shuffledTrue_returnsCardsAboveThresholdEventuallyReordered() {
-        when(cardRepository.findByMinAvgRating(THRESHOLD))
-                .thenReturn(originalCards);
-
-        assertEventuallyReorders(
-                () -> cardService.getCardsByMinAvgRating(THRESHOLD, true),
-                originalCards
-        );
-    }
-
-
-    @Test
-    void getCardsByMinAvgRating_shuffledFalse_alwaysSameOrder() {
-        when(cardRepository.findByMinAvgRating(THRESHOLD))
-                .thenReturn(originalCards);
-
-        List<Card> result = cardService.getCardsByMinAvgRating(THRESHOLD, false);
-        assertThat(result).isSameAs(originalCards);
-    }
-
-    @Test
-    void getCardsByMaxAvgRating_returnsCardsBelowThreshold() {
-        when(cardRepository.findByMaxAvgRating(THRESHOLD)).thenReturn(List.of(card2));
-        List<Card> result = cardService.getCardsByMaxAvgRating(THRESHOLD);
-        assertThat(result).containsExactly(card2);
-    }
-
-    @Test
-    void getCardsByMaxAvgRating_shuffledTrue_returnsCardsBelowThresholdEventuallyReordered() {
-        when(cardRepository.findByMaxAvgRating(THRESHOLD))
-                .thenReturn(originalCards);
-
-        assertEventuallyReorders(
-                () -> cardService.getCardsByMaxAvgRating(THRESHOLD, true),
-                originalCards
-        );
-    }
-
-    @Test
-    void getCardsByMaxAvgRating_shuffledFalse_alwaysSameOrder() {
-        when(cardRepository.findByMaxAvgRating(THRESHOLD))
-                .thenReturn(originalCards);
-
-        List<Card> result = cardService.getCardsByMaxAvgRating(THRESHOLD, false);
-        assertThat(result).isSameAs(originalCards);
     }
 
     @Test

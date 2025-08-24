@@ -18,8 +18,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static com.example.flashcards_backend.utility.CardUtils.shuffleCards;
-
 @Slf4j
 @Service
 @AllArgsConstructor
@@ -42,32 +40,6 @@ public class CardService {
             throw new CardNotFoundException(id);
         }
         return mapRowsToResponses(rows).getFirst();
-    }
-
-    @Transactional(readOnly = true)
-    public List<Card> getCardsByMinAvgRating(double threshold) {
-        return cardRepository.findByMinAvgRating(threshold);
-    }
-
-    @Transactional(readOnly = true)
-    public List<Card> getCardsByMinAvgRating(double threshold, boolean shuffled) {
-        var cards = getCardsByMinAvgRating(threshold);
-        return shuffled
-                ? shuffleCards(cards)
-                : cards;
-    }
-
-    @Transactional(readOnly = true)
-    public List<Card> getCardsByMaxAvgRating(double threshold) {
-        return cardRepository.findByMaxAvgRating(threshold);
-    }
-
-    @Transactional(readOnly = true)
-    public List<Card> getCardsByMaxAvgRating(double threshold, boolean shuffled) {
-        var cards = getCardsByMaxAvgRating(threshold);
-        return shuffled
-                ? shuffleCards(cards)
-                : cards;
     }
 
     @Transactional

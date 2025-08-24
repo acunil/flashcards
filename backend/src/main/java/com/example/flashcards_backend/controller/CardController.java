@@ -1,7 +1,6 @@
 package com.example.flashcards_backend.controller;
 
 import com.example.flashcards_backend.dto.*;
-import com.example.flashcards_backend.model.Card;
 import com.example.flashcards_backend.service.CardHistoryService;
 import com.example.flashcards_backend.service.CardService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -130,44 +129,6 @@ public class CardController {
         return ResponseEntity.noContent().build();
     }
 
-    @Operation(summary = "Get cards by minimum average rating",
-            description = "Returns cards with an average rating above a threshold.")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Successful operation",
-                    content = @Content(mediaType = "application/json",
-                            schema = @Schema(implementation = CardResponse[].class))),
-            @ApiResponse(responseCode = "400", description = "Bad request, invalid rating threshold",
-                    content = @Content(mediaType = "application/json"))
-    })
-    @GetMapping("/minAvgRating")
-    public ResponseEntity<List<CardResponse>> getByMinAvgRating(
-            @RequestParam @Min(1) @Max(5) double threshold,
-            @RequestParam(name = "shuffled", defaultValue = "false") boolean shuffled
-    ) {
-        var cards = cardService.getCardsByMinAvgRating(threshold, shuffled);
-
-        return ResponseEntity.ok(generateResponse(cards));
-    }
-
-    @Operation(summary = "Get cards by maximum average rating",
-            description = "Returns cards with an average rating below a threshold.")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Successful operation",
-                    content = @Content(mediaType = "application/json",
-                            schema = @Schema(implementation = CardResponse[].class))),
-            @ApiResponse(responseCode = "400", description = "Bad request, invalid rating threshold",
-                    content = @Content(mediaType = "application/json"))
-    })
-    @GetMapping("/maxAvgRating")
-    public ResponseEntity<List<CardResponse>> getByMaxAvgRating(
-            @RequestParam @Min(1) @Max(5) double threshold,
-            @RequestParam(name = "shuffled", defaultValue = "false") boolean shuffled
-    ) {
-        var cards = cardService.getCardsByMaxAvgRating(threshold, shuffled);
-
-        return ResponseEntity.ok(generateResponse(cards));
-    }
-
     @Operation(summary = "Delete cards", description = "Deletes cards by their IDs.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "204", description = "Card(s) deleted",
@@ -196,15 +157,6 @@ public class CardController {
     public ResponseEntity<CardResponse> updateCardHints(@RequestBody HintRequest request, @PathVariable Long id) {
         CardResponse response = cardService.setHints(request, id);
         return ResponseEntity.ok(response);
-    }
-
-    /* Helpers */
-
-    private static List<CardResponse> generateResponse(List<Card> cards) {
-        return cards
-                .stream()
-                .map(CardResponse::fromEntity)
-                .toList();
     }
 
 }
