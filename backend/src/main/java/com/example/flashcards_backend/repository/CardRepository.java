@@ -75,4 +75,18 @@ public interface CardRepository extends JpaRepository<Card, Long> {
     void deleteDeckAssociationsByCardIds(@Param("cardIds") List<Long> cardIds);
 
     boolean existsByFrontAndBackAndSubjectId(String front, String back, Long subjectId);
+
+    @Query("""
+            SELECT COUNT(c)
+            FROM Card c
+            LEFT JOIN CardHistory ch ON ch.card = c
+            WHERE c.user.id = :userId
+              AND (ch IS NULL OR ch.lastViewed IS NULL)
+            """)
+    Long countByLastViewedIsNullOrZeroAndUserId(@Param("userId") UUID userId);
+
+    default Long countUnviewedByUserId(UUID userId) {
+        return countByLastViewedIsNullOrZeroAndUserId(userId);
+    }
+
 }
