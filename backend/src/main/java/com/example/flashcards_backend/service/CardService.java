@@ -95,21 +95,20 @@ public class CardService {
             throw new IllegalArgumentException("No card requests provided");
         }
 
-        Set<Long> subjectIds = enforceSingleSubjectId(requests);
-
-        Long subjectId = subjectIds.iterator().next();
+        Long subjectId = enforceSingleSubjectId(requests).iterator().next();
         Subject subject = subjectService.findById(subjectId);
 
-        List<CreateCardResponse> responses = new ArrayList<>();
-        List<Card> toPersist = new ArrayList<>();
+        // Track which were existing vs new
+        record Pending(CardRequest req, boolean existed, Card card) {}
+        List<Pending> pending = new ArrayList<>();
 
         Map<String, Deck> decksByName = fetchOrCreateDecks(requests, subjectId);
 
-        // First pass: build cards or mark as existing
+        // First pass: check for existing
         for (CardRequest req : requests) {
             Optional<Card> existing = getExistingCard(req);
             if (existing.isPresent()) {
-                responses.add(mapCardToCreateCardResponse(existing.get(), true));
+                pending.add(new Pending(req, true, existing.get()));
             } else {
                 Card card = Card.builder()
                         .front(req.front())
@@ -119,42 +118,35 @@ public class CardService {
                         .subject(subject)
                         .user(subject.getUser())
                         .build();
-                toPersist.add(card);
-                responses.add(mapCardToCreateCardResponse(card, false));
+                pending.add(new Pending(req, false, card));
             }
         }
 
-        // Persist all new cards in bulk
-        cardRepository.saveAllAndFlush(toPersist);
+        // Persist new cards
+        List<Card> newCards = pending.stream()
+                .filter(p -> !p.existed)
+                .map(p -> p.card)
+                .toList();
+        cardRepository.saveAllAndFlush(newCards);
 
-        // Link decks using the pre‑fetched map
-        for (int i = 0; i < requests.size(); i++) {
-            CardRequest req = requests.get(i);
-            CreateCardResponse resp = responses.get(i);
-
-            if (!resp.alreadyExisted()
-                    && req.deckNames() != null
-                    && !req.deckNames().isEmpty()) {
-
-                Card card = toPersist.stream()
-                        .filter(c -> c.getFront().equals(req.front()) && c.getBack().equals(req.back()))
-                        .findFirst()
-                        .orElseThrow();
-
-                Set<Deck> resolvedDecks = req.deckNames().stream()
+        // Link decks
+        for (Pending p : pending) {
+            if (!p.existed && p.req.deckNames() != null && !p.req.deckNames().isEmpty()) {
+                Set<Deck> resolved = p.req.deckNames().stream()
                         .map(decksByName::get)
                         .filter(Objects::nonNull)
                         .collect(Collectors.toSet());
-
-                card.addDecks(resolvedDecks);
+                p.card.addDecks(resolved);
             }
         }
+        cardRepository.saveAllAndFlush(newCards);
 
-        // Persist the deck links in bulk
-        cardRepository.saveAllAndFlush(toPersist);
-
-        return responses;
+        // Map at the very end (entities still managed here)
+        return pending.stream()
+                .map(p -> mapCardToCreateCardResponse(p.card, p.existed))
+                .toList();
     }
+
 
     private Map<String, Deck> fetchOrCreateDecks(List<CardRequest> requests, Long subjectId) {
         // 1️⃣ Collect all deck names from *new* card requests
