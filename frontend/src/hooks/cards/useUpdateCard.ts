@@ -5,6 +5,9 @@ interface UpdateCardPayload {
   id: number;
   front: string;
   back: string;
+  hintFront?: string;
+  hintBack?: string;
+  subjectId: number;
   deckNames: string[];
 }
 
@@ -21,6 +24,11 @@ const useUpdateCard = (): UpdateCardResult => {
   const updateCard = async (data: UpdateCardPayload) => {
     setIsLoading(true);
     setError(null);
+
+    if (!data.subjectId || data.subjectId === 0) {
+      setError("No subject selected");
+      return;
+    }
 
     try {
       const response = await fetch(`${API_URL}/cards/${data.id}`, {

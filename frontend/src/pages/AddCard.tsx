@@ -71,9 +71,24 @@ const AddCard = () => {
       const deckNames = selectedDecks.map((d) => d.name);
 
       if (isEditing && cardToEdit) {
-        await updateCard({ id: cardToEdit.id, front, back, deckNames }); // new update hook
+        await updateCard({
+          id: cardToEdit.id,
+          front,
+          back,
+          hintFront: frontHint,
+          hintBack: backHint,
+          deckNames,
+          subjectId: selectedSubject?.id || 0,
+        }); // new update hook
       } else {
-        await createCard({ front, back, deckNames });
+        await createCard({
+          front,
+          back,
+          hintFront: frontHint,
+          hintBack: backHint,
+          deckNames,
+          subjectId: selectedSubject?.id || 0,
+        });
       }
 
       setShowToast(true);
