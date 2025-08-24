@@ -10,19 +10,21 @@ import java.util.stream.Collectors;
 import com.example.flashcards_backend.repository.CardDeckRowProjection;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import lombok.Builder;
 
+@Builder
 public record CardResponse(
-    @JsonProperty("id")         Long    id,
-    @JsonProperty("front")      String  front,
-    @JsonProperty("back")       String  back,
-    @JsonProperty("hintFront")  String  hintFront,
-    @JsonProperty("hintBack")   String  hintBack,
-    @JsonProperty("decks")      Set<DeckSummary> decks,
-    @JsonProperty("avgRating")  Double  avgRating,
-    @JsonProperty("viewCount")  Integer viewCount,
-    @JsonProperty("lastViewed") String  lastViewed,
-    @JsonProperty("lastRating") Integer lastRating,
-    @JsonProperty("subjectId")  Long    subjectId
+        @JsonProperty("id") Long id,
+        @JsonProperty("front") String front,
+        @JsonProperty("back") String back,
+        @JsonProperty("hintFront") String hintFront,
+        @JsonProperty("hintBack") String hintBack,
+        @JsonProperty("decks") Set<DeckSummary> decks,
+        @JsonProperty("avgRating") Double avgRating,
+        @JsonProperty("viewCount") Integer viewCount,
+        @JsonProperty("lastViewed") String lastViewed,
+        @JsonProperty("lastRating") Integer lastRating,
+        @JsonProperty("subjectId") Long subjectId
 ) {
 
     @JsonCreator
@@ -68,5 +70,14 @@ public record CardResponse(
                 cd.getLastRating(),
                 cd.getSubjectId()
         );
+    }
+
+    public static CardResponse fromEntity(CreateCardResponse ccr) {
+        return CardResponse.builder()
+                .id(ccr.id())
+                .front(ccr.front())
+                .back(ccr.back())
+                .decks(ccr.decks().stream().collect(Collectors.toSet()))
+                .build();
     }
 }

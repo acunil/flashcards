@@ -1,10 +1,13 @@
 front,back,decks
-die Milch,milk,
-der Oipa,grandfather,
-die Oma,grandmother,
-das Kind,child,
-der Lehrer,teacher,
-die Schülerin,student,
-das Haus,house,
-der Baum,tree,
-die Schwester,sister,
+die Milch,milk,Lucian Deck
+der Oipa,grandfather,Lucian Deck
+die Oma,grandmother,Lucian Deck
+das Kind,child,Lucian Deck
+der Lehrer,teacher,Lucian Deck
+die Schülerin,student,Lucian Deck
+das Haus,house,Lucian Deck;Another Deck
+der Baum,tree,Lucian Deck;Another Deck
+die Schwester,sister,Lucian Deck;Another Deck
+die Fisch,fish,Lucian Deck;Another Deck
+das Hamster,hamster,Lucian Deck;Another Deck
+holy based,holy holy,Oh Holy New Deck;Lucian Deck
