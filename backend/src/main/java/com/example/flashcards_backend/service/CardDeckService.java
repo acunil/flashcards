@@ -85,7 +85,7 @@ public class CardDeckService {
 
     @Transactional
     public void addDeckToCards(Long id, Set<Long> cardIds) {
-        Deck deck = deckRepository.findById(id).orElseThrow(() -> new DeckNotFoundException(id));
+        Deck deck = findDeckById(id);
         List<Card> cards = cardRepository.findAllById(cardIds);
         if (cards.stream().anyMatch(card -> !Objects.equals(card.getSubject().getId(), deck.getSubject().getId()))) {
             throw new IllegalArgumentException("Card ids must belong to the same subject as the deck");
@@ -93,9 +93,33 @@ public class CardDeckService {
         cards.forEach(card -> card.addDeck(deck));
     }
 
+    @Transactional
+    public void removeDeckFromCards(Long id, Set<Long> cardIds) {
+        Deck deck = findDeckById(id);
+        List<Card> cards = cardRepository.findAllById(cardIds);
+        HashSet<Long> cardIdsNotWithDeck = new HashSet<>();
+        cards.forEach(card -> {
+            if (!card.getDecks().contains(deck)) {
+                cardIdsNotWithDeck.add(card.getId());
+            } else {
+                card.removeDeck(deck);
+            }
+        });
+        if (!cardIdsNotWithDeck.isEmpty()) {
+            log.info("These cards did not have deck {} and were ignored: {}", id, cardIdsNotWithDeck);
+        }
+    }
+
+    private Deck findDeckById(Long id) {
+        return deckRepository.findById(id).orElseThrow(() -> new DeckNotFoundException(id));
+    }
+
+    /* Helpers */
+
     private Set<Card> getCards(CreateDeckRequest request) {
         return new HashSet<>(cardRepository.findAllById(request.cardIds()));
     }
+
 
 
 }

@@ -137,5 +137,18 @@ public class DeckController {
         return ResponseEntity.noContent().build();
     }
 
+    @Operation(summary = "Remove cards from a deck", description = "Removes cards from a deck by their ID.")
+    @ApiResponse(responseCode = "204", description = "Cards removed")
+    @ApiResponse(responseCode = "400", description = "Invalid request")
+    @ApiResponse(responseCode = "404", description = "Deck not found")
+    @PatchMapping("/{id}/remove-cards")
+    public ResponseEntity<Void> removeCardsFromDeck(
+            @PathVariable Long id,
+            @RequestBody Set<Long> cardIds
+    ) {
+        cardDeckService.removeDeckFromCards(id, cardIds);
+        return ResponseEntity.noContent().build();
+    }
+
     /* Helpers */
 }

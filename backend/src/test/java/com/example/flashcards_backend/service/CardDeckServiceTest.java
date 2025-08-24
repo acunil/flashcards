@@ -207,4 +207,33 @@ class CardDeckServiceTest {
         verify(cardRepository).findAllById(Set.of(1L, 2L));
     }
 
+    @Test
+    void testRemoveDeckFromCards() {
+        Card card1 = Card.builder().id(1L).subject(subject1).build();
+        Card card2 = Card.builder().id(2L).subject(subject1).build();
+        Set<Card> cards = Set.of(card1, card2);
+        when(cardRepository.findAllById(anySet())).thenReturn(cards.stream().toList());
+        when(deckRepository.findById(deck1.getId())).thenReturn(Optional.of(deck1));
+
+        cardDeckService.removeDeckFromCards(deck1.getId(), Set.of(1L, 2L));
+
+        verify(deckRepository).findById(deck1.getId());
+        verify(cardRepository).findAllById(anySet());
+
+        assertThat(card1.getDecks()).isEmpty();
+        assertThat(card2.getDecks()).isEmpty();
+    }
+
+    @Test
+    void testRemoveDeckFromCards_DeckNotFound() {
+        Long deckId = deck1.getId();
+        when(deckRepository.findById(deckId)).thenReturn(Optional.empty());
+        Set<Long> cardIds = Set.of(1L, 2L);
+        assertThatThrownBy(() -> cardDeckService.removeDeckFromCards(deckId, cardIds))
+                .isInstanceOf(DeckNotFoundException.class)
+                .hasMessageContaining("Deck not found with id: 1");
+        verify(deckRepository).findById(deckId);
+        verifyNoInteractions(cardRepository);
+    }
+
 }
