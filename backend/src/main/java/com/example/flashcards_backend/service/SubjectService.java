@@ -1,7 +1,6 @@
 package com.example.flashcards_backend.service;
 
-import com.example.flashcards_backend.dto.CreateSubjectRequest;
-import com.example.flashcards_backend.dto.SubjectDto;
+import com.example.flashcards_backend.dto.SubjectRequest;
 import com.example.flashcards_backend.exception.SubjectNotFoundException;
 import com.example.flashcards_backend.exception.UserNotFoundException;
 import com.example.flashcards_backend.model.Subject;
@@ -36,7 +35,7 @@ public class SubjectService {
     }
 
     @Transactional
-    public Subject create(CreateSubjectRequest request, UUID userId) {
+    public Subject create(SubjectRequest request, UUID userId) {
         User user = userRepository.findById(userId).orElseThrow(() -> new UserNotFoundException(userId));
         Subject subject = request.toEntity();
         subject.setUser(user);
@@ -44,7 +43,7 @@ public class SubjectService {
     }
 
     @Transactional
-    public Subject update(Long id, SubjectDto updated) {
+    public Subject update(Long id, SubjectRequest updated) {
         return repository.findById(id)
                 .map(subject -> {
                     subject.setName(updated.name());

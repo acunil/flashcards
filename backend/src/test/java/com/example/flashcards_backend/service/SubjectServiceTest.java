@@ -1,6 +1,6 @@
 package com.example.flashcards_backend.service;
-import com.example.flashcards_backend.dto.CreateSubjectRequest;
-import com.example.flashcards_backend.dto.SubjectDto;
+
+import com.example.flashcards_backend.dto.SubjectRequest;
 import com.example.flashcards_backend.exception.SubjectNotFoundException;
 import com.example.flashcards_backend.model.Subject;
 import com.example.flashcards_backend.model.User;
@@ -89,7 +89,7 @@ class SubjectServiceTest {
     void create() {
         when(userRepository.findById(USER_ID)).thenReturn(Optional.of(new User()));
 
-        CreateSubjectRequest request = CreateSubjectRequest.builder()
+        SubjectRequest request = SubjectRequest.builder()
                 .name("New Subject")
                 .build();
         Subject entity = request.toEntity();
@@ -105,11 +105,17 @@ class SubjectServiceTest {
 
     @Test
     void updateFound() {
-        SubjectDto updatedDto = new SubjectDto(1L, "Updated Subject", "Front", "Back", Subject.Side.FRONT, true);
+        SubjectRequest updateRequest = SubjectRequest.builder()
+                .name("Updated Subject")
+                .frontLabel("Front")
+                .backLabel("Back")
+                .defaultSide(Subject.Side.FRONT)
+                .displayDeckNames(true)
+                .build();
         when(subjectRepository.findById(1L)).thenReturn(Optional.of(subject1));
         when(subjectRepository.save(any(Subject.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-        Subject result = service.update(1L, updatedDto);
+        Subject result = service.update(1L, updateRequest);
 
         assertThat(result.getId()).isEqualTo(1L);
         assertThat(result.getName()).isEqualTo("Updated Subject");
@@ -122,10 +128,12 @@ class SubjectServiceTest {
 
     @Test
     void updateNotFound() {
-        SubjectDto updatedDto = new SubjectDto(1L, "Updated Subject", null, null, null, null);
+        SubjectRequest updateRequest = SubjectRequest.builder()
+                .name("Updated Subject")
+                .build();
         when(subjectRepository.findById(1L)).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> service.update(1L, updatedDto))
+        assertThatThrownBy(() -> service.update(1L, updateRequest))
                 .isInstanceOf(SubjectNotFoundException.class);
     }
 
