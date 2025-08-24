@@ -123,5 +123,19 @@ public class DeckController {
         );
     }
 
+
+    @Operation(summary = "Add cards to a deck", description = "Adds cards to a deck by their ID. Subject must match.")
+    @ApiResponse(responseCode = "204", description = "Cards added")
+    @ApiResponse(responseCode = "400", description = "Invalid request")
+    @ApiResponse(responseCode = "404", description = "Deck not found")
+    @PatchMapping("/{id}/add-cards")
+    public ResponseEntity<Void> addCardsToDeck(
+            @PathVariable Long id,
+            @RequestBody Set<Long> cardIds
+    ) {
+        cardDeckService.addDeckToCards(id, cardIds);
+        return ResponseEntity.noContent().build();
+    }
+
     /* Helpers */
 }
