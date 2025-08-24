@@ -5,9 +5,6 @@ import com.example.flashcards_backend.dto.CardResponse;
 import com.example.flashcards_backend.dto.CreateCardResponse;
 import com.example.flashcards_backend.dto.CsvUploadResponseDto;
 import com.example.flashcards_backend.exception.SubjectNotFoundException;
-import com.example.flashcards_backend.model.Card;
-import com.example.flashcards_backend.model.Deck;
-import com.example.flashcards_backend.model.Subject;
 import com.example.flashcards_backend.repository.CardRepository;
 import com.example.flashcards_backend.repository.SubjectRepository;
 import jakarta.transaction.Transactional;
@@ -33,7 +30,6 @@ public class CsvUploadServiceImpl implements CsvUploadService {
     public static final String DECKS = "decks";
     private final CardRepository cardRepository;
     private final SubjectRepository subjectRepository;
-    private final CardDeckService cardDeckService;
     private final CardService cardService;
 
     @Transactional
@@ -41,7 +37,8 @@ public class CsvUploadServiceImpl implements CsvUploadService {
     public CsvUploadResponseDto uploadCsv(InputStream csvStream, Long subjectId)
             throws IOException, SubjectNotFoundException {
 
-        Subject subject = fetchSubject(subjectId);
+        // Confirm subject exists
+        fetchSubject(subjectId);
 
         try (Reader reader = new BufferedReader(
                 new InputStreamReader(csvStream, StandardCharsets.UTF_8))) {
@@ -91,14 +88,8 @@ public class CsvUploadServiceImpl implements CsvUploadService {
     }
 
 
-    private Subject fetchSubject(Long subjectId) throws SubjectNotFoundException {
-        return subjectRepository.findByIdWithUserAndSubjects(subjectId).orElseThrow(() -> new SubjectNotFoundException(subjectId));
-    }
-
-    private static List<CardResponse> generateResponses(List<Card> cards) {
-        return cards.stream()
-            .map(CardResponse::fromEntity)
-            .toList();
+    private void fetchSubject(Long subjectId) throws SubjectNotFoundException {
+        subjectRepository.findByIdWithUserAndSubjects(subjectId).orElseThrow(() -> new SubjectNotFoundException(subjectId));
     }
 
     private List<CSVRecord> parseAllRecords(Reader reader) throws IOException {
@@ -137,25 +128,6 @@ public class CsvUploadServiceImpl implements CsvUploadService {
             .collect(Collectors.partitioningBy(r ->
                 cardRepository.existsByFrontAndBackAndSubjectId(r.get(FRONT), r.get(BACK), subjectId)
             ));
-    }
-
-    private List<Card> buildCards(List<CSVRecord> csvRecords, Subject subject, boolean processDecks) {
-        return csvRecords.stream()
-                .map(r -> {
-                    Set<String> deckNames = parseDecks(r.get(DECKS));
-                    Set<Deck> decks = processDecks && deckNames != null && !deckNames.isEmpty()
-                            ? cardDeckService.getOrCreateDecksByNamesAndSubjectId(deckNames, subject.getId())
-                            : Set.of();
-
-                    return Card.builder()
-                            .front(r.get(FRONT))
-                            .back(r.get(BACK))
-                            .subject(subject)
-                            .decks(decks)
-                            .user(subject.getUser())
-                            .build();
-                })
-                .collect(Collectors.toList());
     }
 
     private Set<String> parseDecks(String raw) {

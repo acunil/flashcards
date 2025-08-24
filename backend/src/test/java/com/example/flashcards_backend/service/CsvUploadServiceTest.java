@@ -41,7 +41,6 @@ class CsvUploadServiceTest {
     @InjectMocks
     private CsvUploadServiceImpl service;
 
-
     private LogCaptor logCaptor;
 
     private Subject subject;
@@ -75,8 +74,6 @@ class CsvUploadServiceTest {
         // Decks resolved up‑front
         Deck deck1 = Deck.builder().id(1L).name("d1").subject(subject).user(user).build();
         Deck deck2 = Deck.builder().id(2L).name("d2").subject(subject).user(user).build();
-//        when(cardDeckService.getOrCreateDecksByNamesAndSubjectId(Set.of("d1", "d2"), 1L))
-//                .thenReturn(Set.of(deck1, deck2));
 
         // Card that will be “saved” by cardService
         Card savedCard = Card.builder()
@@ -114,7 +111,7 @@ class CsvUploadServiceTest {
         assertThat(result.duplicates())
                 .containsExactly(CardResponse.builder().front("f4").back("b4").build());
 
-        // ✅ CardService invoked once with the correct request list
+        // CardService invoked once with the correct request list
         verify(cardService).createCards(argThat(reqs ->
                 reqs.size() == 1 &&
                         reqs.getFirst().deckNames().containsAll(Set.of("d1", "d2"))
