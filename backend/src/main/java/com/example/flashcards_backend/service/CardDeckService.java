@@ -27,9 +27,11 @@ import java.util.Set;
 public class CardDeckService {
     private final DeckRepository deckRepository;
     private final CardRepository cardRepository;
+    private final SubjectService subjectService;
 
     @Transactional
     public Set<Deck> getOrCreateDecksByNamesAndSubjectId(Set<String> names, Long subjectId) {
+        Subject subject = subjectService.findById(subjectId);
         Set<Deck> existingDecks = deckRepository.findByNameInAndSubjectId(names, subjectId);
         Set<String> existingNames = existingDecks.stream()
                 .map(Deck::getName)
@@ -42,7 +44,8 @@ public class CardDeckService {
             List<Deck> newDecks = newNames.stream()
                     .map(name -> Deck.builder()
                             .name(name)
-                            .subject(Subject.builder().id(subjectId).build())
+                            .subject(subject)
+                            .user(subject.getUser())
                             .build())
                     .collect(toList());
             deckRepository.saveAll(newDecks);

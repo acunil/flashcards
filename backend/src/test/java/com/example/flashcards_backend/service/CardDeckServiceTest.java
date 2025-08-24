@@ -5,6 +5,7 @@ import com.example.flashcards_backend.exception.DuplicateDeckNameException;
 import com.example.flashcards_backend.model.Card;
 import com.example.flashcards_backend.model.Deck;
 import com.example.flashcards_backend.model.Subject;
+import com.example.flashcards_backend.model.User;
 import com.example.flashcards_backend.repository.CardRepository;
 import com.example.flashcards_backend.repository.DeckRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -22,6 +23,7 @@ import static org.mockito.Mockito.*;
 
 import java.util.List;
 import java.util.Set;
+import java.util.UUID;
 
 @ExtendWith(SpringExtension.class)
 class CardDeckServiceTest {
@@ -35,14 +37,26 @@ class CardDeckServiceTest {
     @Mock
     private CardRepository cardRepository;
 
+    @Mock
+    private SubjectService subjectService;
+
     private Deck deck1;
     private Deck deck2;
+    private Subject subject1;
+    private User user;
 
     @BeforeEach
     void setUp() {
-        cardDeckService = new CardDeckService(deckRepository, cardRepository);
+        cardDeckService = new CardDeckService(deckRepository, cardRepository, subjectService);
         deck1 = Deck.builder().id(1L).name("Deck 1").build();
         deck2 = Deck.builder().id(2L).name("Deck 2").build();
+
+        user = User.builder().id(UUID.randomUUID()).username("me").build();
+        subject1 = Subject.builder().id(SUBJECT_ID).name("Subject 1").user(user).build();
+        deck1.setSubject(subject1);
+        deck2.setSubject(subject1);
+
+        when(subjectService.findById(SUBJECT_ID)).thenReturn(subject1);
     }
 
     @Test

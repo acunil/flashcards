@@ -132,6 +132,7 @@ public class Card {
         private Set<Deck> decks = new HashSet<>();
         private Set<CardHistory> cardHistories = new HashSet<>();
         private Subject subject;
+        private User user;
 
         public CardBuilder cardHistory(CardHistory cardHistory) {
             this.cardHistories.add(cardHistory);
@@ -147,6 +148,7 @@ public class Card {
             card.hintBack = this.hintBack;
             card.decks = this.decks;
             card.subject = this.subject;
+            card.user = this.user;
             for (CardHistory ch : this.cardHistories) {
                 card.addCardHistory(ch);
             }

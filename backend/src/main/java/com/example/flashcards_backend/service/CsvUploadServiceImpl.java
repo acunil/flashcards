@@ -43,16 +43,16 @@ public class CsvUploadServiceImpl implements CsvUploadService {
             List<CSVRecord> valid  = filterValid(all);
             logInvalid(all, valid);
 
-            Map<Boolean, List<CSVRecord>> byDup = partitionByDuplicate(valid);
+            Map<Boolean, List<CSVRecord>> byDup = partitionByDuplicate(valid, subjectId);
 
-            List<Card> duplicates = buildCards(byDup.get(true), subject);
-            List<Card> toSave = buildCards(byDup.get(false), subject);
+            List<Card> duplicates = buildCards(byDup.get(true), subject, false);
+            List<Card> toSave = buildCards(byDup.get(false), subject, true);
 
-            duplicates.forEach(d ->
-                log.info("Duplicate, skipping: front='{}', back='{}'", d.getFront(), d.getBack())
+            duplicates.forEach(dup ->
+                log.info("Duplicate, skipping: front='{}', back='{}'", dup.getFront(), dup.getBack())
             );
 
-            List<Card> saved = cardRepository.saveAll(toSave);
+            List<Card> saved = cardRepository.saveAllAndFlush(toSave);
             log.info("Found {} duplicates", duplicates.size());
             log.info("Saved {} new cards", saved.size());
 
@@ -67,7 +67,7 @@ public class CsvUploadServiceImpl implements CsvUploadService {
     }
 
     private Subject fetchSubject(Long subjectId) throws SubjectNotFoundException {
-        return subjectRepository.findById(subjectId).orElseThrow(() -> new SubjectNotFoundException(subjectId));
+        return subjectRepository.findByIdWithUserAndSubjects(subjectId).orElseThrow(() -> new SubjectNotFoundException(subjectId));
     }
 
     private static List<CardResponse> generateResponses(List<Card> cards) {
@@ -107,24 +107,27 @@ public class CsvUploadServiceImpl implements CsvUploadService {
             .forEach(r -> log.warn("Skipping invalid row: {}", r));
     }
 
-    private Map<Boolean, List<CSVRecord>> partitionByDuplicate(List<CSVRecord> rows) {
+    private Map<Boolean, List<CSVRecord>> partitionByDuplicate(List<CSVRecord> rows, Long subjectId) {
         return rows.stream()
             .collect(Collectors.partitioningBy(r ->
-                cardRepository.existsByFrontAndBack(r.get(FRONT), r.get(BACK))
+                cardRepository.existsByFrontAndBackAndSubjectId(r.get(FRONT), r.get(BACK), subjectId)
             ));
     }
 
-    private List<Card> buildCards(List<CSVRecord> csvRecords, Subject subject) {
+    private List<Card> buildCards(List<CSVRecord> csvRecords, Subject subject, boolean processDecks) {
         return csvRecords.stream()
                 .map(r -> {
                     Set<String> deckNames = parseDecks(r.get(DECKS));
-                    Set<Deck> decks = cardDeckService.getOrCreateDecksByNamesAndSubjectId(deckNames, subject.getId());
+                    Set<Deck> decks = processDecks && deckNames != null && !deckNames.isEmpty()
+                            ? cardDeckService.getOrCreateDecksByNamesAndSubjectId(deckNames, subject.getId())
+                            : Set.of();
 
                     return Card.builder()
                             .front(r.get(FRONT))
                             .back(r.get(BACK))
                             .subject(subject)
                             .decks(decks)
+                            .user(subject.getUser())
                             .build();
                 })
                 .collect(Collectors.toList());

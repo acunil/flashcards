@@ -1,0 +1,297 @@
+databaseChangeLog:
+
+  # --- USERS ---
+  - changeSet:
+      id: 001_create_app_user_table
+      author: lucian
+      changes:
+        - createTable:
+            tableName: app_user
+            ifNotExists: true
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: username
+                  type: varchar(255)
+                  constraints:
+                    unique: true
+                    nullable: false
+              - column:
+                  name: is_active
+                  type: boolean
+                  defaultValueBoolean: true
+        - createIndex:
+            indexName: idx_app_user_username
+            tableName: app_user
+            unique: true
+            columns:
+              - column:
+                  name: username
+
+  # --- SUBJECTS ---
+  - changeSet:
+      id: 002_create_subject_table
+      author: lucian
+      changes:
+        - createTable:
+            tableName: subject
+            ifNotExists: true
+            columns:
+              - column:
+                  name: id
+                  type: BIGSERIAL
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+              - column:
+                  name: name
+                  type: varchar(100)
+                  constraints:
+                    nullable: false
+                    unique: true
+              - column:
+                  name: front_label
+                  type: varchar(255)
+              - column:
+                  name: back_label
+                  type: varchar(255)
+              - column:
+                  name: default_side
+                  type: varchar(20)
+                  defaultValue: "FRONT"
+              - column:
+                  name: display_deck_names
+                  type: boolean
+                  defaultValueBoolean: false
+              - column:
+                  name: user_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_subject_user
+                    references: app_user(id)
+                    onDelete: CASCADE
+        - createIndex:
+            indexName: idx_subject_name
+            tableName: subject
+            columns:
+              - column:
+                  name: name
+        - createIndex:
+            indexName: idx_subject_user
+            tableName: subject
+            columns:
+              - column:
+                  name: user_id
+
+  # --- DECKS ---
+  - changeSet:
+      id: 003_create_deck_table
+      author: lucian
+      changes:
+        - createTable:
+            tableName: deck
+            ifNotExists: true
+            columns:
+              - column:
+                  name: id
+                  type: BIGSERIAL
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+              - column:
+                  name: name
+                  type: varchar(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: subject_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_deck_subject
+                    references: subject(id)
+                    onDelete: CASCADE
+              - column:
+                  name: user_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_deck_user
+                    references: app_user(id)
+                    onDelete: CASCADE
+        - createIndex:
+            indexName: idx_deck_subject
+            tableName: deck
+            columns:
+              - column:
+                  name: subject_id
+        - createIndex:
+            indexName: idx_deck_user
+            tableName: deck
+            columns:
+              - column:
+                  name: user_id
+        - createIndex:
+            indexName: idx_deck_name
+            tableName: deck
+            columns:
+              - column:
+                  name: name
+
+  # --- CARDS ---
+  - changeSet:
+      id: 004_create_card_table
+      author: lucian
+      changes:
+        - createTable:
+            tableName: card
+            ifNotExists: true
+            columns:
+              - column:
+                  name: id
+                  type: BIGSERIAL
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+              - column:
+                  name: front
+                  type: varchar(1000)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: back
+                  type: varchar(1000)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: hint_front
+                  type: varchar(100)
+              - column:
+                  name: hint_back
+                  type: varchar(100)
+              - column:
+                  name: subject_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_card_subject
+                    references: subject(id)
+                    onDelete: CASCADE
+              - column:
+                  name: user_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_card_user
+                    references: app_user(id)
+                    onDelete: CASCADE
+        - addUniqueConstraint:
+            tableName: card
+            columnNames: front, back
+            constraintName: uq_card_front_back
+        - createIndex:
+            indexName: idx_card_subject
+            tableName: card
+            columns:
+              - column:
+                  name: subject_id
+        - createIndex:
+            indexName: idx_card_user
+            tableName: card
+            columns:
+              - column:
+                  name: user_id
+
+  # --- CARD_HISTORY ---
+  - changeSet:
+      id: 005_create_card_history_table
+      author: lucian
+      changes:
+        - createTable:
+            tableName: card_history
+            ifNotExists: true
+            columns:
+              - column:
+                  name: id
+                  type: BIGSERIAL
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+              - column:
+                  name: card_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_card_history_card
+                    references: card(id)
+                    onDelete: CASCADE
+              - column:
+                  name: reviewed_at
+                  type: timestamp
+                  constraints:
+                    nullable: false
+              - column:
+                  name: result
+                  type: varchar(20)
+                  constraints:
+                    nullable: false
+        - createIndex:
+            indexName: idx_card_history_card
+            tableName: card_history
+            columns:
+              - column:
+                  name: card_id
+        - createIndex:
+            indexName: idx_card_history_reviewed_at
+            tableName: card_history
+            columns:
+              - column:
+                  name: reviewed_at
+
+  # --- CARD_DECK (join table) ---
+  - changeSet:
+      id: 006_create_card_deck_table
+      author: lucian
+      changes:
+        - createTable:
+            tableName: card_deck
+            ifNotExists: true
+            columns:
+              - column:
+                  name: card_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_carddeck_card
+                    references: card(id)
+                    onDelete: CASCADE
+              - column:
+                  name: deck_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_carddeck_deck
+                    references: deck(id)
+                    onDelete: CASCADE
+        - addPrimaryKey:
+            tableName: card_deck
+            columnNames: card_id, deck_id
+            constraintName: pk_card_deck
+        - createIndex:
+            indexName: idx_card_deck_card
+            tableName: card_deck
+            columns:
+              - column:
+                  name: card_id
+        - createIndex:
+            indexName: idx_card_deck_deck
+            tableName: card_deck
+            columns:
+              - column:
+                  name: deck_id
