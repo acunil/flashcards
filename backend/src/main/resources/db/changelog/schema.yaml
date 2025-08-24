@@ -233,7 +233,7 @@ databaseChangeLog:
                     onDelete: CASCADE
               - column:
                   name: avg_rating
-                  type: DOUBLE PRECISION
+                  type: numeric(2, 1)
                   constraints:
                     nullable: true
               - column:
