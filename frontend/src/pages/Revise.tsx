@@ -65,7 +65,11 @@ const Revise = ({ hardMode = false, deckId }: ReviseProps) => {
       <Header isRevising={true} />
       <main className="flex flex-col items-center">
         {loading && <p>Loading cards...</p>}
-        {error && <p className="text-red-600">{error}</p>}
+        {error && (
+          <div className="bg-white w-full max-w-screen-sm border-black border-2 p-3 rounded m-4 text-center">
+            <p>No cards found</p>
+          </div>
+        )}
         {!loading && !error && cards.length > 0 && (
           <>
             <div className="w-full overflow-hidden flex flex-col items-center">

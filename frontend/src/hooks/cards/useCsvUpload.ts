@@ -14,6 +14,8 @@ const useCsvUpload = () => {
     setLoading(true);
     setError(null);
 
+    console.log(subjectId);
+
     try {
       const formData = new FormData();
       formData.append("file", file);

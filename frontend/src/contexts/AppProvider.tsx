@@ -1,24 +1,35 @@
 import { useEffect, useState, useMemo } from "react";
 import { AppContext } from "./AppContext";
-import { useAllDecks } from "../hooks/decks";
+import useAllDecks from "../hooks/decks/useAllDecks";
 import type { Deck } from "../types/deck";
 import useCards from "../hooks/cards/useCards";
 import useAllSubjects from "../hooks/subjects/useAllSubjects";
 
 export const AppProvider = ({ children }: { children: React.ReactNode }) => {
   const { subjects: subjectsFromHook } = useAllSubjects();
-  const { decks: allDecksFromHook, fetchDecks } = useAllDecks();
-
-  // Local state
-  const [allDecks, setAllDecks] = useState<Deck[]>(allDecksFromHook);
   const [allSubjects, setAllSubjects] = useState(subjectsFromHook);
   const [selectedSubjectId, setSelectedSubjectId] = useState<number | null>(
     null
   );
 
+  // Fetch decks based on subjectId
+  const {
+    decks: allDecksFromHook,
+    fetchDecks,
+    loading: loadingDecks,
+    error: errorDecks,
+  } = useAllDecks(selectedSubjectId);
+
+  const [allDecks, setAllDecks] = useState<Deck[]>(allDecksFromHook);
+
   // Fetch cards for the selected subject
-  const { cards, setCards, loading, error, refetch } =
-    useCards(selectedSubjectId);
+  const {
+    cards,
+    setCards,
+    loading: loadingCards,
+    error: errorCards,
+    refetch,
+  } = useCards(selectedSubjectId);
 
   // Ensure first subject is selected by default
   useEffect(() => {
@@ -39,12 +50,6 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
       setCards([]); // no subject selected
     }
   }, [selectedSubjectId, refetch, setCards]);
-
-  // Filter decks by selectedSubjectId
-  const filteredDecks = useMemo<Deck[]>(() => {
-    if (!selectedSubjectId) return [];
-    return allDecks.filter((deck) => deck.subjectId === selectedSubjectId);
-  }, [allDecks, selectedSubjectId]);
 
   // Currently selected subject object
   const selectedSubject = useMemo(
@@ -73,14 +78,27 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
     );
   };
 
+  const refreshDecks = async () => {
+    if (selectedSubjectId !== null) {
+      await fetchDecks(selectedSubjectId);
+    }
+  };
+
+  const refreshCards = async () => {
+    if (selectedSubjectId !== null) {
+      await refetch(selectedSubjectId);
+    }
+  };
+
   return (
     <AppContext.Provider
       value={{
-        decks: filteredDecks,
+        decks: allDecks,
         cards,
-        loading,
-        error,
-        fetchDecks,
+        loading: loadingDecks || loadingCards,
+        error: errorDecks || errorCards,
+        fetchDecks: refreshDecks,
+        refetchCards: refreshCards,
         setDecks,
         setCards,
         subjects: allSubjects,

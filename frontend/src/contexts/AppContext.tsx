@@ -16,6 +16,7 @@ export type AppContextType = {
   selectedSubjectId: number | null;
   setSelectedSubjectId: React.Dispatch<React.SetStateAction<number | null>>;
   selectedSubject: Subject | null;
+  refetchCards: () => Promise<void>;
 };
 
 export const AppContext = createContext<AppContextType | undefined>(undefined);
