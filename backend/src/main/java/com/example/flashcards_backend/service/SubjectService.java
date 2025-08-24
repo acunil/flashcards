@@ -1,9 +1,13 @@
 package com.example.flashcards_backend.service;
 
+import com.example.flashcards_backend.dto.CreateSubjectRequest;
 import com.example.flashcards_backend.dto.SubjectDto;
 import com.example.flashcards_backend.exception.SubjectNotFoundException;
+import com.example.flashcards_backend.exception.UserNotFoundException;
 import com.example.flashcards_backend.model.Subject;
+import com.example.flashcards_backend.model.User;
 import com.example.flashcards_backend.repository.SubjectRepository;
+import com.example.flashcards_backend.repository.UserRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -16,6 +20,7 @@ import java.util.UUID;
 public class SubjectService {
 
     private final SubjectRepository repository;
+    private final UserRepository userRepository;
 
     public List<Subject> findAll() {
         return repository.findAll();
@@ -31,8 +36,11 @@ public class SubjectService {
     }
 
     @Transactional
-    public Subject create(SubjectDto subjectDto) {
-        return repository.save(subjectDto.toEntity());
+    public Subject create(CreateSubjectRequest request, UUID userId) {
+        User user = userRepository.findById(userId).orElseThrow(() -> new UserNotFoundException(userId));
+        Subject subject = request.toEntity();
+        subject.setUser(user);
+        return repository.save(subject);
     }
 
     @Transactional

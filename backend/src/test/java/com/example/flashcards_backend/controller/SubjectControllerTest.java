@@ -1,5 +1,6 @@
 package com.example.flashcards_backend.controller;
 
+import com.example.flashcards_backend.dto.CreateSubjectRequest;
 import com.example.flashcards_backend.dto.SubjectDto;
 import com.example.flashcards_backend.exception.SubjectNotFoundException;
 import com.example.flashcards_backend.model.Subject;
@@ -83,14 +84,14 @@ class SubjectControllerTest {
                         .content("{\"name\":\"Subject 3\"}"))
                 .andExpect(status().isOk());
 
-        ArgumentCaptor<SubjectDto> captor = ArgumentCaptor.forClass(SubjectDto.class);
-        verify(subjectService).create(captor.capture());
+        ArgumentCaptor<CreateSubjectRequest> captor = ArgumentCaptor.forClass(CreateSubjectRequest.class);
+        verify(subjectService).create(captor.capture(), eq(USER_ID));
         assertThat(captor.getValue().name()).isEqualTo("Subject 3");
     }
 
     @Test
     void createSubjectInvalidInput() throws Exception {
-        doThrow(new IllegalArgumentException("Invalid input")).when(subjectService).create(any(SubjectDto.class));
+        doThrow(new IllegalArgumentException("Invalid input")).when(subjectService).create(any(CreateSubjectRequest.class), any(UUID.class));
 
         mockMvc.perform(post(ENDPOINT)
                         .param("userId", USER_ID.toString())
