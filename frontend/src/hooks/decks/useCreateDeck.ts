@@ -23,7 +23,7 @@ const useCreateDeck = (subjectId: number | null) => {
       const response = await fetch(`${API_URL}/decks?subjectId=${subjectId}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ names: [name] }),
+        body: JSON.stringify([name]),
       });
 
       if (!response.ok) {
@@ -31,8 +31,9 @@ const useCreateDeck = (subjectId: number | null) => {
         throw new Error(text || "Failed to create deck");
       }
 
-      const data: Deck = await response.json();
-      return data;
+      const data: Deck[] = await response.json();
+      // Return the first deck created
+      return data[0] || null;
     } catch (err: unknown) {
       if (err instanceof Error) setError(err.message);
       else setError("Unknown error occurred");

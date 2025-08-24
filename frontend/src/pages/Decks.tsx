@@ -17,7 +17,7 @@ const Decks = () => {
 
     const newDeck = await createDeck(name.trim());
     if (newDeck) {
-      setDecks((prev) => [...prev, newDeck]);
+      setDecks((prev) => [...prev, newDeck]); // update context
     }
   };
 
