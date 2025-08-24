@@ -1,6 +1,8 @@
 package com.example.flashcards_backend.service;
 
+import com.example.flashcards_backend.dto.CardRequest;
 import com.example.flashcards_backend.dto.CardResponse;
+import com.example.flashcards_backend.dto.CreateCardResponse;
 import com.example.flashcards_backend.dto.CsvUploadResponseDto;
 import com.example.flashcards_backend.exception.SubjectNotFoundException;
 import com.example.flashcards_backend.model.Card;
@@ -32,39 +34,62 @@ public class CsvUploadServiceImpl implements CsvUploadService {
     private final CardRepository cardRepository;
     private final SubjectRepository subjectRepository;
     private final CardDeckService cardDeckService;
+    private final CardService cardService;
 
     @Transactional
     @Override
-    public CsvUploadResponseDto uploadCsv(InputStream csvStream, Long subjectId) throws IOException, SubjectNotFoundException {
-        Subject subject = fetchSubject(subjectId);
-        try (Reader reader = new BufferedReader(new InputStreamReader(csvStream, StandardCharsets.UTF_8))) {
-            List<CSVRecord> all = parseAllRecords(reader);
+    public CsvUploadResponseDto uploadCsv(InputStream csvStream, Long subjectId)
+            throws IOException, SubjectNotFoundException {
 
+        Subject subject = fetchSubject(subjectId);
+
+        try (Reader reader = new BufferedReader(
+                new InputStreamReader(csvStream, StandardCharsets.UTF_8))) {
+
+            List<CSVRecord> all = parseAllRecords(reader);
             List<CSVRecord> valid  = filterValid(all);
             logInvalid(all, valid);
 
             Map<Boolean, List<CSVRecord>> byDup = partitionByDuplicate(valid, subjectId);
 
-            List<Card> duplicates = buildCards(byDup.get(true), subject, false);
-            List<Card> toSave = buildCards(byDup.get(false), subject, true);
+            List<CardResponse> duplicates = new ArrayList<>();
 
-            duplicates.forEach(dup ->
-                log.info("Duplicate, skipping: front='{}', back='{}'", dup.getFront(), dup.getBack())
-            );
+            // Handle duplicates (for reporting only)
+            for (CSVRecord r : byDup.get(true)) {
+                duplicates.add(CardResponse.builder()
+                                .front(r.get(FRONT))
+                                .back(r.get(BACK))
+                                .build()
+                );
+            }
 
-            List<Card> saved = cardRepository.saveAllAndFlush(toSave);
-            log.info("Found {} duplicates", duplicates.size());
-            log.info("Saved {} new cards", saved.size());
+            // Handle new cards
+            List<CardRequest> toSave = new ArrayList<>();
+            for (CSVRecord r : byDup.get(false)) {
+                Set<String> deckNames = parseDecks(r.get(DECKS));
+
+                CardRequest request = CardRequest.builder()
+                        .front(r.get(FRONT))
+                        .back(r.get(BACK))
+                        .subjectId(subjectId)
+                        .deckNames(deckNames)
+                        .build();
+                toSave.add(request);
+            }
+            List<CreateCardResponse> cardServiceCards = cardService.createCards(toSave);
+            List<CardResponse> saved = cardServiceCards.stream().map(CardResponse::fromEntity).toList();
 
             return CsvUploadResponseDto.builder()
-                .saved(generateResponses(saved))
-                .duplicates(generateResponses(duplicates))
-                .build();
+                    .saved(saved)
+                    .duplicates(duplicates)
+                    .build();
+
         } catch (IOException e) {
             log.error("CSV processing error", e);
             throw e;
         }
     }
+
 
     private Subject fetchSubject(Long subjectId) throws SubjectNotFoundException {
         return subjectRepository.findByIdWithUserAndSubjects(subjectId).orElseThrow(() -> new SubjectNotFoundException(subjectId));
