@@ -104,7 +104,7 @@ public class DeckController {
     }
 
     @Operation(summary = "Get or create decks by names",
-            description = "Returns or creates decks by their names, optionally by subject ID.")
+            description = "Returns or creates decks by their names by subject ID.")
     @ApiResponses(value = {
         @ApiResponse(responseCode = "200", description = "Successful operation",
             content = @Content(mediaType = "application/json",
@@ -112,8 +112,8 @@ public class DeckController {
     })
     @PostMapping
     public ResponseEntity<Set<DeckSummary>> upsertDecksByNamesAndSubjectId(
-            @RequestParam Set<@DeckName String> names,
-            @RequestParam(value = "subjectId", required = false) Long subjectId
+            @RequestBody Set<@DeckName String> names,
+            @RequestParam(value = "subjectId") Long subjectId
     ) {
         Set<Deck> decks = cardDeckService.getOrCreateDecksByNamesAndSubjectId(names, subjectId);
         return ResponseEntity.ok(

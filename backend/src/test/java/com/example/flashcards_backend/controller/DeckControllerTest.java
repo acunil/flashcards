@@ -168,25 +168,19 @@ class DeckControllerTest {
 
 
     @Test
-    void upsertDecksByNamesAndSubjectIdNull() throws Exception {
+    void upsertDecksByNamesAndSubjectIdNull_returns400() throws Exception {
         when(cardDeckService.getOrCreateDecksByNamesAndSubjectId(Set.of("Deck 1", "Deck 2"), null))
                 .thenReturn(Set.of(deck1, deck2));
 
-        String json = mockMvc.perform(post(ENDPOINT)
-                        .param("names", "Deck 1", "Deck 2"))
-                .andExpect(status().isOk())
-                .andReturn()
-                .getResponse()
-                .getContentAsString();
+        String content = "[\"Deck 1\", \"Deck 2\"]";
 
-        List<DeckSummary> summaries = readSummaries(json);
-
-        assertThat(summaries)
-                .extracting("id", "name")
-                .containsExactlyInAnyOrder(
-                        tuple(deck1.getId(), deck1.getName()),
-                        tuple(deck2.getId(), deck2.getName())
-                );
+        mockMvc.perform(post(ENDPOINT)
+                        .content(content)
+                        .contentType("application/json"))
+                .andExpect(status().isBadRequest())
+                .andExpect(result ->
+                        assertThat(result.getResponse().getErrorMessage())
+                                .isEqualTo("Required parameter 'subjectId' is not present."));
     }
 
     @Test
@@ -194,8 +188,11 @@ class DeckControllerTest {
         when(cardDeckService.getOrCreateDecksByNamesAndSubjectId(Set.of("Deck 1", "Deck 2"), 1L))
                 .thenReturn(Set.of(deck1, deck2));
 
+        String content = "[\"Deck 1\", \"Deck 2\"]";
+
         String json = mockMvc.perform(post(ENDPOINT)
-                        .param("names", "Deck 1", "Deck 2")
+                        .content(content)
+                        .contentType("application/json")
                         .param("subjectId", "1"))
                 .andExpect(status().isOk())
                 .andReturn()
@@ -216,7 +213,8 @@ class DeckControllerTest {
     /* Helpers */
 
     private List<DeckSummary> readSummaries(String json) throws JsonProcessingException {
-        return objectMapper.readValue(json, new TypeReference<>() {});
+        return objectMapper.readValue(json, new TypeReference<>() {
+        });
     }
 
 }
