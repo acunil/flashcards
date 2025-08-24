@@ -1,30 +1,34 @@
 import { useState } from "react";
 import { API_URL } from "../urls";
 
-interface UpdateSubjectPayload {
-  id: number;
+export interface SaveSubjectPayload {
+  id?: number;
+  name: string;
   frontLabel: string;
   backLabel: string;
   defaultSide?: string;
+  displayDeckNames?: boolean;
 }
 
 interface UpdateSubjectResult {
   isLoading: boolean;
   error: string | null;
-  updateSubject: (data: UpdateSubjectPayload) => Promise<void>;
+  updateSubject: (data: SaveSubjectPayload) => Promise<void>;
 }
 
 const useUpdateSubject = (): UpdateSubjectResult => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const updateSubject = async (data: UpdateSubjectPayload) => {
+  const updateSubject = async (data: SaveSubjectPayload) => {
     setIsLoading(true);
     setError(null);
+
     data.defaultSide = "FRONT";
+    data.displayDeckNames = false;
 
     try {
-      const response = await fetch(`${API_URL}/subjects/${data.id}`, {
+      const response = await fetch(`${API_URL}/subjects`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",

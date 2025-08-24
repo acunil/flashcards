@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import SubjectForm from "../components/subjectForm";
 import { useAppContext } from "../contexts";
 import useUpdateSubject from "../hooks/subjects/useUpdateSubject";
+import useCreateSubject from "../hooks/subjects/useCreateSubject";
 
 const SubjectsPage = () => {
   const navigate = useNavigate();
@@ -14,6 +15,7 @@ const SubjectsPage = () => {
   const [editSubjectId, setEditSubjectId] = useState<number | null>(null);
 
   const { updateSubject } = useUpdateSubject();
+  const { createSubject } = useCreateSubject();
 
   const handleSelectSubject = (id: number) => {
     setSelectedSubjectId(id);
@@ -33,6 +35,7 @@ const SubjectsPage = () => {
     try {
       await updateSubject({
         id,
+        name: updated.name,
         frontLabel: updated.frontLabel,
         backLabel: updated.backLabel,
       });
@@ -49,16 +52,25 @@ const SubjectsPage = () => {
     }
   };
 
-  const handleAddSubject = (newSub: {
+  // TODO - FIX ENDPOINT
+  const handleAddSubject = async (newSub: {
     name: string;
     frontLabel: string;
     backLabel: string;
   }) => {
-    const newId =
-      subjects.length > 0 ? Math.max(...subjects.map((s) => s.id)) + 1 : 1;
-    const subject = { id: newId, ...newSub };
-    setSubjects((prev) => [...prev, subject]);
-    console.log("Added subject:", subject);
+    try {
+      const created = await createSubject(newSub);
+
+      // // Add new subject to state
+      // setSubjects((prev) => [...prev, created]);
+
+      // // Auto-select the newly created subject
+      // setSelectedSubjectId(created.id);
+
+      console.log("Added subject:", created);
+    } catch (err) {
+      console.error("Failed to create subject:", err);
+    }
   };
 
   return (
