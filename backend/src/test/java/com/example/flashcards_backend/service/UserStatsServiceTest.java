@@ -5,6 +5,7 @@ import com.example.flashcards_backend.dto.UserStatsResponse;
 import com.example.flashcards_backend.model.Card;
 import com.example.flashcards_backend.model.Subject;
 import com.example.flashcards_backend.model.User;
+import com.example.flashcards_backend.repository.CardHistoryRepository;
 import com.example.flashcards_backend.repository.CardRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -29,6 +30,9 @@ class UserStatsServiceTest {
     @Mock
     CardRepository cardRepository;
 
+    @Mock
+    CardHistoryRepository cardHistoryRepository;
+
     UserStatsResponse userStatsResponse;
     Card hardestCard;
     Card mostViewedCard;
@@ -37,7 +41,7 @@ class UserStatsServiceTest {
 
     @BeforeEach
     void setUp() {
-        service = new UserStatsService(cardRepository);
+        service = new UserStatsService(cardRepository, cardHistoryRepository);
 
         subject = Subject.builder().id(1L).name("Subject 1").build();
         user = User.builder().id(USER_ID).build();
@@ -60,6 +64,7 @@ class UserStatsServiceTest {
                 .hardestCard(CardResponse.fromEntity(hardestCard))
                 .mostViewedCard(CardResponse.fromEntity(mostViewedCard))
                 .totalCards(100L)
+                .totalCardViews(250L)
                 .build();
     }
 
@@ -68,6 +73,7 @@ class UserStatsServiceTest {
         when(cardRepository.countByUserId(USER_ID)).thenReturn(100L);
         when(cardRepository.findHardestByUserId(USER_ID)).thenReturn(Optional.of(hardestCard));
         when(cardRepository.findMostViewedByUserId(USER_ID)).thenReturn(Optional.of(mostViewedCard));
+        when(cardHistoryRepository.totalViewCountByUserId(USER_ID)).thenReturn(250L);
 
         UserStatsResponse response = service.getForUserId(USER_ID);
         assertThat(response).isEqualTo(userStatsResponse);

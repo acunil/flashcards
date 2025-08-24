@@ -6,7 +6,8 @@ import lombok.Builder;
 public record UserStatsResponse(
         Long totalCards,
         CardResponse hardestCard,
-        CardResponse mostViewedCard
+        CardResponse mostViewedCard,
+        Long totalCardViews
 ) {
 
 }

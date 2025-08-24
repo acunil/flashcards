@@ -3,6 +3,7 @@ package com.example.flashcards_backend.service;
 import com.example.flashcards_backend.dto.CardResponse;
 import com.example.flashcards_backend.dto.UserStatsResponse;
 import com.example.flashcards_backend.model.Card;
+import com.example.flashcards_backend.repository.CardHistoryRepository;
 import com.example.flashcards_backend.repository.CardRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -16,11 +17,13 @@ import java.util.UUID;
 public class UserStatsService {
 
     private final CardRepository cardRepository;
+    private final CardHistoryRepository cardHistoryRepository;
 
     @Transactional(readOnly = true)
     public UserStatsResponse getForUserId(UUID userId) {
 
         Long totalCards = cardRepository.countByUserId(userId);
+        Long totalCardViews = cardHistoryRepository.totalViewCountByUserId(userId);
         Optional<Card> mostViewedCard = cardRepository.findMostViewedByUserId(userId);
         Optional<Card> hardestCard = cardRepository.findHardestByUserId(userId);
 
@@ -31,6 +34,7 @@ public class UserStatsService {
                 .totalCards(totalCards)
                 .hardestCard(hardestCardResponse)
                 .mostViewedCard(mostViewedCardResponse)
+                .totalCardViews(totalCardViews)
                 .build();
     }
 }
