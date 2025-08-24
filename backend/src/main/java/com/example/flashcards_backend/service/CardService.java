@@ -8,6 +8,7 @@ import com.example.flashcards_backend.model.Subject;
 import com.example.flashcards_backend.repository.CardDeckRowProjection;
 import com.example.flashcards_backend.repository.CardRepository;
 import lombok.AllArgsConstructor;
+import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.logging.log4j.util.Strings;
 import org.springframework.dao.DataAccessException;
@@ -90,25 +91,52 @@ public class CardService {
     }
 
     @Transactional
-    public List<CreateCardResponse> createCards(List<CardRequest> requests) {
-        if (requests == null || requests.isEmpty()) {
+    public List<CreateCardResponse> createCards(@NonNull List<CardRequest> requests) {
+        log.info("createCards called with {} requests", requests.size());
+        if (requests.isEmpty()) {
+            log.error("No card requests provided");
             throw new IllegalArgumentException("No card requests provided");
         }
 
-        Long subjectId = enforceSingleSubjectId(requests).iterator().next();
-        Subject subject = subjectService.findById(subjectId);
+        List<CardCreationTask> cardCreationTasks = processCardRequests(requests);
 
-        // Track which were existing vs new
-        record Pending(CardRequest req, boolean existed, Card card) {}
-        List<Pending> pending = new ArrayList<>();
+        List<Card> newCards = persistNewCards(cardCreationTasks);
 
-        Map<String, Deck> decksByName = fetchOrCreateDecks(requests, subjectId);
+        // Link decks
+        boolean decksNeedUpdating = false;
+        Map<String, Deck> decksByName = fetchOrCreateDecks(requests);
+        for (CardCreationTask p : cardCreationTasks) {
+            if (!p.existed && p.req.deckNames() != null && !p.req.deckNames().isEmpty()) {
+                Set<Deck> resolved = p.req.deckNames().stream()
+                        .map(decksByName::get)
+                        .filter(Objects::nonNull)
+                        .collect(Collectors.toSet());
+                p.card.addDecks(resolved);
+                decksNeedUpdating = true;
+            }
+        }
+        if (decksNeedUpdating) {
+            log.info("Updating decks");
+            cardRepository.saveAllAndFlush(newCards);
+        }
 
-        // First pass: check for existing
+        // Map at the very end (entities still managed here)
+        log.info("createCards complete: {} cards created. Returning results as CreateCardResponses...", cardCreationTasks.size());
+        return cardCreationTasks.stream()
+                .map(p -> mapCardToCreateCardResponse(p.card, p.existed))
+                .toList();
+    }
+
+    private List<CardCreationTask> processCardRequests(List<CardRequest> requests) {
+        Subject subject = subjectService.findById(enforceSingleSubjectId(requests).iterator().next());
+        List<CardCreationTask> cardCreationTasks = new ArrayList<>();
+        log.info("Processing requests into existing or new");
+
         for (CardRequest req : requests) {
             Optional<Card> existing = getExistingCard(req);
             if (existing.isPresent()) {
-                pending.add(new Pending(req, true, existing.get()));
+                log.info("Card '{} : {}'  already exists in subject '{}'", req.front(), req.back(), subject.getName());
+                cardCreationTasks.add(new CardCreationTask(req, true, existing.get()));
             } else {
                 Card card = Card.builder()
                         .front(req.front())
@@ -118,38 +146,28 @@ public class CardService {
                         .subject(subject)
                         .user(subject.getUser())
                         .build();
-                pending.add(new Pending(req, false, card));
+                cardCreationTasks.add(new CardCreationTask(req, false, card));
             }
         }
+        return cardCreationTasks;
+    }
 
+    private List<Card> persistNewCards(List<CardCreationTask> cardCreationTask) {
         // Persist new cards
-        List<Card> newCards = pending.stream()
+        List<Card> newCards = cardCreationTask.stream()
                 .filter(p -> !p.existed)
                 .map(p -> p.card)
                 .toList();
         cardRepository.saveAllAndFlush(newCards);
-
-        // Link decks
-        for (Pending p : pending) {
-            if (!p.existed && p.req.deckNames() != null && !p.req.deckNames().isEmpty()) {
-                Set<Deck> resolved = p.req.deckNames().stream()
-                        .map(decksByName::get)
-                        .filter(Objects::nonNull)
-                        .collect(Collectors.toSet());
-                p.card.addDecks(resolved);
-            }
-        }
-        cardRepository.saveAllAndFlush(newCards);
-
-        // Map at the very end (entities still managed here)
-        return pending.stream()
-                .map(p -> mapCardToCreateCardResponse(p.card, p.existed))
-                .toList();
+        log.info("Created {} new cards", newCards.size());
+        return newCards;
     }
 
 
-    private Map<String, Deck> fetchOrCreateDecks(List<CardRequest> requests, Long subjectId) {
+    private Map<String, Deck> fetchOrCreateDecks(List<CardRequest> requests) {
+        Long subjectId = requests.getFirst().subjectId();
         // 1️⃣ Collect all deck names from *new* card requests
+        log.info("Collating deck names from {} card requests", requests.size());
         Set<String> allDeckNames = requests.stream()
                 .map(CardRequest::deckNames)
                 .filter(Objects::nonNull)
@@ -162,19 +180,23 @@ public class CardService {
                 : cardDeckService.getOrCreateDecksByNamesAndSubjectId(allDeckNames, subjectId)
                 .stream()
                 .collect(Collectors.toMap(Deck::getName, d -> d));
+        log.info("Fetched {} decks from card selection: {}", decksByName.size(), decksByName.keySet());
         return decksByName;
     }
 
     private static Set<Long> enforceSingleSubjectId(List<CardRequest> requests) {
+        log.info("Enforcing single subjectId for {} card requests", requests.size());
         Set<Long> subjectIds = requests.stream()
                 .map(CardRequest::subjectId)
                 .collect(Collectors.toSet());
 
         if (subjectIds.size() != 1) {
+            log.error("Found {} subjectIds: {}", subjectIds.size(), subjectIds);
             throw new IllegalArgumentException(
                     "All CardRequests must share the same subjectId. Found: " + subjectIds
             );
         }
+        log.info("Found single subjectId: {}", subjectIds.iterator().next());
         return subjectIds;
     }
 
@@ -292,4 +314,9 @@ public class CardService {
                 .alreadyExisted(alreadyExisted)
                 .build();
     }
+
+
+    private record CardCreationTask(CardRequest req, boolean existed, Card card) {}
+
+
 }

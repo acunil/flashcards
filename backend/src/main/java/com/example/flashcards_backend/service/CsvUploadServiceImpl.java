@@ -2,9 +2,9 @@ package com.example.flashcards_backend.service;
 
 import com.example.flashcards_backend.dto.CardRequest;
 import com.example.flashcards_backend.dto.CardResponse;
-import com.example.flashcards_backend.dto.CreateCardResponse;
 import com.example.flashcards_backend.dto.CsvUploadResponseDto;
 import com.example.flashcards_backend.exception.SubjectNotFoundException;
+import com.example.flashcards_backend.model.Subject;
 import com.example.flashcards_backend.repository.CardRepository;
 import com.example.flashcards_backend.repository.SubjectRepository;
 import jakarta.transaction.Transactional;
@@ -13,6 +13,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
+import org.apache.logging.log4j.util.Strings;
 import org.springframework.stereotype.Service;
 
 import java.io.*;
@@ -37,45 +38,41 @@ public class CsvUploadServiceImpl implements CsvUploadService {
     public CsvUploadResponseDto uploadCsv(InputStream csvStream, Long subjectId)
             throws IOException, SubjectNotFoundException {
 
-        // Confirm subject exists
-        fetchSubject(subjectId);
+        log.info("Starting CSV upload for subject with id: {}", subjectId);
+
+        Subject subject = fetchSubject(subjectId);
+        log.info("Subject '{}' found", subject.getName());
 
         try (Reader reader = new BufferedReader(
                 new InputStreamReader(csvStream, StandardCharsets.UTF_8))) {
+            log.info("Parsing CSV with");
 
             List<CSVRecord> all = parseAllRecords(reader);
             List<CSVRecord> valid  = filterValid(all);
             logInvalid(all, valid);
 
-            Map<Boolean, List<CSVRecord>> byDup = partitionByDuplicate(valid, subjectId);
-
-            List<CardResponse> duplicates = new ArrayList<>();
-
-            // Handle duplicates (for reporting only)
-            for (CSVRecord r : byDup.get(true)) {
-                duplicates.add(CardResponse.builder()
-                                .front(r.get(FRONT))
-                                .back(r.get(BACK))
-                                .build()
-                );
+            if (valid.isEmpty()) {
+                log.info("No valid rows found, skipping upload");
+                return CsvUploadResponseDto.builder().build();
             }
 
-            // Handle new cards
-            List<CardRequest> toSave = new ArrayList<>();
-            for (CSVRecord r : byDup.get(false)) {
-                Set<String> deckNames = parseDecks(r.get(DECKS));
+            Map<Boolean, List<CSVRecord>> recordsGroupedByDuplication = partitionByDuplicate(valid, subjectId);
 
-                CardRequest request = CardRequest.builder()
-                        .front(r.get(FRONT))
-                        .back(r.get(BACK))
-                        .subjectId(subjectId)
-                        .deckNames(deckNames)
-                        .build();
-                toSave.add(request);
-            }
-            List<CreateCardResponse> cardServiceCards = cardService.createCards(toSave);
-            List<CardResponse> saved = cardServiceCards.stream().map(CardResponse::fromEntity).toList();
+            List<CardResponse> duplicates = buildDuplicateResponses(recordsGroupedByDuplication);
+            List<CardRequest> toSave = buildNewCardRequests(subjectId, recordsGroupedByDuplication);
+            log.info("Final report: Valid: {}, Invalid: {}, Duplicates: {}, To save: {}",
+                    valid.size(),
+                    all.size() - valid.size(),
+                    recordsGroupedByDuplication.get(true).size(),
+                    toSave.size());
 
+            log.info("Saving {} cards", toSave.size());
+            List<CardResponse> saved = cardService.createCards(toSave).stream()
+                    .map(CardResponse::fromEntity)
+                    .toList();
+            log.info("Cards saved");
+
+            log.info("CSV upload complete. Building response.");
             return CsvUploadResponseDto.builder()
                     .saved(saved)
                     .duplicates(duplicates)
@@ -87,9 +84,35 @@ public class CsvUploadServiceImpl implements CsvUploadService {
         }
     }
 
+    private List<CardRequest> buildNewCardRequests(Long subjectId, Map<Boolean, List<CSVRecord>> recordsGroupedByDuplication) {
+        // Handle new cards
+        List<CardRequest> toSave = new ArrayList<>();
+        for (CSVRecord r : recordsGroupedByDuplication.get(false)) {
+            Set<String> deckNames = parseDecks(r.get(DECKS));
 
-    private void fetchSubject(Long subjectId) throws SubjectNotFoundException {
-        subjectRepository.findByIdWithUserAndSubjects(subjectId).orElseThrow(() -> new SubjectNotFoundException(subjectId));
+            CardRequest request = CardRequest.builder()
+                    .front(r.get(FRONT))
+                    .back(r.get(BACK))
+                    .subjectId(subjectId)
+                    .deckNames(deckNames)
+                    .build();
+            toSave.add(request);
+        }
+        return toSave;
+    }
+
+    private static List<CardResponse> buildDuplicateResponses(Map<Boolean, List<CSVRecord>> recordsGroupedByDuplication) {
+        return recordsGroupedByDuplication.get(true).stream()
+                .map(r -> CardResponse.builder()
+                        .front(r.get(FRONT))
+                        .back(r.get(BACK))
+                        .build())
+                .toList();
+    }
+
+
+    private Subject fetchSubject(Long subjectId) throws SubjectNotFoundException {
+        return subjectRepository.findByIdWithUserAndSubjects(subjectId).orElseThrow(() -> new SubjectNotFoundException(subjectId));
     }
 
     private List<CSVRecord> parseAllRecords(Reader reader) throws IOException {
@@ -131,7 +154,7 @@ public class CsvUploadServiceImpl implements CsvUploadService {
     }
 
     private Set<String> parseDecks(String raw) {
-        if (raw == null || raw.isBlank()) return Set.of();
+        if (Strings.trimToNull(raw) == null) return Set.of();
         return Arrays.stream(raw.split(";"))
                 .map(String::trim)
                 .filter(s -> !s.isEmpty())
