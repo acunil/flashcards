@@ -50,7 +50,7 @@ const BulkUpload = () => {
   return (
     <div className="bg-green-200 min-h-screen">
       {/* ✅ Toast after upload */}
-      {!showToast && (
+      {showToast && (
         <div className="fixed top-15 left-1/2 -translate-x-1/2 bg-yellow-200 border-2 border-black px-4 py-2 rounded shadow transition-opacity z-50">
           Cards uploaded successfully!
         </div>
