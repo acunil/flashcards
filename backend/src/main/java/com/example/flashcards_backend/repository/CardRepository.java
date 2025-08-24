@@ -11,13 +11,6 @@ import java.util.Optional;
 import java.util.UUID;
 
 public interface CardRepository extends JpaRepository<Card, Long> {
-    boolean existsByFrontAndBack(String front, String back);
-
-    @Query("SELECT c FROM Card c JOIN CardHistory h ON h.card = c WHERE h.avgRating >= :threshold")
-    List<Card> findByMinAvgRating(@Param("threshold") double threshold);
-
-    @Query("SELECT c FROM Card c JOIN CardHistory h ON h.card = c WHERE h.avgRating <= :threshold")
-    List<Card> findByMaxAvgRating(@Param("threshold") double threshold);
 
     @Modifying
     @Query("DELETE FROM Card c WHERE c.id IN :ids")
