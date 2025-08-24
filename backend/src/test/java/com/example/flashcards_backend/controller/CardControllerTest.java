@@ -141,7 +141,7 @@ class CardControllerTest {
 
     @Test
     void rate_validIdAndRating_returnsNoContent() throws Exception {
-        mockMvc.perform(put(ENDPOINT + "/7/rate")
+        mockMvc.perform(patch(ENDPOINT + "/7/rate")
                 .param("rating", "5")
                 .contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isNoContent());
@@ -152,7 +152,7 @@ class CardControllerTest {
     void rate_missingCard_returnsNotFoundWithMessage() throws Exception {
         doThrow(new CardNotFoundException(55L))
             .when(cardHistoryService).recordRating(55L, 2);
-        mockMvc.perform(put(ENDPOINT + "/55/rate")
+        mockMvc.perform(patch(ENDPOINT + "/55/rate")
                 .param("rating", "2")
                 .contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isNotFound())
@@ -165,7 +165,7 @@ class CardControllerTest {
         DataAccessException dataAccessException = new DataAccessException("Test Database error", e) {};
         doThrow(dataAccessException)
             .when(cardHistoryService).recordRating(7L, 5);
-        mockMvc.perform(put(ENDPOINT + "/7/rate")
+        mockMvc.perform(patch(ENDPOINT + "/7/rate")
                 .param("rating", "5")
                 .contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isInternalServerError())
