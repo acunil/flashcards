@@ -4,6 +4,7 @@ import com.example.flashcards_backend.dto.*;
 import com.example.flashcards_backend.exception.CardNotFoundException;
 import com.example.flashcards_backend.model.Card;
 import com.example.flashcards_backend.model.Deck;
+import com.example.flashcards_backend.model.Subject;
 import com.example.flashcards_backend.repository.CardDeckRowProjection;
 import com.example.flashcards_backend.repository.CardRepository;
 import lombok.AllArgsConstructor;
@@ -77,8 +78,12 @@ public class CardService {
         Card cardToCreate = Card.builder()
                 .front(request.front())
                 .back(request.back())
+                .hintFront(request.hintFront())
+                .hintBack(request.hintBack())
                 .build();
-        cardToCreate.setSubject(subjectService.findById(request.subjectId()));
+        Subject subject = subjectService.findById(request.subjectId());
+        cardToCreate.setSubject(subject);
+        cardToCreate.setUser(subject.getUser());
         Card saved = cardRepository.saveAndFlush(cardToCreate);
         addDecksIfPresent(request, saved);
         return mapCardToCreateCardResponse(saved, false);
