@@ -116,7 +116,8 @@ const SubjectsPage = () => {
                         <div>
                           <p className="font-semibold">{subject.name}</p>
                           <p className="text-xs text-gray-500">
-                            {subject.frontLabel} | {subject.backLabel}
+                            {subject?.frontLabel || "Front"} |{" "}
+                            {subject?.backLabel || "Back"}
                           </p>
                         </div>
                       </div>

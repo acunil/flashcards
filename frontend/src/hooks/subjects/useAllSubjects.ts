@@ -22,24 +22,20 @@ const useAllSubjects = () => {
           `${API_URL}/subjects?userId=11111111-1111-1111-1111-111111111111`
         );
         if (!response.ok) {
-          throw new Error("Failed to fetch cards");
+          throw new Error("Failed to fetch subjects");
         }
         const data: Subject[] = await response.json();
         setSubjects(data);
         setSelectedSubject(data[0]);
       } catch (err: unknown) {
-        if (err instanceof Error) {
-          setError(err.message);
-        } else {
-          setError("Unknown error occurred");
-        }
+        setError(err instanceof Error ? err.message : "Unknown error occurred");
       } finally {
         setLoading(false);
       }
     };
 
     fetchSubjects();
-  });
+  }, []); // 👈 only run once
 
   return { subjects, selectedSubject, loading, error };
 };
