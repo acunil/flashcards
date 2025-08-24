@@ -52,7 +52,7 @@ const SubjectsPage = () => {
     }
   };
 
-  // TODO - FIX ENDPOINT
+  // TODO
   const handleAddSubject = async (newSub: {
     name: string;
     frontLabel: string;

@@ -23,12 +23,12 @@ const useUpdateSubject = (): UpdateSubjectResult => {
   const updateSubject = async (data: SaveSubjectPayload) => {
     setIsLoading(true);
     setError(null);
-
+    console.log(data);
     data.defaultSide = "FRONT";
     data.displayDeckNames = false;
 
     try {
-      const response = await fetch(`${API_URL}/subjects`, {
+      const response = await fetch(`${API_URL}/subjects/${data.id}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",

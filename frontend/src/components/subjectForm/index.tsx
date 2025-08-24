@@ -35,8 +35,13 @@ const SubjectForm = ({ subject, mode, onSave, onCancel }: SubjectFormProps) => {
     setValues((prev) => ({ ...prev, [field]: value }));
   };
 
-  const handleSubmit = () => {
-    if (!values.name || !values.frontLabel || !values.backLabel) return;
+  const handleSubmit = (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+
+    if (!values.name) {
+      return;
+    }
+
     onSave(values);
   };
 
