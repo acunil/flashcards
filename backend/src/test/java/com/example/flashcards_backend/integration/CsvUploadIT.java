@@ -89,9 +89,9 @@ class CsvUploadIT {
         body.add("file", resource);
 
         ResponseEntity<CsvUploadResponseDto> response = restTemplate.postForEntity(
-            uri,
-            new HttpEntity<>(body, createMultipartHeaders()),
-            CsvUploadResponseDto.class
+                uri,
+                new HttpEntity<>(body, createMultipartHeaders()),
+                CsvUploadResponseDto.class
         );
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);

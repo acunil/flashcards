@@ -68,27 +68,27 @@ class CardServiceTest {
         cardService = new CardService(cardRepository, cardHistoryService, cardDeckService, subjectService);
         subject = Subject.builder().name("Subject 1").id(1L).build();
         deck1 = Deck.builder()
-            .id(1L)
-            .name("Deck 1")
-            .subject(subject)
-            .build();
+                .id(1L)
+                .name("Deck 1")
+                .subject(subject)
+                .build();
         deck2 = Deck.builder()
-            .id(2L)
-            .name("Deck 2")
-            .subject(subject)
-            .build();
+                .id(2L)
+                .name("Deck 2")
+                .subject(subject)
+                .build();
         card1 = Card.builder()
-            .id(CARD_1_ID)
-            .front("Front 1")
-            .back("Back 1")
-            .subject(subject)
-            .build();
+                .id(CARD_1_ID)
+                .front("Front 1")
+                .back("Back 1")
+                .subject(subject)
+                .build();
         card2 = Card.builder()
-            .id(CARD_2_ID)
-            .front("Front 2")
-            .back("Back 2")
-            .subject(subject)
-            .build();
+                .id(CARD_2_ID)
+                .front("Front 2")
+                .back("Back 2")
+                .subject(subject)
+                .build();
         Card card3 = Card.builder()
                 .id(CARD_3_ID)
                 .front("Front 3")
@@ -151,8 +151,9 @@ class CardServiceTest {
         // verify saves twice (initial + after linking)
         verify(cardRepository, times(2)).saveAllAndFlush(anyList());
 
-        assertThat(responses).hasSize(2);
-        assertThat(responses).allSatisfy(r -> assertThat(r.alreadyExisted()).isFalse());
+        assertThat(responses)
+                .hasSize(2)
+                .allSatisfy(r -> assertThat(r.alreadyExisted()).isFalse());
     }
 
     @Test
@@ -251,9 +252,9 @@ class CardServiceTest {
     @Test
     void testGetCardById_throwsExceptionIfCardNotFound() {
         assertThatThrownBy(() -> cardService.getCardResponseById(99L))
-            .isInstanceOf(CardNotFoundException.class)
-            .extracting("message")
-            .isEqualTo("Card not found with id: 99");
+                .isInstanceOf(CardNotFoundException.class)
+                .extracting("message")
+                .isEqualTo("Card not found with id: 99");
     }
 
     @Test
@@ -298,7 +299,7 @@ class CardServiceTest {
         CardRequest request = CardRequest.of(front, back, SUBJECT_ID);
 
         // when
-        var  result = cardService.createCard(request);
+        var result = cardService.createCard(request);
 
         // then
         assertThat(result.alreadyExisted()).isTrue();
@@ -452,9 +453,9 @@ class CardServiceTest {
     void rate_Card_missingCard_throwsException() {
         doThrow(new CardNotFoundException(99L)).when(cardHistoryService).recordRating(99L, 4);
         assertThatThrownBy(() -> cardService.rateCard(99L, 4))
-            .isInstanceOf(CardNotFoundException.class)
-            .extracting("message")
-            .isEqualTo("Card not found with id: 99");
+                .isInstanceOf(CardNotFoundException.class)
+                .extracting("message")
+                .isEqualTo("Card not found with id: 99");
     }
 
     @Test
@@ -467,11 +468,11 @@ class CardServiceTest {
     @Test
     void getCardsByMinAvgRating_shuffledTrue_returnsCardsAboveThresholdEventuallyReordered() {
         when(cardRepository.findByMinAvgRating(THRESHOLD))
-            .thenReturn(originalCards);
+                .thenReturn(originalCards);
 
         assertEventuallyReorders(
-            () -> cardService.getCardsByMinAvgRating(THRESHOLD, true),
-            originalCards
+                () -> cardService.getCardsByMinAvgRating(THRESHOLD, true),
+                originalCards
         );
     }
 
@@ -479,7 +480,7 @@ class CardServiceTest {
     @Test
     void getCardsByMinAvgRating_shuffledFalse_alwaysSameOrder() {
         when(cardRepository.findByMinAvgRating(THRESHOLD))
-            .thenReturn(originalCards);
+                .thenReturn(originalCards);
 
         List<Card> result = cardService.getCardsByMinAvgRating(THRESHOLD, false);
         assertThat(result).isSameAs(originalCards);
@@ -495,18 +496,18 @@ class CardServiceTest {
     @Test
     void getCardsByMaxAvgRating_shuffledTrue_returnsCardsBelowThresholdEventuallyReordered() {
         when(cardRepository.findByMaxAvgRating(THRESHOLD))
-            .thenReturn(originalCards);
+                .thenReturn(originalCards);
 
         assertEventuallyReorders(
-            () -> cardService.getCardsByMaxAvgRating(THRESHOLD, true),
-            originalCards
+                () -> cardService.getCardsByMaxAvgRating(THRESHOLD, true),
+                originalCards
         );
     }
 
     @Test
     void getCardsByMaxAvgRating_shuffledFalse_alwaysSameOrder() {
         when(cardRepository.findByMaxAvgRating(THRESHOLD))
-            .thenReturn(originalCards);
+                .thenReturn(originalCards);
 
         List<Card> result = cardService.getCardsByMaxAvgRating(THRESHOLD, false);
         assertThat(result).isSameAs(originalCards);
@@ -530,9 +531,9 @@ class CardServiceTest {
         doThrow(new CardNotFoundException(ids))
                 .when(cardRepository).findAllById(ids);
         assertThatThrownBy(() -> cardService.deleteCards(ids))
-            .isInstanceOf(CardNotFoundException.class)
-            .extracting("message")
-            .isEqualTo("Cards not found with ids: [1, 3]");
+                .isInstanceOf(CardNotFoundException.class)
+                .extracting("message")
+                .isEqualTo("Cards not found with ids: [1, 3]");
     }
 
     @Test
@@ -581,9 +582,9 @@ class CardServiceTest {
 
         HintRequest request = new HintRequest(null, null);
         assertThatThrownBy(() -> cardService.setHints(request, CARD_1_ID))
-            .isInstanceOf(CardNotFoundException.class)
-            .extracting("message")
-            .isEqualTo("Card not found with id: " + CARD_1_ID);
+                .isInstanceOf(CardNotFoundException.class)
+                .extracting("message")
+                .isEqualTo("Card not found with id: " + CARD_1_ID);
 
         verify(cardRepository).findById(CARD_1_ID);
         verifyNoMoreInteractions(cardRepository);

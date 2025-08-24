@@ -48,7 +48,7 @@ public class CsvUploadServiceImpl implements CsvUploadService {
             log.info("Parsing CSV with");
 
             List<CSVRecord> all = parseAllRecords(reader);
-            List<CSVRecord> valid  = filterValid(all);
+            List<CSVRecord> valid = filterValid(all);
             logInvalid(all, valid);
 
             if (valid.isEmpty()) {
@@ -117,11 +117,11 @@ public class CsvUploadServiceImpl implements CsvUploadService {
 
     private List<CSVRecord> parseAllRecords(Reader reader) throws IOException {
         CSVFormat format = CSVFormat.DEFAULT.builder()
-            .setHeader()
-            .setSkipHeaderRecord(true)
-            .setIgnoreHeaderCase(true)
-            .setTrim(true)
-            .get();
+                .setHeader()
+                .setSkipHeaderRecord(true)
+                .setIgnoreHeaderCase(true)
+                .setTrim(true)
+                .get();
 
         try (CSVParser parser = CSVParser.parse(reader, format)) {
             return parser.getRecords();
@@ -130,27 +130,27 @@ public class CsvUploadServiceImpl implements CsvUploadService {
 
     private List<CSVRecord> filterValid(List<CSVRecord> rows) {
         return rows.stream()
-            .filter(r -> {
-                String f = r.get(FRONT);
-                String b = r.get(BACK);
-                return f != null && !f.isBlank()
-                    && b != null && !b.isBlank();
-            })
-            .toList();
+                .filter(r -> {
+                    String f = r.get(FRONT);
+                    String b = r.get(BACK);
+                    return f != null && !f.isBlank()
+                            && b != null && !b.isBlank();
+                })
+                .toList();
     }
 
     private void logInvalid(List<CSVRecord> all, List<CSVRecord> valid) {
         var validSet = new HashSet<>(valid);
         all.stream()
-            .filter(r -> !validSet.contains(r))
-            .forEach(r -> log.warn("Skipping invalid row: {}", r));
+                .filter(r -> !validSet.contains(r))
+                .forEach(r -> log.warn("Skipping invalid row: {}", r));
     }
 
     private Map<Boolean, List<CSVRecord>> partitionByDuplicate(List<CSVRecord> rows, Long subjectId) {
         return rows.stream()
-            .collect(Collectors.partitioningBy(r ->
-                cardRepository.existsByFrontAndBackAndSubjectId(r.get(FRONT), r.get(BACK), subjectId)
-            ));
+                .collect(Collectors.partitioningBy(r ->
+                        cardRepository.existsByFrontAndBackAndSubjectId(r.get(FRONT), r.get(BACK), subjectId)
+                ));
     }
 
     private Set<String> parseDecks(String raw) {

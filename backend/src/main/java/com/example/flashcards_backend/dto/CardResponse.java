@@ -14,17 +14,17 @@ import lombok.Builder;
 
 @Builder
 public record CardResponse(
-    @JsonProperty("id")         Long    id,
-    @JsonProperty("front")      String  front,
-    @JsonProperty("back")       String  back,
-    @JsonProperty("hintFront")  String  hintFront,
-    @JsonProperty("hintBack")   String  hintBack,
-    @JsonProperty("decks")      Set<DeckSummary> decks,
-    @JsonProperty("avgRating")  Double  avgRating,
-    @JsonProperty("viewCount")  Integer viewCount,
-    @JsonProperty("lastViewed") String  lastViewed,
-    @JsonProperty("lastRating") Integer lastRating,
-    @JsonProperty("subjectId")  Long    subjectId
+        @JsonProperty("id") Long id,
+        @JsonProperty("front") String front,
+        @JsonProperty("back") String back,
+        @JsonProperty("hintFront") String hintFront,
+        @JsonProperty("hintBack") String hintBack,
+        @JsonProperty("decks") Set<DeckSummary> decks,
+        @JsonProperty("avgRating") Double avgRating,
+        @JsonProperty("viewCount") Integer viewCount,
+        @JsonProperty("lastViewed") String lastViewed,
+        @JsonProperty("lastRating") Integer lastRating,
+        @JsonProperty("subjectId") Long subjectId
 ) {
 
     @JsonCreator

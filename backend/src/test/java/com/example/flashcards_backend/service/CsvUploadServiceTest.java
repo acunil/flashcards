@@ -59,12 +59,12 @@ class CsvUploadServiceTest {
         when(subjectRepository.findByIdWithUserAndSubjects(1L)).thenReturn(Optional.of(subject));
 
         String csv = """
-        front,back,decks
-        ,b1,
-        f2,,
-        f3,b3,d1;d2
-        f4,b4,
-        """;
+                front,back,decks
+                ,b1,
+                f2,,
+                f3,b3,d1;d2
+                f4,b4,
+                """;
         InputStream csvInputStream = new ByteArrayInputStream(csv.getBytes(StandardCharsets.UTF_8));
 
         // Duplicate detection
@@ -128,12 +128,12 @@ class CsvUploadServiceTest {
             }
         }) {
             assertThatThrownBy(() -> service.uploadCsv(badStream, 1L))
-                .isInstanceOf(IOException.class)
-                .hasMessageContaining("fail");
+                    .isInstanceOf(IOException.class)
+                    .hasMessageContaining("fail");
         }
 
         assertThat(logCaptor.getErrorLogs())
-            .singleElement()
-            .isEqualTo("CSV processing error");
+                .singleElement()
+                .isEqualTo("CSV processing error");
     }
 }

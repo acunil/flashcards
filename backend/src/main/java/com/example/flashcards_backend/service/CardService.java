@@ -316,7 +316,8 @@ public class CardService {
     }
 
 
-    private record CardCreationTask(CardRequest req, boolean existed, Card card) {}
+    private record CardCreationTask(CardRequest req, boolean existed, Card card) {
+    }
 
 
 }
