@@ -161,12 +161,12 @@ databaseChangeLog:
                     primaryKey: true
               - column:
                   name: front
-                  type: text
+                  type: varchar(1000)
                   constraints:
                     nullable: false
               - column:
                   name: back
-                  type: text
+                  type: varchar(1000)
                   constraints:
                     nullable: false
               - column:
