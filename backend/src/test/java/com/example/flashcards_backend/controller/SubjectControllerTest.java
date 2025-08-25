@@ -49,7 +49,7 @@ class SubjectControllerTest {
         user = User.builder().id(USER_ID).username("me").build();
         subject1 = Subject.builder().id(1L).name("Subject 1").build();
         subject2 = Subject.builder().id(2L).name("Subject 2").build();
-        when(currentUserService.getOrCreateCurrentUser(any())).thenReturn(user);
+        when(currentUserService.getCurrentUser(any())).thenReturn(user);
     }
 
     @Test

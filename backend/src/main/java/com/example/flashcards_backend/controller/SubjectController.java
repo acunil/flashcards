@@ -52,7 +52,11 @@ public class SubjectController {
                     content = @Content)
     })
     @GetMapping("/{id}")
-    public ResponseEntity<SubjectDto> getById(@PathVariable Long id) {
+    public ResponseEntity<SubjectDto> getById(
+            @PathVariable Long id,
+            @AuthenticationPrincipal Jwt jwt
+    ) {
+        currentUserService.getCurrentUser(jwt);
         return ResponseEntity.ok(SubjectDto.fromEntity(subjectService.findById(id)));
     }
 
@@ -66,7 +70,10 @@ public class SubjectController {
                     content = @Content)
     })
     @PostMapping
-    public ResponseEntity<SubjectDto> create(@RequestBody SubjectRequest subjectRequest, @AuthenticationPrincipal Jwt jwt) {
+    public ResponseEntity<SubjectDto> create(
+            @RequestBody SubjectRequest subjectRequest,
+            @AuthenticationPrincipal Jwt jwt
+    ) {
         User currentUser = currentUserService.getCurrentUser(jwt);
         Subject subject = subjectService.create(subjectRequest, currentUser.getId());
         return ResponseEntity.status(CREATED).body(SubjectDto.fromEntity(subject));
@@ -81,7 +88,12 @@ public class SubjectController {
                     content = @Content)
     })
     @PutMapping("/{id}")
-    public ResponseEntity<SubjectDto> update(@PathVariable Long id, @RequestBody SubjectRequest subjectRequest) {
+    public ResponseEntity<SubjectDto> update(
+            @PathVariable Long id,
+            @RequestBody SubjectRequest subjectRequest,
+            @AuthenticationPrincipal Jwt jwt
+    ) {
+        currentUserService.getCurrentUser(jwt);
         return ResponseEntity.ok(SubjectDto.fromEntity(subjectService.update(id, subjectRequest)));
     }
 
@@ -92,7 +104,11 @@ public class SubjectController {
                     content = @Content)
     })
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@PathVariable Long id) {
+    public ResponseEntity<Void> delete(
+            @PathVariable Long id,
+            @AuthenticationPrincipal Jwt jwt
+    ) {
+        currentUserService.getCurrentUser(jwt);
         subjectService.delete(id);
         return ResponseEntity.noContent().build();
     }
