@@ -21,6 +21,8 @@ const SubjectForm = ({ subject, mode, onSave, onCancel }: SubjectFormProps) => {
     backLabel: "",
   });
 
+  const [errors, setErrors] = useState<{ name?: string }>({});
+
   useEffect(() => {
     if (subject) {
       setValues({
@@ -33,12 +35,23 @@ const SubjectForm = ({ subject, mode, onSave, onCancel }: SubjectFormProps) => {
 
   const handleChange = (field: keyof typeof values, value: string) => {
     setValues((prev) => ({ ...prev, [field]: value }));
+
+    // clear error while typing
+    if (field === "name" && value.trim() !== "") {
+      setErrors((prev) => ({ ...prev, name: undefined }));
+    }
   };
 
   const handleSubmit = (e?: React.FormEvent) => {
     if (e) e.preventDefault();
 
-    if (!values.name) {
+    const newErrors: typeof errors = {};
+    if (!values.name.trim()) {
+      newErrors.name = "Name is required.";
+    }
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
       return;
     }
 
@@ -46,16 +59,23 @@ const SubjectForm = ({ subject, mode, onSave, onCancel }: SubjectFormProps) => {
   };
 
   return (
-    <div className="flex flex-col gap-2">
+    <form className="flex flex-col gap-2" onSubmit={handleSubmit}>
       <div className="flex flex-col mb-2">
-        <label className="text-xs">Name</label>
+        <label className="text-xs">
+          Name <span className="text-red-500">*</span>
+        </label>
         <input
           type="text"
           value={values.name}
           onChange={(e) => handleChange("name", e.target.value)}
-          className="border p-1 rounded text-sm border-gray-500"
+          className={`border p-1 rounded text-sm ${
+            errors.name ? "border-red-500" : "border-gray-500"
+          }`}
           placeholder="Enter text..."
         />
+        {errors.name && (
+          <span className="text-xs text-red-500 mt-1">{errors.name}</span>
+        )}
       </div>
       <div className="flex gap-3">
         <div className="flex flex-col w-full">
@@ -83,6 +103,7 @@ const SubjectForm = ({ subject, mode, onSave, onCancel }: SubjectFormProps) => {
       <div className="flex justify-end gap-2 mt-2">
         {onCancel && (
           <button
+            type="button"
             onClick={onCancel}
             className="px-3 py-1 border-2 cursor-pointer text-sm rounded hover:bg-gray-100"
           >
@@ -90,14 +111,14 @@ const SubjectForm = ({ subject, mode, onSave, onCancel }: SubjectFormProps) => {
           </button>
         )}
         <button
-          onClick={handleSubmit}
-          className={`flex items-center gap-1 px-3 py-1 border-2 border-black rounded text-sm ${"bg-green-200 hover:bg-green-300 hover:cursor-pointer"}`}
+          type="submit"
+          className="flex items-center gap-1 px-3 py-1 border-2 border-black rounded text-sm bg-green-200 hover:bg-green-300 hover:cursor-pointer"
         >
           {mode === "edit" ? <Check size={16} /> : <Plus size={16} />}
           {mode === "edit" ? "Save" : "Add"}
         </button>
       </div>
-    </div>
+    </form>
   );
 };
 
