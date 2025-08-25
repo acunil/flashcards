@@ -19,4 +19,6 @@ public interface UserRepository extends JpaRepository<User, Long> {
             FROM User u
             """)
     List<UserDto> findAllUsersAsDtos();
+
+    Optional<User> findByAuth0Id(String auth0Id);
 }
