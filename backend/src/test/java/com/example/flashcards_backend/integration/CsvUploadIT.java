@@ -7,7 +7,6 @@ import com.example.flashcards_backend.repository.CardRepository;
 import com.example.flashcards_backend.repository.DeckRepository;
 import com.example.flashcards_backend.repository.SubjectRepository;
 import com.example.flashcards_backend.repository.UserRepository;
-import com.example.flashcards_backend.service.CurrentUserService;
 import config.TestSecurityConfig;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -54,9 +53,6 @@ class CsvUploadIT {
     @Autowired
     private DeckRepository deckRepository;
 
-    @Autowired
-    private CurrentUserService currentUserService;
-
     @BeforeEach
     void setUp() {
         clearDatabase();
@@ -64,7 +60,6 @@ class CsvUploadIT {
         User testUser = User.builder()
                 .username("testuser")
                 .id(ID)
-                .auth0Id("auth0|test-user-id")
                 .build();
 
         Subject subject = Subject.builder()
