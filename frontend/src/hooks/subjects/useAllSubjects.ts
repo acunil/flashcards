@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { API_URL } from "../urls";
 import type { Subject } from "../../types/subject";
+import { useAuth0 } from "@auth0/auth0-react";
 
 const useAllSubjects = () => {
   const [subjects, setSubjects] = useState<Subject[]>([]);
@@ -10,6 +11,7 @@ const useAllSubjects = () => {
   const [selectedSubject, setSelectedSubject] = useState<Subject | undefined>(
     undefined
   );
+  const { getAccessTokenSilently } = useAuth0();
 
   useEffect(() => {
     const fetchSubjects = async () => {
@@ -18,8 +20,15 @@ const useAllSubjects = () => {
 
       try {
         setLoading(true);
+        const token = await getAccessTokenSilently();
         const response = await fetch(
-          `${API_URL}/subjects?userId=11111111-1111-1111-1111-111111111111`
+          `${API_URL}/subjects?userId=22222222-2222-2222-2222-222222222225`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+            },
+          }
         );
         if (!response.ok) {
           throw new Error("Failed to fetch subjects");
