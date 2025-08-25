@@ -40,6 +40,10 @@ export const useAuthFetch = () => {
 
     if (!response.ok)
       throw new Error(`Request failed with status ${response.status}`);
+
+    if (response.status === 204) {
+      return;
+    }
     return response.json();
   };
 

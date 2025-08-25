@@ -1,21 +1,24 @@
 import { API_URL } from "../urls";
 import { useAppContext } from "../../contexts";
+import { useAuthFetch } from "../../utils/authFetch";
 
 const useDeleteCards = () => {
   const { cards, setCards } = useAppContext();
+  const { authFetch } = useAuthFetch();
 
   const deleteCards = async (cardIds: number[]) => {
     try {
-      const res = await fetch(`${API_URL}/cards`, {
+      const result = await authFetch(`${API_URL}/cards`, {
         method: "DELETE",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(cardIds),
       });
 
-      if (!res.ok) throw new Error(`Server error: ${res.status}`);
+      if (result === undefined) {
+        // User was likely redirected to login
+        return;
+      }
 
       setCards(cards.filter((card) => !cardIds.includes(card.id)));
-
       console.log("Delete successful");
     } catch (error) {
       console.error("Failed to delete cards", error);

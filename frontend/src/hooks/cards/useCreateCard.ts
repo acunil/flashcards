@@ -42,7 +42,7 @@ const useCreateCard = () => {
       } else {
         setError("Unknown error occurred");
       }
-      throw err; // propagate error if caller wants to handle it
+      throw err;
     } finally {
       setCreating(false);
     }

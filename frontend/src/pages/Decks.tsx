@@ -43,9 +43,8 @@ const Decks = () => {
           </div>
 
           {(loading || creating) && <DeckListSkeleton />}
-          {decks.length === 0 && <p className="text-center">No decks found</p>}
 
-          {!loading && !creating && decks.length > 0 && (
+          {!loading && !creating && (
             <DeckList decks={decks} onAddDeck={handleAddDeck} />
           )}
         </div>

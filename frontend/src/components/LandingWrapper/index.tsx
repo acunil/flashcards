@@ -10,6 +10,8 @@ const LandingWrapper = () => {
   const { subjects, loading, error } = useAppContext();
 
   useEffect(() => {
+    if (loading) return;
+
     if (subjects.length === 0) {
       navigate("/subjects");
     } else {

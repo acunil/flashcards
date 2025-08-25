@@ -1,23 +1,36 @@
 import { useEffect, useState } from "react";
 import type { Deck } from "../../types/deck";
 import { API_URL } from "../urls";
+import { useAuthFetch } from "../../utils/authFetch";
 
 const useDecksByCardId = (cardId: number) => {
   const [decks, setDecks] = useState<Deck[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const { authFetch } = useAuthFetch();
 
   useEffect(() => {
-    if (!cardId) return;
+    if (!cardId) {
+      setDecks([]);
+      setLoading(false);
+      return;
+    }
 
     const fetchDecks = async () => {
       try {
         setLoading(true);
-        const response = await fetch(`${API_URL}/decks/card/${cardId}`);
-        if (!response.ok) {
-          throw new Error("Failed to fetch decks by card ID");
+        setError(null);
+
+        const data: Deck[] | undefined = await authFetch(
+          `${API_URL}/decks/card/${cardId}`
+        );
+
+        if (!data) {
+          // User was likely redirected to login
+          setDecks([]);
+          return;
         }
-        const data: Deck[] = await response.json();
+
         setDecks(data);
       } catch (err: unknown) {
         if (err instanceof Error) setError(err.message);
@@ -28,7 +41,7 @@ const useDecksByCardId = (cardId: number) => {
     };
 
     fetchDecks();
-  }, [cardId]);
+  }, [cardId, authFetch]);
 
   return { decks, loading, error };
 };

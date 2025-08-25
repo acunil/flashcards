@@ -1,21 +1,26 @@
 import { useState } from "react";
 import { API_URL } from "../urls";
+import { useAuthFetch } from "../../utils/authFetch";
 
 const useDeleteDeck = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const { authFetch } = useAuthFetch();
 
   const deleteDeck = async (id: number) => {
     setLoading(true);
     setError(null);
 
     try {
-      const response = await fetch(`${API_URL}/decks/${id}`, {
+      const result = await authFetch(`${API_URL}/decks/${id}`, {
         method: "DELETE",
       });
-      if (!response.ok) {
-        throw new Error("Failed to delete deck");
+
+      if (result === undefined) {
+        // User was likely redirected to login
+        return false;
       }
+
       return true;
     } catch (err: unknown) {
       if (err instanceof Error) setError(err.message);

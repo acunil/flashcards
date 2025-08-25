@@ -1,4 +1,4 @@
-import { CaretLeft, PencilSimple } from "phosphor-react";
+import { CaretLeft, PencilSimple, Trash } from "phosphor-react";
 import Header from "../components/header";
 import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
@@ -6,6 +6,8 @@ import SubjectForm from "../components/subjectForm";
 import { useAppContext } from "../contexts";
 import useUpdateSubject from "../hooks/subjects/useUpdateSubject";
 import useCreateSubject from "../hooks/subjects/useCreateSubject";
+import useDeleteSubject from "../hooks/subjects/useDeleteSubject";
+import type { Subject } from "../types/subject";
 
 const SubjectsPage = () => {
   const navigate = useNavigate();
@@ -16,13 +18,13 @@ const SubjectsPage = () => {
 
   const { updateSubject } = useUpdateSubject();
   const { createSubject } = useCreateSubject();
+  const { deleteSubject } = useDeleteSubject();
 
   const handleSelectSubject = (id: number) => {
     setSelectedSubjectId(id);
   };
 
   useEffect(() => {
-    // If no subject is selected and there are subjects, select the first one
     if (subjects.length > 0 && !selectedSubjectId) {
       setSelectedSubjectId(subjects[0].id);
     }
@@ -40,10 +42,16 @@ const SubjectsPage = () => {
         backLabel: updated.backLabel,
       });
 
-      // Update local state after successful API call
-      setSubjects((prev) =>
-        prev.map((s) => (s.id === id ? { ...s, ...updated } : s))
-      );
+      // Optimistically update global state with a full Subject
+      setSubjects((prev) => {
+        const exists = prev.some((s) => s.id === id);
+        if (exists) {
+          return prev.map((s) => (s.id === id ? { ...s, ...updated } : s));
+        }
+        // Insert new subject with valid id + updated fields
+        const newSubject: Subject = { id, ...updated };
+        return [...prev, newSubject];
+      });
 
       setEditSubjectId(null);
       console.log("Saved subject:", id, updated);
@@ -52,7 +60,6 @@ const SubjectsPage = () => {
     }
   };
 
-  // TODO
   const handleAddSubject = async (newSub: {
     name: string;
     frontLabel: string;
@@ -61,15 +68,42 @@ const SubjectsPage = () => {
     try {
       const created = await createSubject(newSub);
 
-      // // Add new subject to state
-      // setSubjects((prev) => [...prev, created]);
+      if (created && created.id) {
+        // Optimistically add new subject
+        setSubjects((prev) => [...prev, created]);
 
-      // // Auto-select the newly created subject
-      // setSelectedSubjectId(created.id);
+        // Auto-select the newly created subject
+        setSelectedSubjectId(created.id);
+      }
 
       console.log("Added subject:", created);
     } catch (err) {
       console.error("Failed to create subject:", err);
+    }
+  };
+
+  const handleDeleteSubject = async (subjectId: number) => {
+    try {
+      const success = await deleteSubject(subjectId);
+      console.log(success);
+      if (success) {
+        setSubjects((prev) => {
+          const newSubjects = prev.filter((s) => s.id !== subjectId);
+
+          setSelectedSubjectId((prevSelected) => {
+            if (prevSelected === subjectId) {
+              return newSubjects.length > 0 ? newSubjects[0].id : null;
+            }
+            return prevSelected;
+          });
+
+          return newSubjects;
+        });
+      }
+
+      console.log("Deleted subject:", subjectId);
+    } catch (err) {
+      console.error("Failed to delete subject:", err);
     }
   };
 
@@ -93,6 +127,7 @@ const SubjectsPage = () => {
             )}
             <h1 className="text-xl font-bold text-center mx-auto">Subjects</h1>
           </div>
+
           {subjects.length === 0 && (
             <p className="text-center">Create a subject to begin studying</p>
           )}
@@ -134,16 +169,27 @@ const SubjectsPage = () => {
                         </div>
                       </div>
 
-                      {/* Edit button */}
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setEditSubjectId(subject.id);
-                        }}
-                        className="p-2 border-inherit border-2 hover:border-black hover:bg-yellow-200 rounded hover:cursor-pointer"
-                      >
-                        <PencilSimple size={23} />
-                      </button>
+                      {/* Edit + Delete buttons */}
+                      <div className="flex flex-row gap-2">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setEditSubjectId(subject.id);
+                          }}
+                          className="p-2 border-inherit border-2 hover:border-black hover:bg-yellow-200 rounded hover:cursor-pointer"
+                        >
+                          <PencilSimple size={23} />
+                        </button>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDeleteSubject(subject.id);
+                          }}
+                          className="p-2 border-inherit border-2 bg-black hover:border-black hover:bg-pink-600 rounded hover:cursor-pointer"
+                        >
+                          <Trash size={23} color="white" />
+                        </button>
+                      </div>
                     </div>
                   )}
                 </li>

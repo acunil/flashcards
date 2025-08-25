@@ -96,6 +96,18 @@ const Revise = ({ hardMode = false, deckId }: ReviseProps) => {
             <p>No cards found</p>
           </div>
         )}
+        {!loading && !error && revisionCards.length === 0 && (
+          <div className="bg-white w-full max-w-screen-sm border-black border-2 p-3 rounded m-4 text-center">
+            <p>You don't have any cards!</p>
+            <p>Create a card to start revising</p>
+            <button
+              className="cursor-pointer border-2 m-2 border-black p-2 rounded bg-yellow-200"
+              onClick={() => navigate("/add-card/")}
+            >
+              Add a card
+            </button>
+          </div>
+        )}
         {!loading && !error && revisionCards.length > 0 && (
           <>
             <ReviseButtons

@@ -1,9 +1,11 @@
 import { useState } from "react";
 import { API_URL } from "../urls";
+import { useAuthFetch } from "../../utils/authFetch";
 
 const useCsvUpload = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const { authFetch } = useAuthFetch();
 
   /**
    * Upload CSV for a given subject.
@@ -14,23 +16,21 @@ const useCsvUpload = () => {
     setLoading(true);
     setError(null);
 
-    console.log(subjectId);
-
     try {
       const formData = new FormData();
       formData.append("file", file);
 
-      const response = await fetch(`${API_URL}/csv/${subjectId}`, {
+      // authFetch supports passing FormData; it will skip Content-Type override
+      const data = await authFetch(`${API_URL}/csv/${subjectId}`, {
         method: "POST",
         body: formData,
       });
 
-      if (!response.ok) {
-        const text = await response.text();
-        throw new Error(text || "CSV upload failed");
+      if (!data) {
+        // User was likely redirected to login
+        return null;
       }
 
-      const data = await response.json();
       return data;
     } catch (err: unknown) {
       if (err instanceof Error) setError(err.message);
