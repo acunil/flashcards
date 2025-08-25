@@ -196,19 +196,31 @@ const CardListItem = ({
         <div className="flex flex-row justify-around items-center p-3 text-sm bg-gray-50 border-t border-gray-200">
           <div className="flex items-center space-x-2">
             <span>views:</span>
-            <span>{viewCount}</span>
+            <span>{viewCount || 0}</span>
           </div>
           <div className="flex items-center space-x-2">
             <span>last:</span>
-            <lastLevel.Icon
-              size={20}
-              weight="duotone"
-              color={lastLevel.color}
-            />
+            {lastRating != null ? (
+              <lastLevel.Icon
+                size={20}
+                weight="duotone"
+                color={lastLevel.color}
+              />
+            ) : (
+              <span>-</span>
+            )}
           </div>
           <div className="flex items-center space-x-2">
             <span>avg:</span>
-            <avgLevel.Icon size={20} weight="duotone" color={avgLevel.color} />
+            {avgRating != null ? (
+              <avgLevel.Icon
+                size={20}
+                weight="duotone"
+                color={avgLevel.color}
+              />
+            ) : (
+              <span>-</span>
+            )}
           </div>
         </div>
       </div>
