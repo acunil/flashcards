@@ -154,7 +154,7 @@ const AddCard = () => {
                 {`${selectedSubject?.frontLabel ?? "Front"} hint`}
               </label>
               <textarea
-                value={frontHint}
+                value={frontHint || ""}
                 onChange={(e) => setFrontHint(e.target.value)}
                 className="w-full p-2 border rounded-lg resize-none bg-gray-50 border-gray-300 text-gray-600 focus:outline-none focus:ring-2 focus:ring-sky-200"
                 rows={3}
@@ -184,7 +184,7 @@ const AddCard = () => {
                 {`${selectedSubject?.backLabel ?? "Back"} hint`}
               </label>
               <textarea
-                value={backHint}
+                value={backHint || ""}
                 onChange={(e) => setBackHint(e.target.value)}
                 className="w-full p-2 border rounded-lg resize-none bg-gray-50 border-gray-300 text-gray-600 focus:outline-none focus:ring-2 focus:ring-sky-200"
                 rows={3}

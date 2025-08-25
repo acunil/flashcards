@@ -214,23 +214,25 @@ const CardListItem = ({
       </div>
 
       {/* Right side: full-panel edit/save */}
-      <div
-        onClick={(e) => {
-          handleEditClick(e);
-        }}
-        className={`flex flex-col justify-center items-center p-2 min-w-1/10 cursor-pointer 
+      {onUpdate && (
+        <div
+          onClick={(e) => {
+            handleEditClick(e);
+          }}
+          className={`flex flex-col justify-center items-center p-2 min-w-1/10 cursor-pointer 
                     ${
                       isSelectMode
                         ? "bg-gray-300"
                         : "bg-yellow-100 hover:bg-yellow-200"
                     }`}
-      >
-        {isEditingLocal ? (
-          <Check size={20} className="text-green-700" />
-        ) : (
-          <Pencil size={20} className="text-yellow-700" />
-        )}
-      </div>
+        >
+          {isEditingLocal ? (
+            <Check size={20} className="text-green-700" />
+          ) : (
+            <Pencil size={20} className="text-yellow-700" />
+          )}
+        </div>
+      )}
     </div>
   );
 };
