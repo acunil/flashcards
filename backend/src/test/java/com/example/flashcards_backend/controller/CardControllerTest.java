@@ -10,6 +10,7 @@ import com.example.flashcards_backend.model.CardHistory;
 import com.example.flashcards_backend.model.Subject;
 import com.example.flashcards_backend.service.CardHistoryService;
 import com.example.flashcards_backend.service.CardService;
+import com.example.flashcards_backend.service.CurrentUserService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.junit.jupiter.api.BeforeEach;
@@ -41,6 +42,9 @@ class CardControllerTest {
 
     @MockitoBean
     private CardHistoryService cardHistoryService;
+
+    @MockitoBean
+    private CurrentUserService currentUserService;
 
     @Autowired
     private MockMvc mockMvc;
