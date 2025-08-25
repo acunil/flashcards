@@ -138,31 +138,25 @@ const Header = ({
         {isRevising && (
           <div
             ref={revisionButtonRef}
-            className={`p-1 border-2 rounded transition-colors ${
+            className={`p-1 border-2 rounded transition-colors cursor-pointer ${
               showRevisionDropdown
                 ? "bg-white border-black"
                 : "border-transparent"
             }`}
+            onClick={() => setShowRevisionDropdown((prev) => !prev)}
           >
-            <Gear
-              size={22}
-              className="cursor-pointer"
-              onClick={() => setShowRevisionDropdown((prev) => !prev)}
-            />
+            <Gear size={22} />
           </div>
         )}
 
         <div
           ref={userButtonRef}
-          className={`p-1 border-2 rounded transition-colors ${
+          className={`p-1 border-2 rounded transition-colors cursor-pointer ${
             showUserDropdown ? "bg-white border-black" : "border-transparent"
           }`}
+          onClick={() => setShowUserDropdown((prev) => !prev)}
         >
-          <UserCircle
-            size={22}
-            className="cursor-pointer"
-            onClick={() => setShowUserDropdown((prev) => !prev)}
-          />
+          <UserCircle size={22} />
         </div>
       </div>
 
