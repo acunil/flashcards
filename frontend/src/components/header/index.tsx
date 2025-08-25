@@ -13,9 +13,14 @@ import type {
 interface HeaderProps {
   isHomePage?: boolean;
   isRevising?: boolean;
+  isErrorMode?: boolean;
 }
 
-const Header = ({ isHomePage = false, isRevising = false }: HeaderProps) => {
+const Header = ({
+  isHomePage = false,
+  isRevising = false,
+  isErrorMode = false,
+}: HeaderProps) => {
   const navigate = useNavigate();
   const [showDropdown, setShowDropdown] = useState(false);
   const { selectedSubject } = useAppContext();
@@ -63,26 +68,28 @@ const Header = ({ isHomePage = false, isRevising = false }: HeaderProps) => {
           <div className="p-1">
             <House
               size={24}
-              className="cursor-pointer"
-              onClick={() => navigate("/")}
+              className={`${!isErrorMode ? "cursor-pointer" : ""}`}
+              onClick={isErrorMode ? () => {} : () => navigate("/")}
             />
           </div>
         )}
       </div>
 
       {/* Center Section */}
-      <div className="flex-1 text-center font-medium">
-        <button
-          id="subject-select"
-          onClick={() => navigate("/subjects")}
-          className="border-black border-2 rounded"
-        >
-          <div className="flex-row flex items-center justify-center gap-1 p-2 bg-white cursor-pointer">
-            <Books size={25} />
-            {selectedSubject?.name || "Create subject"}
-          </div>
-        </button>
-      </div>
+      {!isErrorMode && (
+        <div className="flex-1 text-center font-medium">
+          <button
+            id="subject-select"
+            onClick={() => navigate("/subjects")}
+            className="border-black border-2 rounded"
+          >
+            <div className="flex-row flex items-center justify-center gap-1 p-2 bg-white cursor-pointer">
+              <Books size={25} />
+              {selectedSubject?.name || "Create subject"}
+            </div>
+          </button>
+        </div>
+      )}
 
       {/* Right Section */}
       <div className="flex justify-end w-1/3">
