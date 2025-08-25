@@ -18,7 +18,6 @@ const CardCarousel = ({
   cardColors = {},
   displayCurrentHint = false,
 }: CardCarouselProps) => {
-  const [flippedMap, setFlippedMap] = useState<Record<string, boolean>>({});
   const [windowWidth, setWindowWidth] = useState(
     typeof window !== "undefined" ? window.innerWidth : 1024
   );
@@ -35,6 +34,27 @@ const CardCarousel = ({
     });
   }, [cards, familiarity]);
 
+  // Precompute initial flippedMap before first render
+  const initialFlipMap = useMemo(() => {
+    const map: Record<string, boolean> = {};
+    filteredCards.forEach((card) => {
+      if (cardDisplay === "Front") map[card.id] = false;
+      else if (cardDisplay === "Back") map[card.id] = true;
+      else if (cardDisplay === "Any") {
+        map[card.id] = Math.random() < 0.5;
+      }
+    });
+    return map;
+  }, [filteredCards, cardDisplay]);
+
+  const [flippedMap, setFlippedMap] =
+    useState<Record<string, boolean>>(initialFlipMap);
+
+  // Reset flippedMap whenever card set or display mode changes
+  useEffect(() => {
+    setFlippedMap(initialFlipMap);
+  }, [initialFlipMap]);
+
   // Adjust currentIndex if the filtered cards remove the current card
   useEffect(() => {
     if (currentIndex >= filteredCards.length && filteredCards.length > 0) {
@@ -42,21 +62,6 @@ const CardCarousel = ({
       setCurrentIndex?.(newIndex);
     }
   }, [filteredCards, currentIndex, setCurrentIndex]);
-
-  // Initialize flippedMap
-  useEffect(() => {
-    setFlippedMap((prev) => {
-      const newMap: Record<string, boolean> = { ...prev };
-      filteredCards.forEach((card) => {
-        if (cardDisplay === "Front") newMap[card.id] = false;
-        else if (cardDisplay === "Back") newMap[card.id] = true;
-        else if (cardDisplay === "Any" && newMap[card.id] === undefined) {
-          newMap[card.id] = Math.random() < 0.5;
-        }
-      });
-      return newMap;
-    });
-  }, [filteredCards, cardDisplay]);
 
   // Window resize
   useEffect(() => {
