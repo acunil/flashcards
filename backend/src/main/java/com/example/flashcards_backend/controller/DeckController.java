@@ -15,13 +15,13 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
+import java.net.URI;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -32,6 +32,7 @@ import java.util.stream.Collectors;
 @AllArgsConstructor
 public class DeckController {
 
+    private static final String REQUEST_MAPPING = "/decks/";
     private final DeckService deckService;
     private final CardDeckService cardDeckService;
     private final CurrentUserService currentUserService;
@@ -88,7 +89,8 @@ public class DeckController {
     ) {
         currentUserService.getCurrentUser(jwt);
         Deck createdDeck = cardDeckService.createDeck(request); // Throws DuplicateDeckNameException if a deck with the same name already exists
-        return ResponseEntity.status(HttpStatus.CREATED).body(DeckSummary.fromEntity(createdDeck));
+        return ResponseEntity.created(URI.create(REQUEST_MAPPING + createdDeck.getId()))
+                .body(DeckSummary.fromEntity(createdDeck));
     }
 
     @Operation(summary = "Update deck name", description = "Renames a deck by its ID.")

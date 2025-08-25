@@ -35,6 +35,7 @@ public class SubjectService {
     }
 
     public Subject findById(Long id) {
+        log.info("Finding subject with id {}", id);
         return repository.findById(id)
                 .orElseThrow(() -> new SubjectNotFoundException(id));
     }

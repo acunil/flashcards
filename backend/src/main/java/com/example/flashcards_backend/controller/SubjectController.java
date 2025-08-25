@@ -17,15 +17,15 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
 
+import java.net.URI;
 import java.util.List;
-
-import static org.springframework.http.HttpStatus.CREATED;
 
 @RestController
 @RequestMapping("/subjects")
 @RequiredArgsConstructor
 public class SubjectController {
 
+    public static final String REQUEST_MAPPING = "/subjects/";
     private final SubjectService subjectService;
     private final CurrentUserService currentUserService;
 
@@ -76,7 +76,9 @@ public class SubjectController {
     ) {
         User currentUser = currentUserService.getCurrentUser(jwt);
         Subject subject = subjectService.create(subjectRequest, currentUser.getId());
-        return ResponseEntity.status(CREATED).body(SubjectDto.fromEntity(subject));
+        return ResponseEntity
+                .created(URI.create(REQUEST_MAPPING + subject.getId()))
+                .body(SubjectDto.fromEntity(subject));
     }
 
     @Operation(summary = "Update subject", description = "Updates an existing subject by ID.")
