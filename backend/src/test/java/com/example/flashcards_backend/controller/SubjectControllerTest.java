@@ -3,6 +3,8 @@ package com.example.flashcards_backend.controller;
 import com.example.flashcards_backend.dto.SubjectRequest;
 import com.example.flashcards_backend.exception.SubjectNotFoundException;
 import com.example.flashcards_backend.model.Subject;
+import com.example.flashcards_backend.model.User;
+import com.example.flashcards_backend.service.CurrentUserService;
 import com.example.flashcards_backend.service.SubjectService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -32,6 +34,9 @@ class SubjectControllerTest {
     @MockitoBean
     private SubjectService subjectService;
 
+    @MockitoBean
+    private CurrentUserService currentUserService;
+
     @Autowired
     private MockMvc mockMvc;
 
@@ -42,6 +47,8 @@ class SubjectControllerTest {
     void setUp() {
         subject1 = Subject.builder().id(1L).name("Subject 1").build();
         subject2 = Subject.builder().id(2L).name("Subject 2").build();
+        when(currentUserService.getOrCreateCurrentUser(any()))
+                .thenReturn(User.builder().id(USER_ID).username("me").build());
     }
 
     @Test
@@ -49,7 +56,8 @@ class SubjectControllerTest {
 
         when(subjectService.findByUserId(USER_ID)).thenReturn(List.of(subject1, subject2));
 
-        mockMvc.perform(get(ENDPOINT).param("userId", USER_ID.toString()))
+        mockMvc.perform(get(ENDPOINT)
+                .header("Authorization", "Bearer jwt"))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$[0].id").value(1))

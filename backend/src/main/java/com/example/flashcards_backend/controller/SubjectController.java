@@ -2,6 +2,8 @@ package com.example.flashcards_backend.controller;
 
 import com.example.flashcards_backend.dto.SubjectRequest;
 import com.example.flashcards_backend.dto.SubjectDto;
+import com.example.flashcards_backend.model.User;
+import com.example.flashcards_backend.service.CurrentUserService;
 import com.example.flashcards_backend.model.Subject;
 import com.example.flashcards_backend.service.SubjectService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -11,6 +13,8 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -24,6 +28,7 @@ import static org.springframework.http.HttpStatus.CREATED;
 public class SubjectController {
 
     private final SubjectService subjectService;
+    private final CurrentUserService currentUserService;
 
     @Operation(summary = "Get all subjects", description = "Returns all subjects for a user.")
     @ApiResponses(value = {
@@ -33,8 +38,10 @@ public class SubjectController {
                     ))
     })
     @GetMapping
-    public ResponseEntity<List<SubjectDto>> getAllForUser(@RequestParam UUID userId) {
-        return ResponseEntity.ok(subjectService.findByUserId(userId).stream().map(SubjectDto::fromEntity).toList());
+    public ResponseEntity<List<SubjectDto>> getAllForUser(@AuthenticationPrincipal Jwt jwt) {
+        User currentUser = currentUserService.getOrCreateCurrentUser(jwt);
+        return ResponseEntity.ok(subjectService.findByUserId(currentUser.getId()).stream()
+                .map(SubjectDto::fromEntity).toList());
     }
 
     @Operation(summary = "Get subject by ID", description = "Returns a subject by its ID.")
