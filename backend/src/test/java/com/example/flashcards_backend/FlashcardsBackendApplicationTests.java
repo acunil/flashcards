@@ -11,6 +11,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest
 @ActiveProfiles("test")
+// TODO this is still spending seconds loading despite the only test is disabled
 class FlashcardsBackendApplicationTests {
 
 	@Autowired
