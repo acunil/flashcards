@@ -30,8 +30,8 @@ public class SubjectController {
                     ))
     })
     @GetMapping
-    public List<SubjectDto> getAllForUser(@RequestParam UUID userId) {
-        return subjectService.findByUserId(userId).stream().map(SubjectDto::fromEntity).toList();
+    public ResponseEntity<List<SubjectDto>> getAllForUser(@RequestParam UUID userId) {
+        return ResponseEntity.ok(subjectService.findByUserId(userId).stream().map(SubjectDto::fromEntity).toList());
     }
 
     @Operation(summary = "Get subject by ID", description = "Returns a subject by its ID.")

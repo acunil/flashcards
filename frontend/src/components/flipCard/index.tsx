@@ -8,6 +8,7 @@ interface FlipCardProps {
   displayMode?: "Front" | "Back" | "Any";
   cardBgColor?: string;
   showDecks?: boolean;
+  showHint?: boolean;
 }
 
 const FlipCard = ({
@@ -16,6 +17,7 @@ const FlipCard = ({
   onFlip,
   showDecks = false,
   cardBgColor = "bg-white",
+  showHint = false,
 }: FlipCardProps) => {
   const { selectedSubject } = useAppContext();
 
@@ -40,8 +42,13 @@ const FlipCard = ({
             <span className="absolute top-2 left-2 text-xs text-gray-400">
               {selectedSubject?.frontLabel || "front"}
             </span>
-            <div className="flex items-center justify-center h-full text-center px-2 ">
-              {card.front}
+            <div className="flex items-center justify-center h-full text-center px-2">
+              <div className="flex flex-col gap-2">
+                <p>{card.front}</p>
+                {card.hintBack && showHint && (
+                  <p className="text-gray-500 font-light">{card.hintFront}</p>
+                )}
+              </div>
             </div>
             {showDecks && card.decks.length > 0 && (
               <span className="absolute bottom-2 right-2 text-xs text-gray-400 ">
@@ -58,7 +65,12 @@ const FlipCard = ({
               {selectedSubject?.backLabel || "back"}
             </span>
             <div className="flex items-center justify-center h-full text-center px-2 ">
-              {card.back}
+              <div className="flex flex-col gap-2">
+                <p>{card.back}</p>
+                {card.hintBack && showHint && (
+                  <p className="text-gray-500 font-light">{card.hintBack}</p>
+                )}
+              </div>
             </div>
             {showDecks && card.decks.length > 0 && (
               <span className="absolute bottom-2 right-2 text-xs text-gray-400 ">

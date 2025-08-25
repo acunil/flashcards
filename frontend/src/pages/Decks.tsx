@@ -9,15 +9,18 @@ import { useAppContext } from "../contexts";
 const Decks = () => {
   const navigate = useNavigate();
 
-  const { decks, loading, setDecks, selectedSubjectId } = useAppContext();
+  const { decks, loading, setDecks, selectedSubjectId, fetchDecks } =
+    useAppContext();
   const { createDeck, loading: creating } = useCreateDeck(selectedSubjectId);
 
   const handleAddDeck = async (name: string) => {
     if (!name.trim()) return;
 
     const newDeck = await createDeck(name.trim());
+    await fetchDecks();
+
     if (newDeck) {
-      setDecks((prev) => [...prev, newDeck]); // update context
+      setDecks((prev) => [...prev, newDeck]);
     }
   };
 

@@ -6,7 +6,7 @@ interface DifficultyButtonsProps {
 
 const DifficultyButtons = ({ onSelectDifficulty }: DifficultyButtonsProps) => {
   return (
-    <div className="flex justify-between gap-2 mt-4 w-full max-w-md p-4">
+    <div className="flex justify-between gap-2 w-full max-w-md p-4">
       {levels.map(({ label, Icon, buttonClassName, rating }) => (
         <button
           key={label}
