@@ -2,7 +2,7 @@ import { useEffect, useState, useCallback } from "react";
 import type { Card } from "../../types/card";
 import { API_URL } from "../urls";
 
-const useCards = (subjectId: number | null) => {
+const useAllCards = (subjectId: number | null) => {
   const [cards, setCards] = useState<Card[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -39,4 +39,4 @@ const useCards = (subjectId: number | null) => {
   return { cards, setCards, loading, error, refetch: fetchCards };
 };
 
-export default useCards;
+export default useAllCards;

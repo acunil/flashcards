@@ -2,7 +2,8 @@ import { useEffect, useState, useMemo } from "react";
 import { AppContext } from "./AppContext";
 import useAllDecks from "../hooks/decks/useAllDecks";
 import type { Deck } from "../types/deck";
-import useCards from "../hooks/cards/useCards";
+
+import useAllCards from "../hooks/cards/useAllCards";
 import useAllSubjects from "../hooks/subjects/useAllSubjects";
 
 export const AppProvider = ({ children }: { children: React.ReactNode }) => {
@@ -29,7 +30,7 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
     loading: loadingCards,
     error: errorCards,
     refetch,
-  } = useCards(selectedSubjectId);
+  } = useAllCards(selectedSubjectId);
 
   // Ensure first subject is selected by default
   useEffect(() => {
