@@ -33,6 +33,7 @@ public class CardDeckService {
 
     @Transactional
     public Set<Deck> getOrCreateDecksByNamesAndSubjectId(Set<String> names, Long subjectId) {
+        log.info("Creating or getting decks for subject with id {}", subjectId);
         Subject subject = subjectService.findById(subjectId);
         Set<Deck> existingDecks = deckRepository.findByNameInAndSubjectId(names, subjectId);
         Set<String> existingNames = existingDecks.stream()
@@ -58,6 +59,7 @@ public class CardDeckService {
 
     @Transactional
     public Deck createDeck(CreateDeckRequest request) {
+        log.info("Creating deck '{}'", request.name());
         Subject subject = Subject.builder().id(request.subjectId()).build();
         Deck deck = Deck.builder()
                 .name(request.name().trim())
@@ -85,6 +87,7 @@ public class CardDeckService {
 
     @Transactional
     public void addDeckToCards(Long id, Set<Long> cardIds) {
+        log.info("Adding deck with id {} to {} cards", id, cardIds.size());
         Deck deck = findDeckById(id);
         List<Card> cards = cardRepository.findAllById(cardIds);
         if (cards.stream().anyMatch(card -> !Objects.equals(card.getSubject().getId(), deck.getSubject().getId()))) {
@@ -95,6 +98,7 @@ public class CardDeckService {
 
     @Transactional
     public void removeDeckFromCards(Long id, Set<Long> cardIds) {
+        log.info("Removing deck with id {} from {} cards", id, cardIds.size());
         Deck deck = findDeckById(id);
         List<Card> cards = cardRepository.findAllById(cardIds);
         HashSet<Long> cardIdsNotWithDeck = new HashSet<>();

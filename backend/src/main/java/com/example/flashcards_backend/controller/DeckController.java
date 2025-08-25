@@ -6,6 +6,7 @@ import com.example.flashcards_backend.dto.DeckSummary;
 import com.example.flashcards_backend.dto.UpdateDeckNameRequest;
 import com.example.flashcards_backend.model.Deck;
 import com.example.flashcards_backend.service.CardDeckService;
+import com.example.flashcards_backend.service.CurrentUserService;
 import com.example.flashcards_backend.service.DeckService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -16,6 +17,8 @@ import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -31,6 +34,7 @@ public class DeckController {
 
     private final DeckService deckService;
     private final CardDeckService cardDeckService;
+    private final CurrentUserService currentUserService;
 
     @Operation(summary = "Get all decks", description = "Returns all decks.")
     @ApiResponses(value = {
@@ -39,8 +43,11 @@ public class DeckController {
                 schema = @Schema(implementation = DeckSummary.class)))
     })
     @GetMapping
-    public ResponseEntity<Set<DeckSummary>> getAllForSubject(@RequestParam Long subjectId) {
-        log.info("GET /decks from subjectId={}", subjectId);
+    public ResponseEntity<Set<DeckSummary>> getAllForSubject(
+            @RequestParam Long subjectId,
+            @AuthenticationPrincipal Jwt jwt
+    ) {
+        currentUserService.getCurrentUser(jwt);
         Set<DeckSummary> responses = deckService.getDeckSummariesBySubjectId(subjectId);
         return ResponseEntity.ok(responses);
     }
@@ -54,7 +61,11 @@ public class DeckController {
             content = @Content(mediaType = "application/json"))
     })
     @GetMapping("/{id}")
-    public ResponseEntity<DeckSummary> getDeckById(@PathVariable Long id) {
+    public ResponseEntity<DeckSummary> getDeckById(
+            @PathVariable Long id,
+            @AuthenticationPrincipal Jwt jwt
+    ) {
+        currentUserService.getCurrentUser(jwt);
         Deck deck = deckService.getDeckById(id);
         return ResponseEntity.ok(DeckSummary.fromEntity(deck));
     }
@@ -71,7 +82,11 @@ public class DeckController {
             content = @Content(mediaType = "application/json"))
     })
     @PostMapping("/create")
-    public ResponseEntity<DeckSummary> createDeck(@RequestBody CreateDeckRequest request) {
+    public ResponseEntity<DeckSummary> createDeck(
+            @RequestBody CreateDeckRequest request,
+            @AuthenticationPrincipal Jwt jwt
+    ) {
+        currentUserService.getCurrentUser(jwt);
         Deck createdDeck = cardDeckService.createDeck(request); // Throws DuplicateDeckNameException if a deck with the same name already exists
         return ResponseEntity.status(HttpStatus.CREATED).body(DeckSummary.fromEntity(createdDeck));
     }
@@ -85,7 +100,12 @@ public class DeckController {
             content = @Content(mediaType = "application/json"))
     })
     @PutMapping("/{id}")
-    public ResponseEntity<DeckSummary> updateDeckName(@PathVariable Long id, @RequestBody UpdateDeckNameRequest request) {
+    public ResponseEntity<DeckSummary> updateDeckName(
+            @PathVariable Long id,
+            @RequestBody UpdateDeckNameRequest request,
+            @AuthenticationPrincipal Jwt jwt
+    ) {
+        currentUserService.getCurrentUser(jwt);
         Deck updatedDeck = deckService.renameDeck(id, request.newName());
         return ResponseEntity.ok(DeckSummary.fromEntity(updatedDeck));
     }
@@ -98,7 +118,11 @@ public class DeckController {
             content = @Content(mediaType = "application/json"))
     })
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteDeck(@PathVariable Long id) {
+    public ResponseEntity<Void> deleteDeck(
+            @PathVariable Long id,
+            @AuthenticationPrincipal Jwt jwt
+    ) {
+        currentUserService.getCurrentUser(jwt);
         deckService.deleteDeck(id);
         return ResponseEntity.noContent().build();
     }
@@ -113,8 +137,10 @@ public class DeckController {
     @PostMapping
     public ResponseEntity<Set<DeckSummary>> upsertDecksByNamesAndSubjectId(
             @RequestBody Set<@DeckName String> names,
-            @RequestParam(value = "subjectId") Long subjectId
+            @RequestParam(value = "subjectId") Long subjectId,
+            @AuthenticationPrincipal Jwt jwt
     ) {
+        currentUserService.getCurrentUser(jwt);
         Set<Deck> decks = cardDeckService.getOrCreateDecksByNamesAndSubjectId(names, subjectId);
         return ResponseEntity.ok(
             decks.stream()
@@ -131,8 +157,10 @@ public class DeckController {
     @PatchMapping("/{id}/add-cards")
     public ResponseEntity<Void> addCardsToDeck(
             @PathVariable Long id,
-            @RequestBody Set<Long> cardIds
+            @RequestBody Set<Long> cardIds,
+            @AuthenticationPrincipal Jwt jwt
     ) {
+        currentUserService.getCurrentUser(jwt);
         cardDeckService.addDeckToCards(id, cardIds);
         return ResponseEntity.noContent().build();
     }
@@ -144,8 +172,10 @@ public class DeckController {
     @PatchMapping("/{id}/remove-cards")
     public ResponseEntity<Void> removeCardsFromDeck(
             @PathVariable Long id,
-            @RequestBody Set<Long> cardIds
+            @RequestBody Set<Long> cardIds,
+            @AuthenticationPrincipal Jwt jwt
     ) {
+        currentUserService.getCurrentUser(jwt);
         cardDeckService.removeDeckFromCards(id, cardIds);
         return ResponseEntity.noContent().build();
     }

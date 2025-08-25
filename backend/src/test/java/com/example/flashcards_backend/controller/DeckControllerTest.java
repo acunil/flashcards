@@ -7,6 +7,7 @@ import com.example.flashcards_backend.exception.DuplicateDeckNameException;
 import com.example.flashcards_backend.model.Deck;
 import com.example.flashcards_backend.model.Subject;
 import com.example.flashcards_backend.service.CardDeckService;
+import com.example.flashcards_backend.service.CurrentUserService;
 import com.example.flashcards_backend.service.DeckService;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -42,6 +43,9 @@ class DeckControllerTest {
 
     @MockitoBean
     private DeckService deckService;
+
+    @MockitoBean
+    private CurrentUserService currentUserService;
 
     @Autowired
     private MockMvc mockMvc;
