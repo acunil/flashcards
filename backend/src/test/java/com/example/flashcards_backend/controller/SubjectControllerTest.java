@@ -77,15 +77,16 @@ class SubjectControllerTest {
 
     @Test
     void createSubject() throws Exception {
+        when(subjectService.create(any(SubjectRequest.class), any(UUID.class))).thenReturn(subject1);
         mockMvc.perform(post(ENDPOINT)
                         .param("userId", USER_ID.toString())
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"name\":\"Subject 3\"}"))
+                        .content("{\"name\":\"Subject 1\"}"))
                 .andExpect(status().isOk());
 
         ArgumentCaptor<SubjectRequest> captor = ArgumentCaptor.forClass(SubjectRequest.class);
         verify(subjectService).create(captor.capture(), eq(USER_ID));
-        assertThat(captor.getValue().name()).isEqualTo("Subject 3");
+        assertThat(captor.getValue().name()).isEqualTo("Subject 1");
     }
 
     @Test
