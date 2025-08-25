@@ -1,8 +1,10 @@
 package com.example.flashcards_backend.controller;
 
 import com.example.flashcards_backend.dto.*;
+import com.example.flashcards_backend.model.User;
 import com.example.flashcards_backend.service.CardHistoryService;
 import com.example.flashcards_backend.service.CardService;
+import com.example.flashcards_backend.service.CurrentUserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
@@ -14,6 +16,8 @@ import jakarta.validation.constraints.NotEmpty;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -33,6 +37,7 @@ public class CardController {
     public static final String REQUEST_MAPPING = "/cards/";
     private final CardService cardService;
     private final CardHistoryService cardHistoryService;
+    private final CurrentUserService currentUserService;
 
     @Operation(summary = "Get all cards",
             description = "Returns all cards, optionally with subject ID specified.")
@@ -42,10 +47,14 @@ public class CardController {
                             schema = @Schema(implementation = CardResponse[].class)))
     })
     @GetMapping
-    public ResponseEntity<List<CardResponse>> getAllCardResponses(@RequestParam Long subjectId) {
+    public ResponseEntity<List<CardResponse>> getAllCardResponses(
+            @RequestParam Long subjectId,
+            @AuthenticationPrincipal Jwt jwt
+            ) {
         log.info("GET /cards: subjectId={}", subjectId);
+        User user = currentUserService.getOrCreateCurrentUser(jwt);
         Instant start = Instant.now();
-        var cards = cardService.getAllCardResponsesFromSubject(subjectId);
+        var cards = cardService.getAllCardResponsesForUserAndSubject(user, subjectId);
         Instant end = Instant.now();
         double duration = (end.toEpochMilli() - start.toEpochMilli()) / 1000.0;
         log.info("GET /cards: returned {} cards in {} seconds", cards.size(), duration);

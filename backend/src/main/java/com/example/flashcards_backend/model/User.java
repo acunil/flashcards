@@ -26,6 +26,9 @@ public class User {
     @Column(nullable = false)
     private boolean isActive = true;
 
+    @Column(name = "auth0_id", length = 100, unique = true)
+    private String auth0Id;
+
     @Builder.Default
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Card> cards = new ArrayList<>();
