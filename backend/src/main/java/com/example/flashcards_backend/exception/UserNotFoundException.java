@@ -7,8 +7,8 @@ public class UserNotFoundException extends RuntimeException {
         super("User not found with id: " + id);
     }
 
-    public UserNotFoundException(String jwt) {
-        super("User not found with jwt: " + jwt);
+    public UserNotFoundException(String auth0Id) {
+        super("User not found with auth0Id: " + auth0Id);
     }
 
     public UserNotFoundException(UUID id, Throwable cause) {
