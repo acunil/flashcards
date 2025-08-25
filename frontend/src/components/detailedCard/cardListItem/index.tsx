@@ -196,41 +196,55 @@ const CardListItem = ({
         <div className="flex flex-row justify-around items-center p-3 text-sm bg-gray-50 border-t border-gray-200">
           <div className="flex items-center space-x-2">
             <span>views:</span>
-            <span>{viewCount}</span>
+            <span>{viewCount || 0}</span>
           </div>
           <div className="flex items-center space-x-2">
             <span>last:</span>
-            <lastLevel.Icon
-              size={20}
-              weight="duotone"
-              color={lastLevel.color}
-            />
+            {lastRating != null ? (
+              <lastLevel.Icon
+                size={20}
+                weight="duotone"
+                color={lastLevel.color}
+              />
+            ) : (
+              <span>-</span>
+            )}
           </div>
           <div className="flex items-center space-x-2">
             <span>avg:</span>
-            <avgLevel.Icon size={20} weight="duotone" color={avgLevel.color} />
+            {avgRating != null ? (
+              <avgLevel.Icon
+                size={20}
+                weight="duotone"
+                color={avgLevel.color}
+              />
+            ) : (
+              <span>-</span>
+            )}
           </div>
         </div>
       </div>
 
       {/* Right side: full-panel edit/save */}
-      <div
-        onClick={(e) => {
-          handleEditClick(e);
-        }}
-        className={`flex flex-col justify-center items-center p-2 min-w-1/10 cursor-pointer 
+      {onUpdate && (
+        <div
+          onClick={(e) => {
+            handleEditClick(e);
+          }}
+          className={`flex flex-col justify-center items-center p-2 min-w-1/10 cursor-pointer 
                     ${
                       isSelectMode
                         ? "bg-gray-300"
                         : "bg-yellow-100 hover:bg-yellow-200"
                     }`}
-      >
-        {isEditingLocal ? (
-          <Check size={20} className="text-green-700" />
-        ) : (
-          <Pencil size={20} className="text-yellow-700" />
-        )}
-      </div>
+        >
+          {isEditingLocal ? (
+            <Check size={20} className="text-green-700" />
+          ) : (
+            <Pencil size={20} className="text-yellow-700" />
+          )}
+        </div>
+      )}
     </div>
   );
 };

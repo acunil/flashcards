@@ -5,7 +5,7 @@ import type { Deck } from "../types/deck";
 import SearchableMultiSelect from "../components/searchableMultiSelect";
 import { useAppContext } from "../contexts";
 import { CaretLeft } from "phosphor-react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import useUpdateCard from "../hooks/cards/useUpdateCard";
 import type { Card } from "../types/card";
 
@@ -18,13 +18,17 @@ const AddCard = () => {
   const [error, setError] = useState<string | null>(null);
   const [showToast, setShowToast] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-  const { decks, cards, selectedSubject } = useAppContext();
+  const { decks, cards, selectedSubject, fetchDecks, refetchCards } =
+    useAppContext();
   const navigate = useNavigate();
   const { createCard } = useCreateCard();
   const { updateCard } = useUpdateCard();
   const { cardId } = useParams<{ cardId: string }>();
   const [isEditing, setIsEditing] = useState(false);
   const [cardToEdit, setCardToEdit] = useState<Card>();
+
+  const [searchParams] = useSearchParams();
+  const deckId = searchParams.get("deckId");
 
   const resetForm = () => {
     setFront("");
@@ -46,8 +50,13 @@ const AddCard = () => {
         setBackHint(cardToEdit.hintBack);
         setSelectedDecks(cardToEdit.decks);
       }
+    } else if (deckId) {
+      const matchedDeck = decks.find((d) => d.id === Number(deckId));
+      if (matchedDeck) {
+        setSelectedDecks([matchedDeck]);
+      }
     }
-  }, [cardId, cards, cardToEdit]);
+  }, [cardId, cards, cardToEdit, deckId, decks]);
 
   useEffect(() => {
     if (showToast) {
@@ -79,7 +88,7 @@ const AddCard = () => {
           hintBack: backHint,
           deckNames,
           subjectId: selectedSubject?.id || 0,
-        }); // new update hook
+        });
       } else {
         await createCard({
           front,
@@ -90,6 +99,9 @@ const AddCard = () => {
           subjectId: selectedSubject?.id || 0,
         });
       }
+
+      await fetchDecks();
+      await refetchCards();
 
       setShowToast(true);
     } catch {
@@ -150,7 +162,7 @@ const AddCard = () => {
                 {`${selectedSubject?.frontLabel ?? "Front"} hint`}
               </label>
               <textarea
-                value={frontHint}
+                value={frontHint || ""}
                 onChange={(e) => setFrontHint(e.target.value)}
                 className="w-full p-2 border rounded-lg resize-none bg-gray-50 border-gray-300 text-gray-600 focus:outline-none focus:ring-2 focus:ring-sky-200"
                 rows={3}
@@ -180,7 +192,7 @@ const AddCard = () => {
                 {`${selectedSubject?.backLabel ?? "Back"} hint`}
               </label>
               <textarea
-                value={backHint}
+                value={backHint || ""}
                 onChange={(e) => setBackHint(e.target.value)}
                 className="w-full p-2 border rounded-lg resize-none bg-gray-50 border-gray-300 text-gray-600 focus:outline-none focus:ring-2 focus:ring-sky-200"
                 rows={3}

@@ -13,7 +13,7 @@ const useUpdateDeck = () => {
       const response = await fetch(`${API_URL}/decks/${id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: newName }),
+        body: JSON.stringify({ newName }),
       });
       if (!response.ok) {
         throw new Error("Failed to update deck");
