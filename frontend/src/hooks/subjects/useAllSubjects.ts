@@ -11,25 +11,56 @@ const useAllSubjects = () => {
   const [selectedSubject, setSelectedSubject] = useState<Subject | undefined>(
     undefined
   );
-  const { getAccessTokenSilently } = useAuth0();
+  const { getAccessTokenSilently, loginWithRedirect } = useAuth0();
 
   useEffect(() => {
     const fetchSubjects = async () => {
       if (hasFetched.current) return;
       hasFetched.current = true;
 
+      setLoading(true);
       try {
-        setLoading(true);
-        const token = await getAccessTokenSilently();
+        // 1️⃣ Get the access token from Auth0
+        let token: string;
+        try {
+          token = await getAccessTokenSilently({
+            authorizationParams: {
+              audience: "https://dev-2rqhk7k4rkbvzvn0.us.auth0.com/api/v2/",
+            },
+          });
+          console.log("Access Token:", token);
+        } catch (err: unknown) {
+          // Handle consent/login requirement
+          if (
+            (typeof err === "object" &&
+              err !== null &&
+              "error" in err &&
+              (err as { error: string }).error === "consent_required") ||
+            (err as { error: string }).error === "login_required"
+          ) {
+            await loginWithRedirect({
+              authorizationParams: {
+                audience: "https://dev-2rqhk7k4rkbvzvn0.us.auth0.com/api/v2/",
+              },
+            });
+            return; // stop fetch, user is redirected
+          } else {
+            throw err; // rethrow unknown errors
+          }
+        }
+
+        // 2️⃣ Fetch subjects with Authorization header
         const response = await fetch(`${API_URL}/subjects`, {
           headers: {
             Authorization: `Bearer ${token}`,
             "Content-Type": "application/json",
           },
         });
+
         if (!response.ok) {
-          throw new Error("Failed to fetch subjects");
+          throw new Error(`Failed to fetch subjects: ${response.status}`);
         }
+
         const data: Subject[] = await response.json();
         setSubjects(data);
         setSelectedSubject(data[0]);
@@ -41,7 +72,7 @@ const useAllSubjects = () => {
     };
 
     fetchSubjects();
-  }, [getAccessTokenSilently]); // 👈 only run once
+  }, [getAccessTokenSilently, loginWithRedirect]); // include loginWithRedirect as dependency
 
   return { subjects, selectedSubject, loading, error };
 };
