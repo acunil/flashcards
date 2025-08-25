@@ -14,12 +14,6 @@ const ReviseButtons = ({
   return (
     <div className="flex flex-row justify-end py-2 px-4 w-sm gap-2 max-w-screen">
       <button
-        onClick={onEdit}
-        className="bg-blue-200 p-2 border-black border-2 rounded cursor-pointer hover:bg-sky-300"
-      >
-        <Pencil size={20} />
-      </button>
-      <button
         onClick={disableHint ? undefined : onShowHint}
         className={`p-2 border-black border-2 rounded 
     ${
@@ -29,6 +23,12 @@ const ReviseButtons = ({
     }`}
       >
         <LightbulbFilament size={20} />
+      </button>
+      <button
+        onClick={onEdit}
+        className="bg-blue-200 p-2 border-black border-2 rounded cursor-pointer hover:bg-sky-300"
+      >
+        <Pencil size={20} />
       </button>
     </div>
   );
