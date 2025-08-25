@@ -6,7 +6,7 @@ import useCards from "../hooks/cards/useCards";
 import useAllSubjects from "../hooks/subjects/useAllSubjects";
 
 export const AppProvider = ({ children }: { children: React.ReactNode }) => {
-  const { subjects: subjectsFromHook } = useAllSubjects();
+  const { subjects: subjectsFromHook, error: errorSubjects } = useAllSubjects();
   const [allSubjects, setAllSubjects] = useState(subjectsFromHook);
   const [selectedSubjectId, setSelectedSubjectId] = useState<number | null>(
     null
@@ -96,7 +96,7 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
         decks: allDecks,
         cards,
         loading: loadingDecks || loadingCards,
-        error: errorDecks || errorCards,
+        error: errorDecks || errorCards || errorSubjects,
         fetchDecks: refreshDecks,
         refetchCards: refreshCards,
         setDecks,
