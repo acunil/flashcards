@@ -2,6 +2,7 @@ package com.example.flashcards_backend.controller;
 
 import com.example.flashcards_backend.dto.SubjectRequest;
 import com.example.flashcards_backend.dto.SubjectDto;
+import com.example.flashcards_backend.model.Subject;
 import com.example.flashcards_backend.service.SubjectService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -14,6 +15,8 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.UUID;
+
+import static org.springframework.http.HttpStatus.CREATED;
 
 @RestController
 @RequestMapping("/subjects")
@@ -49,15 +52,17 @@ public class SubjectController {
 
     @Operation(summary = "Create a new subject", description = "Creates a new subject.")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Subject created successfully",
-                    content = @Content),
+            @ApiResponse(responseCode = "201", description = "Subject created successfully",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = SubjectDto.class)
+                    )),
             @ApiResponse(responseCode = "400", description = "Invalid input",
                     content = @Content)
     })
     @PostMapping
-    public ResponseEntity<Void> create(@RequestBody SubjectRequest subjectRequest, @RequestParam UUID userId) {
-        subjectService.create(subjectRequest, userId);
-        return ResponseEntity.ok().build();
+    public ResponseEntity<SubjectDto> create(@RequestBody SubjectRequest subjectRequest, @RequestParam UUID userId) {
+        Subject subject = subjectService.create(subjectRequest, userId);
+        return ResponseEntity.status(CREATED).body(SubjectDto.fromEntity(subject));
     }
 
     @Operation(summary = "Update subject", description = "Updates an existing subject by ID.")
