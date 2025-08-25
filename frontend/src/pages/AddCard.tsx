@@ -88,7 +88,7 @@ const AddCard = () => {
           hintBack: backHint,
           deckNames,
           subjectId: selectedSubject?.id || 0,
-        }); // new update hook
+        });
       } else {
         await createCard({
           front,

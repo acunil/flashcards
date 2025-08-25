@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import DifficultyButtons from "../components/difficultyButtons";
 import Header from "../components/header";
 import useRateCard from "../hooks/cards/useRateCard";
@@ -15,6 +15,15 @@ interface ReviseProps {
   deckId?: number;
 }
 
+const shuffleCards = (cards: Card[]) => {
+  const copy = [...cards];
+  for (let i = copy.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [copy[i], copy[j]] = [copy[j], copy[i]];
+  }
+  return copy;
+};
+
 const Revise = ({ hardMode = false, deckId }: ReviseProps) => {
   const { rateCard } = useRateCard();
   const { cards, loading, error } = useAppContext();
@@ -22,30 +31,34 @@ const Revise = ({ hardMode = false, deckId }: ReviseProps) => {
 
   const [currentIndex, setCurrentIndex] = useState(0);
   const [showHint, setShowHint] = useState(false);
+  const [revisionCards, setRevisionCards] = useState<Card[]>([]);
+  const [cardColors, setCardColors] = useState<Record<string, string>>({});
 
   useEffect(() => {
     setShowHint(false);
   }, [currentIndex]);
 
-  // filter all cards for the revision deck
-  const revisionCards: Card[] = useMemo(() => {
-    const filtered = cards.filter(
-      (card) =>
-        (!deckId || card.decks.some((deck: Deck) => deck.id === deckId)) &&
-        (!hardMode || card.avgRating >= 4)
+  const buildRevisionCards = useCallback(() => {
+    const deckFiltered = cards.filter(
+      (card) => !deckId || card.decks.some((deck: Deck) => deck.id === deckId)
     );
 
-    // Shuffle using Fisher–Yates algorithm
-    for (let i = filtered.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [filtered[i], filtered[j]] = [filtered[j], filtered[i]];
+    if (hardMode) {
+      const hardFiltered = deckFiltered.filter((card) => card.avgRating >= 4);
+      return shuffleCards(
+        hardFiltered.length > 0 ? hardFiltered : deckFiltered
+      );
     }
 
-    return filtered;
+    return shuffleCards(deckFiltered);
   }, [cards, deckId, hardMode]);
 
-  // Map card id -> color
-  const [cardColors, setCardColors] = useState<Record<string, string>>({});
+  useEffect(() => {
+    const newDeck = buildRevisionCards();
+    setRevisionCards(newDeck);
+    setCurrentIndex(0);
+    setCardColors({});
+  }, [buildRevisionCards]);
 
   const handleDifficultySelect = (rating: number) => {
     if (revisionCards.length === 0) return;
@@ -56,18 +69,14 @@ const Revise = ({ hardMode = false, deckId }: ReviseProps) => {
     const level = levels.find((l) => l.rating === rating);
     const newColor = level ? level.buttonClassName : "bg-white";
 
-    // Set the color for the *current* card before moving forward
     setCardColors((prevColors) => ({
       ...prevColors,
       [currentCard.id]: newColor,
     }));
 
-    // Then move to next card
-    setCurrentIndex((prevIndex) =>
-      prevIndex < cards.length - 1 ? prevIndex + 1 : 0
-    );
+    // 🔄 Loop through cards instead of resetting
+    setCurrentIndex((prev) => (prev + 1) % revisionCards.length);
   };
-
   const handleEditCard = () => {
     navigate(`/add-card/${revisionCards[currentIndex].id}`);
   };
@@ -86,11 +95,10 @@ const Revise = ({ hardMode = false, deckId }: ReviseProps) => {
             <p>No cards found</p>
           </div>
         )}
-        {!loading && !error && cards.length > 0 && (
+        {!loading && !error && revisionCards.length > 0 && (
           <>
             <ReviseButtons
               disableHint={
-                // Disable if the card has no hint OR if the hint has already been shown
                 !(
                   revisionCards[currentIndex].hintFront ||
                   revisionCards[currentIndex].hintBack
@@ -111,7 +119,9 @@ const Revise = ({ hardMode = false, deckId }: ReviseProps) => {
             </div>
           </>
         )}
-        {!loading && !error && cards.length === 0 && <p>No cards available.</p>}
+        {!loading && !error && revisionCards.length === 0 && (
+          <p>No cards available.</p>
+        )}
       </main>
     </div>
   );

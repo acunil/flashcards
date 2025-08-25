@@ -169,6 +169,7 @@ const DeckDetails = () => {
           <CardList
             cards={filteredCards}
             isAllCardsList={effectiveDeckId === 0}
+            deckId={effectiveDeckId}
           />
         </div>
       </div>
