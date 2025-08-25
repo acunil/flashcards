@@ -67,3 +67,14 @@ export default tseslint.config([
   },
 ])
 ```
+
+
+# Auth0
+
+Add these properties to the .env file located in the frontend root
+
+```
+VITE_AUTH0_DOMAIN=
+VITE_AUTH0_CLIENT_ID=
+VITE_AUTH0_AUDIENCE=
+```
