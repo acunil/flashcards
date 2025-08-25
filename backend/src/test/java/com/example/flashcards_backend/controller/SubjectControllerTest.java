@@ -42,18 +42,18 @@ class SubjectControllerTest {
 
     private Subject subject1;
     private Subject subject2;
+    private User user;
 
     @BeforeEach
     void setUp() {
+        user = User.builder().id(USER_ID).username("me").build();
         subject1 = Subject.builder().id(1L).name("Subject 1").build();
         subject2 = Subject.builder().id(2L).name("Subject 2").build();
-        when(currentUserService.getOrCreateCurrentUser(any()))
-                .thenReturn(User.builder().id(USER_ID).username("me").build());
+        when(currentUserService.getOrCreateCurrentUser(any())).thenReturn(user);
     }
 
     @Test
     void getAllForUserSubjects() throws Exception {
-
         when(subjectService.findByUserId(USER_ID)).thenReturn(List.of(subject1, subject2));
 
         mockMvc.perform(get(ENDPOINT)
@@ -89,19 +89,20 @@ class SubjectControllerTest {
     void createSubject() throws Exception {
         when(subjectService.create(any(SubjectRequest.class), any(UUID.class))).thenReturn(subject1);
         mockMvc.perform(post(ENDPOINT)
-                        .param("userId", USER_ID.toString())
+                        .header("Authorization", "Bearer jwt")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"name\":\"Subject 1\"}"))
                 .andExpect(status().isOk());
 
         ArgumentCaptor<SubjectRequest> captor = ArgumentCaptor.forClass(SubjectRequest.class);
-        verify(subjectService).create(captor.capture(), eq(USER_ID));
+        verify(subjectService).create(captor.capture(), eq(user));
         assertThat(captor.getValue().name()).isEqualTo("Subject 1");
     }
 
     @Test
     void createSubjectInvalidInput() throws Exception {
-        doThrow(new IllegalArgumentException("Invalid input")).when(subjectService).create(any(SubjectRequest.class), any(UUID.class));
+        doThrow(new IllegalArgumentException("Invalid input")).when(subjectService)
+                .create(any(SubjectRequest.class), any(User.class));
 
         mockMvc.perform(post(ENDPOINT)
                         .param("userId", USER_ID.toString())

@@ -18,7 +18,6 @@ import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.UUID;
 
 import static org.springframework.http.HttpStatus.CREATED;
 
@@ -39,7 +38,7 @@ public class SubjectController {
     })
     @GetMapping
     public ResponseEntity<List<SubjectDto>> getAllForUser(@AuthenticationPrincipal Jwt jwt) {
-        User currentUser = currentUserService.getOrCreateCurrentUser(jwt);
+        User currentUser = currentUserService.getCurrentUser(jwt);
         return ResponseEntity.ok(subjectService.findByUserId(currentUser.getId()).stream()
                 .map(SubjectDto::fromEntity).toList());
     }
@@ -67,8 +66,9 @@ public class SubjectController {
                     content = @Content)
     })
     @PostMapping
-    public ResponseEntity<SubjectDto> create(@RequestBody SubjectRequest subjectRequest, @RequestParam UUID userId) {
-        Subject subject = subjectService.create(subjectRequest, userId);
+    public ResponseEntity<SubjectDto> create(@RequestBody SubjectRequest subjectRequest, @AuthenticationPrincipal Jwt jwt) {
+        User currentUser = currentUserService.getCurrentUser(jwt);
+        Subject subject = subjectService.create(subjectRequest, currentUser.getId());
         return ResponseEntity.status(CREATED).body(SubjectDto.fromEntity(subject));
     }
 
