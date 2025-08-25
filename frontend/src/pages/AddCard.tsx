@@ -101,7 +101,7 @@ const AddCard = () => {
       }
 
       await fetchDecks();
-      await refetchCards();
+      await refetchCards(selectedSubject?.id || 0);
 
       setShowToast(true);
     } catch {
