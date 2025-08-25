@@ -13,7 +13,7 @@ public class CurrentUserService {
 
     private final UserRepository userRepository;
 
-    public User getOrCreateCurrentUser(Jwt jwt) {
+    public User getCurrentUser(Jwt jwt) {
         String auth0Id = jwt.getClaim("sub");
         if (auth0Id == null || auth0Id.isBlank()) {
             throw new IllegalArgumentException("JWT is missing 'sub' claim");

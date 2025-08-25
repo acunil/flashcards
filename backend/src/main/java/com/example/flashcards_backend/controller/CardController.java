@@ -52,7 +52,7 @@ public class CardController {
             @AuthenticationPrincipal Jwt jwt
             ) {
         log.info("GET /cards: subjectId={}", subjectId);
-        User user = currentUserService.getOrCreateCurrentUser(jwt);
+        User user = currentUserService.getCurrentUser(jwt);
         Instant start = Instant.now();
         var cards = cardService.getAllCardResponsesForUserAndSubject(user, subjectId);
         Instant end = Instant.now();
