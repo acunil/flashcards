@@ -4,7 +4,10 @@ import { API_URL } from "../urls";
 export type NewCard = {
   front: string;
   back: string;
+  hintFront?: string;
+  hintBack?: string;
   deckNames: string[];
+  subjectId: number;
 };
 
 const useCreateCard = () => {
@@ -15,6 +18,11 @@ const useCreateCard = () => {
     try {
       setCreating(true);
       setError(null);
+
+      if (!card.subjectId || card.subjectId === 0) {
+        setError("No subject selected");
+        return null;
+      }
 
       const response = await fetch(`${API_URL}/cards`, {
         method: "POST",

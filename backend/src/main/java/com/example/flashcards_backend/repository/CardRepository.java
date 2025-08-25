@@ -11,13 +11,6 @@ import java.util.Optional;
 import java.util.UUID;
 
 public interface CardRepository extends JpaRepository<Card, Long> {
-    boolean existsByFrontAndBack(String front, String back);
-
-    @Query("SELECT c FROM Card c JOIN CardHistory h ON h.card = c WHERE h.avgRating >= :threshold")
-    List<Card> findByMinAvgRating(@Param("threshold") double threshold);
-
-    @Query("SELECT c FROM Card c JOIN CardHistory h ON h.card = c WHERE h.avgRating <= :threshold")
-    List<Card> findByMaxAvgRating(@Param("threshold") double threshold);
 
     @Modifying
     @Query("DELETE FROM Card c WHERE c.id IN :ids")
@@ -80,5 +73,20 @@ public interface CardRepository extends JpaRepository<Card, Long> {
     @Modifying
     @Query(value = "DELETE FROM card_deck WHERE card_id IN :cardIds", nativeQuery = true)
     void deleteDeckAssociationsByCardIds(@Param("cardIds") List<Long> cardIds);
+
+    boolean existsByFrontAndBackAndSubjectId(String front, String back, Long subjectId);
+
+    @Query("""
+            SELECT COUNT(c)
+            FROM Card c
+            LEFT JOIN CardHistory ch ON ch.card = c
+            WHERE c.user.id = :userId
+              AND (ch IS NULL OR ch.lastViewed IS NULL)
+            """)
+    Long countByLastViewedIsNullOrZeroAndUserId(@Param("userId") UUID userId);
+
+    default Long countUnviewedByUserId(UUID userId) {
+        return countByLastViewedIsNullOrZeroAndUserId(userId);
+    }
 
 }

@@ -141,7 +141,7 @@ class CardControllerTest {
 
     @Test
     void rate_validIdAndRating_returnsNoContent() throws Exception {
-        mockMvc.perform(put(ENDPOINT + "/7/rate")
+        mockMvc.perform(patch(ENDPOINT + "/7/rate")
                 .param("rating", "5")
                 .contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isNoContent());
@@ -152,7 +152,7 @@ class CardControllerTest {
     void rate_missingCard_returnsNotFoundWithMessage() throws Exception {
         doThrow(new CardNotFoundException(55L))
             .when(cardHistoryService).recordRating(55L, 2);
-        mockMvc.perform(put(ENDPOINT + "/55/rate")
+        mockMvc.perform(patch(ENDPOINT + "/55/rate")
                 .param("rating", "2")
                 .contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isNotFound())
@@ -165,82 +165,12 @@ class CardControllerTest {
         DataAccessException dataAccessException = new DataAccessException("Test Database error", e) {};
         doThrow(dataAccessException)
             .when(cardHistoryService).recordRating(7L, 5);
-        mockMvc.perform(put(ENDPOINT + "/7/rate")
+        mockMvc.perform(patch(ENDPOINT + "/7/rate")
                 .param("rating", "5")
                 .contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isInternalServerError())
             .andExpect(jsonPath("$.error")
                 .value("Data access error occurred: Test Database error"));
-    }
-
-    @Test
-    void getByMinAvgRating_validThreshold_returnsListOfCardResponse() throws Exception {
-        when(cardService.getCardsByMinAvgRating(3.0, false))
-            .thenReturn(List.of(c1, c2));
-        mockMvc.perform(get(ENDPOINT + "/minAvgRating")
-                .param("threshold", "3.0"))
-            .andExpect(status().isOk())
-            .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-            .andExpect(jsonPath("$[0].id").value(1))
-            .andExpect(jsonPath("$[0].front").value("f1"))
-            .andExpect(jsonPath("$[0].back").value("b1"))
-            .andExpect(jsonPath("$[1].id").value(2))
-            .andExpect(jsonPath("$[1].front").value("f2"))
-            .andExpect(jsonPath("$[1].back").value("b2"));
-        verify(cardService, never()).getCardsByMinAvgRating(3.0, true);
-    }
-
-    @Test
-    void getByMinAvgRating_validThreshold_shuffledTrue_returnsListOfCardResponse() throws Exception {
-        when(cardService.getCardsByMinAvgRating(3.0, true))
-            .thenReturn(List.of(c1, c2));
-        mockMvc.perform(get(ENDPOINT + "/minAvgRating")
-                .param("threshold", "3.0")
-                .param("shuffled", "true"))
-            .andExpect(status().isOk())
-            .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-            .andExpect(jsonPath("$[0].id").value(1))
-            .andExpect(jsonPath("$[0].front").value("f1"))
-            .andExpect(jsonPath("$[0].back").value("b1"))
-            .andExpect(jsonPath("$[1].id").value(2))
-            .andExpect(jsonPath("$[1].front").value("f2"))
-            .andExpect(jsonPath("$[1].back").value("b2"));
-        verify(cardService, never()).getCardsByMinAvgRating(3.0, false);
-    }
-
-    @Test
-    void getByMaxAvgRating_validThreshold_returnsListOfCardResponse() throws Exception {
-        when(cardService.getCardsByMaxAvgRating(3.0, false))
-            .thenReturn(List.of(c1, c2));
-        mockMvc.perform(get(ENDPOINT + "/maxAvgRating")
-                .param("threshold", "3.0"))
-            .andExpect(status().isOk())
-            .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-            .andExpect(jsonPath("$[0].id").value(1))
-            .andExpect(jsonPath("$[0].front").value("f1"))
-            .andExpect(jsonPath("$[0].back").value("b1"))
-            .andExpect(jsonPath("$[1].id").value(2))
-            .andExpect(jsonPath("$[1].front").value("f2"))
-            .andExpect(jsonPath("$[1].back").value("b2"));
-        verify(cardService, never()).getCardsByMaxAvgRating(3.0, true);
-    }
-
-    @Test
-    void getByMaxAvgRating_validThreshold_shuffledTrue_returnsListOfCardResponse() throws Exception {
-        when(cardService.getCardsByMaxAvgRating(3.0, true))
-            .thenReturn(List.of(c1, c2));
-        mockMvc.perform(get(ENDPOINT + "/maxAvgRating")
-                .param("threshold", "3.0")
-                .param("shuffled", "true"))
-            .andExpect(status().isOk())
-            .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-            .andExpect(jsonPath("$[0].id").value(1))
-            .andExpect(jsonPath("$[0].front").value("f1"))
-            .andExpect(jsonPath("$[0].back").value("b1"))
-            .andExpect(jsonPath("$[1].id").value(2))
-            .andExpect(jsonPath("$[1].front").value("f2"))
-            .andExpect(jsonPath("$[1].back").value("b2"));
-        verify(cardService, never()).getCardsByMaxAvgRating(3.0, false);
     }
 
     @Test

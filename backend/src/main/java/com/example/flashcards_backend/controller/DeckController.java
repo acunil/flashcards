@@ -104,7 +104,7 @@ public class DeckController {
     }
 
     @Operation(summary = "Get or create decks by names",
-            description = "Returns or creates decks by their names, optionally by subject ID.")
+            description = "Returns or creates decks by their names by subject ID.")
     @ApiResponses(value = {
         @ApiResponse(responseCode = "200", description = "Successful operation",
             content = @Content(mediaType = "application/json",
@@ -112,8 +112,8 @@ public class DeckController {
     })
     @PostMapping
     public ResponseEntity<Set<DeckSummary>> upsertDecksByNamesAndSubjectId(
-            @RequestParam Set<@DeckName String> names,
-            @RequestParam(value = "subjectId", required = false) Long subjectId
+            @RequestBody Set<@DeckName String> names,
+            @RequestParam(value = "subjectId") Long subjectId
     ) {
         Set<Deck> decks = cardDeckService.getOrCreateDecksByNamesAndSubjectId(names, subjectId);
         return ResponseEntity.ok(
@@ -121,6 +121,33 @@ public class DeckController {
                 .map(DeckSummary::fromEntity)
                 .collect(Collectors.toSet())
         );
+    }
+
+
+    @Operation(summary = "Add cards to a deck", description = "Adds cards to a deck by their ID. Subject must match.")
+    @ApiResponse(responseCode = "204", description = "Cards added")
+    @ApiResponse(responseCode = "400", description = "Invalid request")
+    @ApiResponse(responseCode = "404", description = "Deck not found")
+    @PatchMapping("/{id}/add-cards")
+    public ResponseEntity<Void> addCardsToDeck(
+            @PathVariable Long id,
+            @RequestBody Set<Long> cardIds
+    ) {
+        cardDeckService.addDeckToCards(id, cardIds);
+        return ResponseEntity.noContent().build();
+    }
+
+    @Operation(summary = "Remove cards from a deck", description = "Removes cards from a deck by their ID.")
+    @ApiResponse(responseCode = "204", description = "Cards removed")
+    @ApiResponse(responseCode = "400", description = "Invalid request")
+    @ApiResponse(responseCode = "404", description = "Deck not found")
+    @PatchMapping("/{id}/remove-cards")
+    public ResponseEntity<Void> removeCardsFromDeck(
+            @PathVariable Long id,
+            @RequestBody Set<Long> cardIds
+    ) {
+        cardDeckService.removeDeckFromCards(id, cardIds);
+        return ResponseEntity.noContent().build();
     }
 
     /* Helpers */

@@ -10,20 +10,20 @@ import java.util.Set;
 
 @Builder
 public record CardRequest(
-    @CardContent String front,
-    @CardContent String back,
-    @Length(max = 100) String hintFront,
-    @Length(max = 100) String hintBack,
-    @NonNull
-    Long subjectId,
-    Set<@DeckName String> deckNames
+        @CardContent String front,
+        @CardContent String back,
+        @Length(max = 100) String hintFront,
+        @Length(max = 100) String hintBack,
+        @NonNull
+        Long subjectId,
+        Set<@DeckName String> deckNames
 ) {
     public static CardRequest of(String front, String back, Long subjectId) {
         return new CardRequest(front, back, null, null, subjectId, null);
     }
 
     public static CardRequest of(String front, String back, Long subjectId, String... deckNames) {
-        return new CardRequest(front, back,null, null, subjectId, Set.of(deckNames));
+        return new CardRequest(front, back, null, null, subjectId, Set.of(deckNames));
     }
 
 }

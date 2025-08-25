@@ -26,15 +26,29 @@ public class User {
     @Column(nullable = false)
     private boolean isActive = true;
 
+    @Builder.Default
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Card> cards = new ArrayList<>();
 
+    @Builder.Default
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Deck> decks = new ArrayList<>();
 
+    @Builder.Default
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<CardHistory> cardHistories = new ArrayList<>();
 
+    @Builder.Default
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Subject> subjects = new ArrayList<>();
+
+    public void addSubject(Subject subject) {
+        subjects.add(subject);
+        subject.setUser(this);
+    }
+
+    public void removeSubject(Subject subject) {
+        subjects.remove(subject);
+        subject.setUser(null);
+    }
 }

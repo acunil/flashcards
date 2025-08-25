@@ -12,8 +12,8 @@ Thank you,Danke,
 
 const BulkUpload = () => {
   const navigate = useNavigate();
-  const { selectedSubjectId } = useAppContext();
-  const { uploadCsv } = useCsvUpload();
+  const { selectedSubjectId, refetchCards, fetchDecks } = useAppContext();
+  const { uploadCsv, loading, error } = useCsvUpload(); // 👈 use loading + error
   const [showToast, setShowToast] = useState(false);
 
   const downloadSample = () => {
@@ -33,6 +33,8 @@ const BulkUpload = () => {
 
     const result = await uploadCsv(selectedSubjectId, file);
     if (result) {
+      await fetchDecks();
+      await refetchCards();
       setShowToast(true);
       e.target.value = ""; // reset input
     }
@@ -47,11 +49,20 @@ const BulkUpload = () => {
 
   return (
     <div className="bg-green-200 min-h-screen">
+      {/* ✅ Toast after upload */}
       {showToast && (
-        <div className="fixed top-20 left-1/2 -translate-x-1/2 bg-green-200 border-2 border-black px-4 py-2 rounded shadow transition-opacity z-50">
+        <div className="fixed top-15 left-1/2 -translate-x-1/2 bg-yellow-200 border-2 border-black px-4 py-2 rounded shadow transition-opacity z-50">
           Cards uploaded successfully!
         </div>
       )}
+
+      {/* ✅ Spinner while uploading */}
+      {loading && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+          <div className="animate-spin rounded-full h-12 w-12 border-4 border-white border-t-transparent"></div>
+        </div>
+      )}
+
       <Header />
       <div className="flex justify-center">
         <div className="bg-white w-full max-w-screen-sm border-black border-2 p-4 rounded m-4">
@@ -62,6 +73,7 @@ const BulkUpload = () => {
                 id="decks-back-button"
                 className="cursor-pointer"
                 onClick={() => navigate("/")}
+                disabled={loading} // 👈 disable while uploading
               >
                 <CaretLeft size={24} />
               </button>
@@ -70,6 +82,7 @@ const BulkUpload = () => {
               Upload Cards
             </h1>
           </div>
+
           {/* Instructions */}
           <p className="text-md mb-2">
             Cards can be uploaded in bulk using a CSV file.
@@ -83,10 +96,14 @@ const BulkUpload = () => {
             </li>
             <li>Each row represents a single card</li>
           </ul>
+
           {/* Download Sample Button */}
           <button
             onClick={downloadSample}
-            className={`relative flex bg-sky-200 p-2 mb-4 items-center justify-between text-black rounded shadow-lg cursor-pointer hover:bg-gray-200 border-black border-2 `}
+            disabled={loading} // 👈 disable while uploading
+            className={`relative flex bg-sky-200 p-2 mb-4 items-center justify-between text-black rounded shadow-lg cursor-pointer hover:bg-gray-200 border-black border-2 ${
+              loading ? "opacity-50 cursor-not-allowed" : ""
+            }`}
           >
             <DownloadSimple
               size={20}
@@ -102,9 +119,17 @@ const BulkUpload = () => {
               type="file"
               accept=".csv"
               onChange={handleFileUpload}
+              disabled={loading} // 👈 disable input
               className="border-2 p-2 rounded w-full h-full"
             />
           </div>
+
+          {/* ✅ Show error if upload failed */}
+          {error && (
+            <div className="mt-4 text-red-600 font-medium text-center">
+              {error}
+            </div>
+          )}
         </div>
       </div>
     </div>

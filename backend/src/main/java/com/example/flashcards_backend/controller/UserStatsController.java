@@ -23,7 +23,7 @@ public class UserStatsController {
 
     @Operation(summary = "Get user stats", description = "Returns user stats for a given user.")
     @ApiResponse(responseCode = "200", description = "Successful operation",
-            content = @Content(schema = @Schema(implementation = UserStatsResponse.class)))
+            content = @Content(schema = @Schema(implementation = UserStatsResponse.class), mediaType = "application/json"))
     @ApiResponse(responseCode = "404", description = "User not found", content = @Content)
     @GetMapping
     public UserStatsResponse getForUser(@RequestParam UUID userId) {

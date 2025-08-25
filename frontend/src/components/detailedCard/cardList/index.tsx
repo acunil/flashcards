@@ -4,6 +4,7 @@ import CardListItem from "../cardListItem";
 import { Trash } from "phosphor-react";
 import useUpdateCard from "../../../hooks/cards/useUpdateCard"; // assuming you have this
 import useDeleteCards from "../../../hooks/cards/useDeleteCards";
+import { useAppContext } from "../../../contexts";
 
 interface CardListProps {
   cards: Card[];
@@ -17,6 +18,7 @@ const CardList = ({ cards, isAllCardsList }: CardListProps) => {
   const [selectedCards, setSelectedCards] = useState<Set<number>>(new Set());
   const [searchQuery, setSearchQuery] = useState("");
   const [isEditing, setIsEditing] = useState(false);
+  const { selectedSubjectId } = useAppContext();
 
   const toggleBulkSelectMode = () => {
     if (isEditing) return;
@@ -50,7 +52,11 @@ const CardList = ({ cards, isAllCardsList }: CardListProps) => {
     front: string;
     back: string;
   }) => {
-    updateCard({ ...updated, deckNames: [] });
+    updateCard({
+      ...updated,
+      deckNames: [],
+      subjectId: selectedSubjectId || 0,
+    });
   };
 
   // Filter cards based on search query

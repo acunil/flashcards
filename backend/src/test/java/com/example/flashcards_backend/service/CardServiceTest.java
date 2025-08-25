@@ -15,9 +15,9 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
-import static com.example.flashcards_backend.testutils.ShuffleTestUtils.assertEventuallyReorders;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.*;
@@ -31,12 +31,10 @@ class CardServiceTest {
     public static final Long CARD_2_ID = 2L;
     public static final Long CARD_3_ID = 3L;
     public static final Long SUBJECT_ID = 1L;
-    public static final double THRESHOLD = 3.0;
 
     private CardService cardService;
     private Card card1;
     private Card card2;
-    private List<Card> originalCards;
     private Deck deck1;
     private Deck deck2;
     private Subject subject;
@@ -67,27 +65,27 @@ class CardServiceTest {
         cardService = new CardService(cardRepository, cardHistoryService, cardDeckService, subjectService);
         subject = Subject.builder().name("Subject 1").id(1L).build();
         deck1 = Deck.builder()
-            .id(1L)
-            .name("Deck 1")
-            .subject(subject)
-            .build();
+                .id(1L)
+                .name("Deck 1")
+                .subject(subject)
+                .build();
         deck2 = Deck.builder()
-            .id(2L)
-            .name("Deck 2")
-            .subject(subject)
-            .build();
+                .id(2L)
+                .name("Deck 2")
+                .subject(subject)
+                .build();
         card1 = Card.builder()
-            .id(CARD_1_ID)
-            .front("Front 1")
-            .back("Back 1")
-            .subject(subject)
-            .build();
+                .id(CARD_1_ID)
+                .front("Front 1")
+                .back("Back 1")
+                .subject(subject)
+                .build();
         card2 = Card.builder()
-            .id(CARD_2_ID)
-            .front("Front 2")
-            .back("Back 2")
-            .subject(subject)
-            .build();
+                .id(CARD_2_ID)
+                .front("Front 2")
+                .back("Back 2")
+                .subject(subject)
+                .build();
         Card card3 = Card.builder()
                 .id(CARD_3_ID)
                 .front("Front 3")
@@ -96,7 +94,6 @@ class CardServiceTest {
                 .build();
         card1.addDecks(Set.of(deck1, deck2));
         card2.addDecks(Set.of(deck1));
-        originalCards = List.of(card1, card2, card3);
 
         when(cardRepository.findById(CARD_1_ID)).thenReturn(Optional.of(card1));
         when(cardRepository.findById(CARD_2_ID)).thenReturn(Optional.of(card2));
@@ -131,6 +128,106 @@ class CardServiceTest {
     }
 
     @Test
+    void createCards_allNew_withDecks_linksOnceAndSaves() {
+        CardRequest req1 = new CardRequest("F1", "B1", null, null, 1L, Set.of("Deck 1", "Deck 2"));
+        CardRequest req2 = new CardRequest("F2", "B2", null, null, 1L, Set.of("Deck 1"));
+        List<CardRequest> requests = List.of(req1, req2);
+
+        when(cardDeckService.getOrCreateDecksByNamesAndSubjectId(Set.of("Deck 1", "Deck 2"), 1L))
+                .thenReturn(Set.of(deck1, deck2));
+        when(subjectService.findById(1L)).thenReturn(subject);
+
+        // no existing cards
+        when(cardRepository.saveAllAndFlush(anyList())).thenAnswer(inv -> inv.getArgument(0));
+
+        List<CreateCardResponse> responses = cardService.createCards(requests);
+
+        // verify deck lookup batched once
+        verify(cardDeckService).getOrCreateDecksByNamesAndSubjectId(Set.of("Deck 1", "Deck 2"), 1L);
+        // verify saves twice (initial + after linking)
+        verify(cardRepository, times(2)).saveAllAndFlush(anyList());
+
+        assertThat(responses)
+                .hasSize(2)
+                .allSatisfy(r -> assertThat(r.alreadyExisted()).isFalse());
+    }
+
+    @Test
+    void createCards_mixedExistingAndNew() {
+        Card existingCard = Card.builder().id(100L).front("F1").back("B1").subject(subject).build();
+
+        CardRequest req1 = new CardRequest("F1", "B1", null, null, 1L, null);
+        CardRequest req2 = new CardRequest("F2", "B2", null, null, 1L, null);
+        List<CardRequest> requests = List.of(req1, req2);
+
+        when(cardRepository.saveAllAndFlush(anyList())).thenAnswer(inv -> inv.getArgument(0));
+        when(subjectService.findById(1L)).thenReturn(subject);
+
+        // create ONE spy instance
+        CardService spy = spyService();
+
+        // Simulate getExistingCard returning for first request
+        doReturn(Optional.of(existingCard)).when(spy).getExistingCard(req1);
+
+        List<CreateCardResponse> responses = spy.createCards(requests);
+
+        assertThat(responses).hasSize(2);
+        assertThat(responses.get(0).alreadyExisted()).isTrue();
+        assertThat(responses.get(1).alreadyExisted()).isFalse();
+    }
+
+    @Test
+    void createCards_emptyListThrows() {
+        assertThatThrownBy(() -> cardService.createCards(List.of()))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("No card requests provided");
+    }
+
+    @Test
+    void createCards_multipleSubjectsThrows() {
+        List<CardRequest> bad = List.of(
+                new CardRequest("F1", "B1", null, null, 1L, null),
+                new CardRequest("F2", "B2", null, null, 2L, null)
+        );
+
+        assertThatThrownBy(() -> cardService.createCards(bad))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("All CardRequests must share the same subjectId");
+    }
+
+    @Test
+    void createCards_noDecks_skipsDeckLinking() {
+        CardRequest req1 = new CardRequest("F1", "B1", null, null, 1L, null);
+        List<CardRequest> requests = List.of(req1);
+
+        when(subjectService.findById(1L)).thenReturn(subject);
+        when(cardRepository.saveAllAndFlush(anyList())).thenAnswer(inv -> inv.getArgument(0));
+
+        List<CreateCardResponse> responses = cardService.createCards(requests);
+
+        verify(cardDeckService, never()).getOrCreateDecksByNamesAndSubjectId(anySet(), anyLong());
+        assertThat(responses).hasSize(1);
+    }
+
+    // helper to spy CardService to override getExistingCard
+    private CardService spyService() {
+        CardService spy = Mockito.spy(cardService);
+        doReturn(Optional.empty()).when(spy).getExistingCard(any());
+        doAnswer(inv -> {
+            Card c = inv.getArgument(0);
+            boolean already = inv.getArgument(1);
+            return CreateCardResponse.builder()
+                    .id(c.getId())
+                    .front(c.getFront())
+                    .back(c.getBack())
+                    .alreadyExisted(already)
+                    .decks(new ArrayList<>())
+                    .build();
+        }).when(spy).mapCardToCreateCardResponse(any(), anyBoolean());
+        return spy;
+    }
+
+    @Test
     void testGetCardById() {
         when(cardRepository.findCardDeckRowsByCardId(CARD_2_ID)).thenReturn(List.of(cardDeckRowProjection3));
 
@@ -151,9 +248,9 @@ class CardServiceTest {
     @Test
     void testGetCardById_throwsExceptionIfCardNotFound() {
         assertThatThrownBy(() -> cardService.getCardResponseById(99L))
-            .isInstanceOf(CardNotFoundException.class)
-            .extracting("message")
-            .isEqualTo("Card not found with id: 99");
+                .isInstanceOf(CardNotFoundException.class)
+                .extracting("message")
+                .isEqualTo("Card not found with id: 99");
     }
 
     @Test
@@ -198,7 +295,7 @@ class CardServiceTest {
         CardRequest request = CardRequest.of(front, back, SUBJECT_ID);
 
         // when
-        var  result = cardService.createCard(request);
+        var result = cardService.createCard(request);
 
         // then
         assertThat(result.alreadyExisted()).isTrue();
@@ -352,64 +449,9 @@ class CardServiceTest {
     void rate_Card_missingCard_throwsException() {
         doThrow(new CardNotFoundException(99L)).when(cardHistoryService).recordRating(99L, 4);
         assertThatThrownBy(() -> cardService.rateCard(99L, 4))
-            .isInstanceOf(CardNotFoundException.class)
-            .extracting("message")
-            .isEqualTo("Card not found with id: 99");
-    }
-
-    @Test
-    void getCardsByMinAvgRating_returnsCardsAboveThreshold() {
-        when(cardRepository.findByMinAvgRating(THRESHOLD)).thenReturn(List.of(card1));
-        List<Card> result = cardService.getCardsByMinAvgRating(THRESHOLD);
-        assertThat(result).containsExactly(card1);
-    }
-
-    @Test
-    void getCardsByMinAvgRating_shuffledTrue_returnsCardsAboveThresholdEventuallyReordered() {
-        when(cardRepository.findByMinAvgRating(THRESHOLD))
-            .thenReturn(originalCards);
-
-        assertEventuallyReorders(
-            () -> cardService.getCardsByMinAvgRating(THRESHOLD, true),
-            originalCards
-        );
-    }
-
-
-    @Test
-    void getCardsByMinAvgRating_shuffledFalse_alwaysSameOrder() {
-        when(cardRepository.findByMinAvgRating(THRESHOLD))
-            .thenReturn(originalCards);
-
-        List<Card> result = cardService.getCardsByMinAvgRating(THRESHOLD, false);
-        assertThat(result).isSameAs(originalCards);
-    }
-
-    @Test
-    void getCardsByMaxAvgRating_returnsCardsBelowThreshold() {
-        when(cardRepository.findByMaxAvgRating(THRESHOLD)).thenReturn(List.of(card2));
-        List<Card> result = cardService.getCardsByMaxAvgRating(THRESHOLD);
-        assertThat(result).containsExactly(card2);
-    }
-
-    @Test
-    void getCardsByMaxAvgRating_shuffledTrue_returnsCardsBelowThresholdEventuallyReordered() {
-        when(cardRepository.findByMaxAvgRating(THRESHOLD))
-            .thenReturn(originalCards);
-
-        assertEventuallyReorders(
-            () -> cardService.getCardsByMaxAvgRating(THRESHOLD, true),
-            originalCards
-        );
-    }
-
-    @Test
-    void getCardsByMaxAvgRating_shuffledFalse_alwaysSameOrder() {
-        when(cardRepository.findByMaxAvgRating(THRESHOLD))
-            .thenReturn(originalCards);
-
-        List<Card> result = cardService.getCardsByMaxAvgRating(THRESHOLD, false);
-        assertThat(result).isSameAs(originalCards);
+                .isInstanceOf(CardNotFoundException.class)
+                .extracting("message")
+                .isEqualTo("Card not found with id: 99");
     }
 
     @Test
@@ -430,9 +472,9 @@ class CardServiceTest {
         doThrow(new CardNotFoundException(ids))
                 .when(cardRepository).findAllById(ids);
         assertThatThrownBy(() -> cardService.deleteCards(ids))
-            .isInstanceOf(CardNotFoundException.class)
-            .extracting("message")
-            .isEqualTo("Cards not found with ids: [1, 3]");
+                .isInstanceOf(CardNotFoundException.class)
+                .extracting("message")
+                .isEqualTo("Cards not found with ids: [1, 3]");
     }
 
     @Test
@@ -481,9 +523,9 @@ class CardServiceTest {
 
         HintRequest request = new HintRequest(null, null);
         assertThatThrownBy(() -> cardService.setHints(request, CARD_1_ID))
-            .isInstanceOf(CardNotFoundException.class)
-            .extracting("message")
-            .isEqualTo("Card not found with id: " + CARD_1_ID);
+                .isInstanceOf(CardNotFoundException.class)
+                .extracting("message")
+                .isEqualTo("Card not found with id: " + CARD_1_ID);
 
         verify(cardRepository).findById(CARD_1_ID);
         verifyNoMoreInteractions(cardRepository);

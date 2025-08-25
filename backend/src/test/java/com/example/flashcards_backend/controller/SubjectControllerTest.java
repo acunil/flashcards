@@ -1,6 +1,6 @@
 package com.example.flashcards_backend.controller;
 
-import com.example.flashcards_backend.dto.SubjectDto;
+import com.example.flashcards_backend.dto.SubjectRequest;
 import com.example.flashcards_backend.exception.SubjectNotFoundException;
 import com.example.flashcards_backend.model.Subject;
 import com.example.flashcards_backend.service.SubjectService;
@@ -83,14 +83,14 @@ class SubjectControllerTest {
                         .content("{\"name\":\"Subject 3\"}"))
                 .andExpect(status().isOk());
 
-        ArgumentCaptor<SubjectDto> captor = ArgumentCaptor.forClass(SubjectDto.class);
-        verify(subjectService).create(captor.capture());
+        ArgumentCaptor<SubjectRequest> captor = ArgumentCaptor.forClass(SubjectRequest.class);
+        verify(subjectService).create(captor.capture(), eq(USER_ID));
         assertThat(captor.getValue().name()).isEqualTo("Subject 3");
     }
 
     @Test
     void createSubjectInvalidInput() throws Exception {
-        doThrow(new IllegalArgumentException("Invalid input")).when(subjectService).create(any(SubjectDto.class));
+        doThrow(new IllegalArgumentException("Invalid input")).when(subjectService).create(any(SubjectRequest.class), any(UUID.class));
 
         mockMvc.perform(post(ENDPOINT)
                         .param("userId", USER_ID.toString())
@@ -104,7 +104,7 @@ class SubjectControllerTest {
     void updateSubjectFound() throws Exception {
         Subject updatedSubject = Subject.builder().id(1L).name("Updated Subject 1").build();
 
-        when(subjectService.update(eq(1L), any(SubjectDto.class))).thenReturn(updatedSubject);
+        when(subjectService.update(eq(1L), any(SubjectRequest.class))).thenReturn(updatedSubject);
 
         mockMvc.perform(put(ENDPOINT + "/1")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -116,7 +116,7 @@ class SubjectControllerTest {
 
     @Test
     void updateSubjectNotFound() throws Exception {
-        when(subjectService.update(eq(1L), any(SubjectDto.class)))
+        when(subjectService.update(eq(1L), any(SubjectRequest.class)))
                 .thenThrow(new SubjectNotFoundException(1L));
 
         mockMvc.perform(put(ENDPOINT + "/1")

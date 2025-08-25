@@ -1,18 +1,16 @@
 package com.example.flashcards_backend.service;
 
-import com.example.flashcards_backend.dto.CardResponse;
-import com.example.flashcards_backend.dto.CsvUploadResponseDto;
+import com.example.flashcards_backend.dto.*;
 import com.example.flashcards_backend.model.Card;
 import com.example.flashcards_backend.model.Deck;
 import com.example.flashcards_backend.model.Subject;
+import com.example.flashcards_backend.model.User;
 import com.example.flashcards_backend.repository.CardRepository;
 import com.example.flashcards_backend.repository.SubjectRepository;
 import nl.altindag.log.LogCaptor;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentCaptor;
-import org.mockito.Captor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
@@ -22,6 +20,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -37,80 +36,91 @@ class CsvUploadServiceTest {
     private SubjectRepository subjectRepository;
 
     @Mock
-    private CardDeckService cardDeckService;
+    private CardService cardService;
 
     @InjectMocks
     private CsvUploadServiceImpl service;
 
-
     private LogCaptor logCaptor;
 
-    @Captor
-    private ArgumentCaptor<List<Card>> cardListCaptor;
-
     private Subject subject;
+    private User user;
 
     @BeforeEach
     void setUp() {
         logCaptor = LogCaptor.forClass(CsvUploadServiceImpl.class);
         logCaptor.clearLogs();
-        subject = Subject.builder().id(1L).name("Subject 1").build();
+        user = User.builder().id(UUID.randomUUID()).build();
+        subject = Subject.builder().id(1L).name("Subject 1").user(user).build();
     }
 
     @Test
     void uploadCsv_filtersInvalidPartitionsDuplicatesAndSavesValid() throws Exception {
-        when(subjectRepository.findById(1L)).thenReturn(Optional.of(subject));
+        when(subjectRepository.findByIdWithUserAndSubjects(1L)).thenReturn(Optional.of(subject));
+
         String csv = """
-            front,back,decks
-            ,b1,
-            f2,,
-            f3,b3,d1;d2
-            f4,b4,
-            """;
-        InputStream is = new ByteArrayInputStream(csv.getBytes(StandardCharsets.UTF_8));
+                front,back,decks
+                ,b1,
+                f2,,
+                f3,b3,d1;d2
+                f4,b4,
+                """;
+        InputStream csvInputStream = new ByteArrayInputStream(csv.getBytes(StandardCharsets.UTF_8));
 
-        when(cardRepository.existsByFrontAndBack("f3", "b3")).thenReturn(false);
-        when(cardRepository.existsByFrontAndBack("f4", "b4")).thenReturn(true);
+        // Duplicate detection
+        when(cardRepository.existsByFrontAndBackAndSubjectId("f3", "b3", 1L)).thenReturn(false);
+        when(cardRepository.existsByFrontAndBackAndSubjectId("f4", "b4", 1L)).thenReturn(true);
 
-        Deck deck1 = Deck.builder().name("d1").subject(subject).build();
-        Deck deck2 = Deck.builder().name("d2").subject(subject).build();
-        when(cardDeckService.getOrCreateDecksByNamesAndSubjectId(Set.of("d1", "d2"), subject.getId()))
-                .thenReturn(Set.of(deck1, deck2));
+        // Decks resolved up‑front
+        Deck deck1 = Deck.builder().id(1L).name("d1").subject(subject).user(user).build();
+        Deck deck2 = Deck.builder().id(2L).name("d2").subject(subject).user(user).build();
 
+        // Card that will be “saved” by cardService
         Card savedCard = Card.builder()
+                .id(42L)
                 .front("f3")
                 .back("b3")
-                .id(1L)
                 .subject(subject)
-                .decks(Set.of(deck1, deck2))
+                .user(user)
                 .build();
-        when(cardRepository.saveAll(cardListCaptor.capture())).thenReturn(List.of(savedCard));
+        savedCard.addDecks(Set.of(deck1, deck2));
 
-        CsvUploadResponseDto csvUploadResponseDTO = service.uploadCsv(is, subject.getId());
+        when(cardService.createCards(anyList()))
+                .thenReturn(List.of(CreateCardResponse.builder()
+                        .id(savedCard.getId())
+                        .front(savedCard.getFront())
+                        .back(savedCard.getBack())
+                        .decks(savedCard.getDecks().stream().map(DeckSummary::fromEntity).toList())
+                        .alreadyExisted(false)
+                        .build()));
 
+        CsvUploadResponseDto result = service.uploadCsv(csvInputStream, subject.getId());
+
+        // Warnings for invalid rows
         assertThat(logCaptor.getWarnLogs()).hasSize(2)
-            .allSatisfy(msg -> assertThat(msg).startsWith("Skipping invalid row:"));
+                .allSatisfy(msg -> assertThat(msg).startsWith("Skipping invalid row:"));
 
-        assertThat(logCaptor.getInfoLogs())
-            .hasSize(3)
-            .containsSequence("Duplicate, skipping: front='f4', back='b4'",
-                "Found 1 duplicates",
-                "Saved 1 new cards");
+        // Result DTO matches our mock
+        List<CardResponse> saved = result.saved();
+        assertThat(saved).singleElement().satisfies(card -> {
+            assertThat(card.front()).isEqualTo("f3");
+            assertThat(card.back()).isEqualTo("b3");
+            assertThat(card.decks()).hasSize(2)
+                    .containsExactlyInAnyOrder(DeckSummary.fromEntity(deck1), DeckSummary.fromEntity(deck2));
+        });
+        assertThat(result.duplicates())
+                .containsExactly(CardResponse.builder().front("f4").back("b4").build());
 
-        List<Card> toSaveCaptured = cardListCaptor.getValue();
-        assertThat(toSaveCaptured).hasSize(1);
-        assertThat(toSaveCaptured.getFirst().getFront()).isEqualTo("f3");
-        assertThat(toSaveCaptured.getFirst().getBack()).isEqualTo("b3");
-        verify(cardRepository).existsByFrontAndBack("f3", "b3");
-
-        assertThat(csvUploadResponseDTO.saved()).containsExactly(CardResponse.fromEntity(savedCard));
-        Card expectedDuplicate = Card.builder().front("f4").back("b4").subject(subject).build();
-        assertThat(csvUploadResponseDTO.duplicates()).containsExactly(CardResponse.fromEntity(expectedDuplicate));
+        // CardService invoked once with the correct request list
+        verify(cardService).createCards(argThat(reqs ->
+                reqs.size() == 1 &&
+                        reqs.getFirst().deckNames().containsAll(Set.of("d1", "d2"))
+        ));
     }
 
     @Test
     void uploadCsv_ioExceptionIsLoggedAndRethrown() throws Exception {
-        when(subjectRepository.findById(1L)).thenReturn(Optional.of(subject));
+        when(subjectRepository.findByIdWithUserAndSubjects(1L)).thenReturn(Optional.of(subject));
         try (InputStream badStream = new InputStream() {
             @Override
             public int read() throws IOException {
@@ -118,12 +128,12 @@ class CsvUploadServiceTest {
             }
         }) {
             assertThatThrownBy(() -> service.uploadCsv(badStream, 1L))
-                .isInstanceOf(IOException.class)
-                .hasMessageContaining("fail");
+                    .isInstanceOf(IOException.class)
+                    .hasMessageContaining("fail");
         }
 
         assertThat(logCaptor.getErrorLogs())
-            .singleElement()
-            .isEqualTo("CSV processing error");
+                .singleElement()
+                .isEqualTo("CSV processing error");
     }
 }

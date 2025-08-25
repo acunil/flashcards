@@ -9,15 +9,15 @@ import { useAppContext } from "../contexts";
 const Decks = () => {
   const navigate = useNavigate();
 
-  const { decks, loading, error, setDecks } = useAppContext();
-  const { createDeck, loading: creating, error: createError } = useCreateDeck();
+  const { decks, loading, setDecks, selectedSubjectId } = useAppContext();
+  const { createDeck, loading: creating } = useCreateDeck(selectedSubjectId);
 
   const handleAddDeck = async (name: string) => {
     if (!name.trim()) return;
 
     const newDeck = await createDeck(name.trim());
     if (newDeck) {
-      setDecks((prev) => [...prev, newDeck]);
+      setDecks((prev) => [...prev, newDeck]); // update context
     }
   };
 
@@ -40,11 +40,9 @@ const Decks = () => {
           </div>
 
           {(loading || creating) && <DeckListSkeleton />}
-          {(error || createError) && (
-            <p className="text-red-600">Error: {error || createError}</p>
-          )}
+          {decks.length === 0 && <p className="text-center">No decks found</p>}
 
-          {!loading && !creating && !error && !createError && (
+          {!loading && !creating && decks.length > 0 && (
             <DeckList decks={decks} onAddDeck={handleAddDeck} />
           )}
         </div>
