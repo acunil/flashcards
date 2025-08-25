@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { API_URL } from "../urls";
+import { useAuthFetch } from "../../utils/authFetch";
 
 export type NewCard = {
   front: string;
@@ -13,29 +14,30 @@ export type NewCard = {
 const useCreateCard = () => {
   const [creating, setCreating] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const { authFetch } = useAuthFetch();
 
   const createCard = async (card: NewCard) => {
+    if (!card.subjectId || card.subjectId === 0) {
+      setError("No subject selected");
+      return null;
+    }
+
+    setCreating(true);
+    setError(null);
+
     try {
-      setCreating(true);
-      setError(null);
-
-      if (!card.subjectId || card.subjectId === 0) {
-        setError("No subject selected");
-        return null;
-      }
-
-      const response = await fetch(`${API_URL}/cards`, {
+      const result = await authFetch(`${API_URL}/cards`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(card),
       });
 
-      if (!response.ok) {
-        throw new Error("Failed to create card");
+      if (result === undefined) {
+        // User was likely redirected to login
+        return null;
       }
 
-      const data = await response.json();
-      return data;
+      return result;
     } catch (err: unknown) {
       if (err instanceof Error) {
         setError(err.message);
