@@ -5,7 +5,7 @@ import type { Deck } from "../types/deck";
 import SearchableMultiSelect from "../components/searchableMultiSelect";
 import { useAppContext } from "../contexts";
 import { CaretLeft } from "phosphor-react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import useUpdateCard from "../hooks/cards/useUpdateCard";
 import type { Card } from "../types/card";
 
@@ -27,6 +27,9 @@ const AddCard = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [cardToEdit, setCardToEdit] = useState<Card>();
 
+  const [searchParams] = useSearchParams();
+  const deckId = searchParams.get("deckId");
+
   const resetForm = () => {
     setFront("");
     setBack("");
@@ -47,8 +50,13 @@ const AddCard = () => {
         setBackHint(cardToEdit.hintBack);
         setSelectedDecks(cardToEdit.decks);
       }
+    } else if (deckId) {
+      const matchedDeck = decks.find((d) => d.id === Number(deckId));
+      if (matchedDeck) {
+        setSelectedDecks([matchedDeck]);
+      }
     }
-  }, [cardId, cards, cardToEdit]);
+  }, [cardId, cards, cardToEdit, deckId, decks]);
 
   useEffect(() => {
     if (showToast) {

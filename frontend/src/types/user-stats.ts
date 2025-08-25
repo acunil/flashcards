@@ -10,5 +10,5 @@ export type UserStats = {
   totalLastRating3: number;
   totalLastRating4: number;
   totalLastRating5: number;
-  totalUniviwedCards: number;
+  totalUnviewedCards: number;
 };

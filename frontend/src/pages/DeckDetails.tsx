@@ -6,6 +6,7 @@ import {
   Pencil,
   FloppyDisk,
   X,
+  Plus,
 } from "phosphor-react";
 import CardList from "../components/detailedCard/cardList";
 import { useAppContext } from "../contexts";
@@ -78,6 +79,10 @@ const DeckDetails = () => {
     }
   };
 
+  const handleClickAddCard = () => {
+    navigate(`/add-card?deckId=${deck?.id}`);
+  };
+
   return (
     <div className="bg-sky-200 min-h-screen">
       <Header />
@@ -94,7 +99,11 @@ const DeckDetails = () => {
 
             <div className="mx-auto flex items-center gap-2">
               {effectiveDeckId === 0 ? (
-                <h1 className="text-xl font-bold text-center">all cards</h1>
+                <h1 className="text-xl font-bold text-center">
+                  <div className="flex flex-row items-center gap-2">
+                    All cards
+                  </div>
+                </h1>
               ) : isEditing ? (
                 <div className="flex items-center gap-2">
                   <input
@@ -124,7 +133,9 @@ const DeckDetails = () => {
               ) : (
                 <div className="flex items-center gap-2">
                   <h1 className="text-xl font-bold text-center">
-                    {deck?.name}
+                    <div className="flex flex-row items-center gap-2">
+                      Deck: {deck?.name}
+                    </div>
                   </h1>
                   {deck && (
                     <button
@@ -138,12 +149,20 @@ const DeckDetails = () => {
               )}
             </div>
 
-            <button
-              onClick={handleClickRevise}
-              className="absolute right-0 flex items-center justify-center p-2 bg-yellow-200 hover:bg-yellow-100 border-black border-2 rounded shadow"
-            >
-              <GraduationCap size={20} />
-            </button>
+            <div className="flex flex-row gap-2 justify-end">
+              <button
+                onClick={handleClickAddCard}
+                className="flex items-center cursor-pointer justify-center p-2 bg-yellow-200 hover:bg-yellow-300 border-black border-2 rounded shadow"
+              >
+                <Plus size={20} />
+              </button>
+              <button
+                onClick={handleClickRevise}
+                className="flex items-center cursor-pointer justify-center p-2 bg-pink-200 hover:bg-pink-300 border-black border-2 rounded shadow"
+              >
+                <GraduationCap size={20} />
+              </button>
+            </div>
           </div>
 
           {/* Card list */}

@@ -43,7 +43,7 @@ const UserStats = () => {
 
           <div className="flex justify-between px-2 rounded">
             <span className="font-bold">Total unviewed cards:</span>
-            <span>{userStats?.totalUniviwedCards ?? "-"}</span>
+            <span>{userStats?.totalUnviewedCards ?? "-"}</span>
           </div>
 
           <div className="flex flex-col justify-between px-2 rounded">
