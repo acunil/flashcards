@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { API_URL } from "../urls";
 import type { UserStats } from "../../types/user-stats";
 
@@ -7,7 +7,7 @@ const useUserStats = (userId: string) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const getUserStats = async () => {
+  const getUserStats = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -24,7 +24,7 @@ const useUserStats = (userId: string) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [userId]);
 
   return { userStats, loading, error, getUserStats };
 };
