@@ -9,6 +9,7 @@ import { useAppContext } from "../contexts";
 import type { Card } from "../types/card";
 import ReviseButtons from "../components/reviseButtons";
 import { useNavigate } from "react-router-dom";
+import PageLoad from "../components/pageLoad";
 
 interface ReviseProps {
   hardMode?: boolean;
@@ -89,7 +90,7 @@ const Revise = ({ hardMode = false, deckId }: ReviseProps) => {
     <div className={`min-h-screen ${hardMode ? "bg-pink-300" : "bg-pink-200"}`}>
       <Header isRevising={true} />
       <main className="flex flex-col items-center my-2">
-        {loading && <p>Loading cards...</p>}
+        {loading && <PageLoad />}
         {error && (
           <div className="bg-white w-full max-w-screen-sm border-black border-2 p-3 rounded m-4 text-center">
             <p>No cards found</p>
@@ -118,9 +119,6 @@ const Revise = ({ hardMode = false, deckId }: ReviseProps) => {
               <DifficultyButtons onSelectDifficulty={handleDifficultySelect} />
             </div>
           </>
-        )}
-        {!loading && !error && revisionCards.length === 0 && (
-          <p>No cards available.</p>
         )}
       </main>
     </div>
