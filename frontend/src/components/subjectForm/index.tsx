@@ -77,24 +77,24 @@ const SubjectForm = ({ subject, mode, onSave, onCancel }: SubjectFormProps) => {
           <span className="text-xs text-red-500 mt-1">{errors.name}</span>
         )}
       </div>
-      <div className="flex gap-3">
-        <div className="flex flex-col w-full">
+      <div className="flex flex-col sm:flex-row gap-3">
+        <div className="flex flex-col sm:w-1/2 w-full">
           <label className="text-xs">Front label</label>
           <input
             type="text"
             value={values.frontLabel}
             onChange={(e) => handleChange("frontLabel", e.target.value)}
-            className="border p-1 rounded flex-1 text-sm border-gray-500"
+            className="border p-1 rounded w-full text-sm border-gray-500"
             placeholder="Enter text..."
           />
         </div>
-        <div className="flex flex-col w-full">
+        <div className="flex flex-col sm:w-1/2 w-full">
           <label className="text-xs">Back label</label>
           <input
             type="text"
             value={values.backLabel}
             onChange={(e) => handleChange("backLabel", e.target.value)}
-            className="border p-1 rounded flex-1 text-sm border-gray-500"
+            className="border p-1 rounded w-full text-sm border-gray-500"
             placeholder="Enter text..."
           />
         </div>

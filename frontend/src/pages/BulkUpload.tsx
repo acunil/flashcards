@@ -35,7 +35,7 @@ const BulkUpload = () => {
     const result = await uploadCsv(selectedSubjectId, file);
     if (result) {
       await fetchDecks();
-      await refetchCards();
+      await refetchCards(selectedSubjectId);
       setShowToast(true);
       e.target.value = ""; // reset input
     }

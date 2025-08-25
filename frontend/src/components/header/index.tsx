@@ -1,5 +1,5 @@
 import { Books, Cards, Gear, House, UserCircle } from "phosphor-react";
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Toggle, { type ToggleOption } from "../toggle";
 import { useAppContext } from "../../contexts";
@@ -28,7 +28,6 @@ const Header = ({
   const { selectedSubject } = useAppContext();
   const { logout } = useAuth0();
 
-  // Get context values
   const {
     cardDisplay,
     setCardDisplay,
@@ -59,26 +58,56 @@ const Header = ({
   ];
 
   const handleLogout = () => {
-    logout({
-      logoutParams: {
-        returnTo: window.location.origin, // where to go after logout
-      },
-    });
+    logout({ logoutParams: { returnTo: window.location.origin } });
   };
 
+  // Separate refs for buttons and dropdowns
+  const revisionButtonRef = useRef<HTMLDivElement>(null);
+  const revisionDropdownRef = useRef<HTMLDivElement>(null);
+  const userButtonRef = useRef<HTMLDivElement>(null);
+  const userDropdownRef = useRef<HTMLDivElement>(null);
+
+  // Close dropdowns when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      // Revision dropdown
+      if (
+        showRevisionDropdown &&
+        revisionDropdownRef.current &&
+        revisionButtonRef.current &&
+        !revisionDropdownRef.current.contains(event.target as Node) &&
+        !revisionButtonRef.current.contains(event.target as Node)
+      ) {
+        setShowRevisionDropdown(false);
+      }
+      // User dropdown
+      if (
+        showUserDropdown &&
+        userDropdownRef.current &&
+        userButtonRef.current &&
+        !userDropdownRef.current.contains(event.target as Node) &&
+        !userButtonRef.current.contains(event.target as Node)
+      ) {
+        setShowUserDropdown(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [showRevisionDropdown, showUserDropdown]);
+
   return (
-    <header className="relative h-16 flex items-center px-4 py-3 border-b shadow-sm">
+    <header className="relative h-16 flex items-center justify-between px-3 sm:px-4 border-b shadow-sm">
       {/* Left Section */}
-      <div className="flex items-center w-1/3">
+      <div className="flex items-center flex-1">
         {isHomePage ? (
           <div className="p-1 flex flex-row items-center">
-            <Cards size={25} className="mr-2" />
-            <p>flashcards</p>
+            <Cards size={22} className="mr-1 sm:mr-2" />
+            <p className="text-sm sm:text-base">flashcards</p>
           </div>
         ) : (
           <div className="p-1">
             <House
-              size={24}
+              size={22}
               className={`${!isErrorMode ? "cursor-pointer" : ""}`}
               onClick={isErrorMode ? () => {} : () => navigate("/")}
             />
@@ -86,26 +115,29 @@ const Header = ({
         )}
       </div>
 
-      {/* Center Section */}
+      {/* Center Section (Subject) */}
       {!isErrorMode && (
-        <div className="flex-1 text-center font-medium">
+        <div className="px-2">
           <button
             id="subject-select"
             onClick={() => navigate("/subjects")}
-            className="border-black border-2 rounded"
+            className="border-2 border-black rounded w-fit max-w-[250px] sm:max-w-[300px] md:max-w-[400px] truncate bg-white"
           >
-            <div className="flex-row flex items-center justify-center gap-1 p-2 bg-white cursor-pointer">
-              <Books size={25} />
-              {selectedSubject?.name || "Create subject"}
+            <div className="flex flex-row items-center justify-center gap-1 px-2 py-1 cursor-pointer">
+              <Books size={20} />
+              <span className="truncate">
+                {selectedSubject?.name || "Create subject"}
+              </span>
             </div>
           </button>
         </div>
       )}
 
-      {/* Right Section */}
-      <div className="flex justify-end w-full">
+      {/* Right Section (User + Settings) */}
+      <div className="flex items-center gap-2 flex-1 justify-end">
         {isRevising && (
           <div
+            ref={revisionButtonRef}
             className={`p-1 border-2 rounded transition-colors ${
               showRevisionDropdown
                 ? "bg-white border-black"
@@ -113,7 +145,7 @@ const Header = ({
             }`}
           >
             <Gear
-              size={24}
+              size={22}
               className="cursor-pointer"
               onClick={() => setShowRevisionDropdown((prev) => !prev)}
             />
@@ -121,12 +153,13 @@ const Header = ({
         )}
 
         <div
+          ref={userButtonRef}
           className={`p-1 border-2 rounded transition-colors ${
             showUserDropdown ? "bg-white border-black" : "border-transparent"
           }`}
         >
           <UserCircle
-            size={24}
+            size={22}
             className="cursor-pointer"
             onClick={() => setShowUserDropdown((prev) => !prev)}
           />
@@ -135,25 +168,28 @@ const Header = ({
 
       {/* Revision Dropdown */}
       {showRevisionDropdown && (
-        <div className="absolute right-4 top-full mt-2 w-100 bg-white border-2 rounded z-10 text-sm p-3 space-y-2">
-          <div className="flex items-center justify-between">
-            <label>Card display:</label>
+        <div
+          ref={revisionDropdownRef}
+          className="absolute right-0 top-full mt-2 w-64 bg-white border-2 rounded z-10 text-sm p-3 space-y-4 sm:space-y-3 shadow-lg max-w-[95vw] sm:right-3 sm:mt-2 sm:p-3"
+        >
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
+            <label className="whitespace-nowrap">Card display:</label>
             <Toggle
               options={cardOptions}
               selected={cardDisplay}
               onChange={setCardDisplay}
             />
           </div>
-          <div className="flex items-center justify-between">
-            <label>Familiarity:</label>
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
+            <label className="whitespace-nowrap">Familiarity:</label>
             <Toggle
               options={familiarityOptions}
               selected={familiarity}
               onChange={setFamiliarity}
             />
           </div>
-          <div className="flex items-center justify-between">
-            <label>Show decks:</label>
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
+            <label className="whitespace-nowrap">Show decks:</label>
             <Toggle
               options={deckOptions}
               selected={showDeckNames}
@@ -163,7 +199,7 @@ const Header = ({
           <div className="flex justify-end pt-2">
             <button
               onClick={() => setShowRevisionDropdown(false)}
-              className="border-2 bg-sky-200 px-4 py-1 rounded-md cursor-pointer hover:bg-sky-300 transition"
+              className="border-2 bg-sky-200 px-4 py-2 rounded-md cursor-pointer hover:bg-sky-300 transition w-full sm:w-auto"
             >
               Done
             </button>
@@ -173,7 +209,10 @@ const Header = ({
 
       {/* User Dropdown */}
       {showUserDropdown && (
-        <div className="absolute right-4 top-full mt-2 w-30 bg-white border-2 rounded z-10 text-sm p-3 space-y-2">
+        <div
+          ref={userDropdownRef}
+          className="absolute right-3 top-full mt-2 w-32 bg-white border-2 rounded z-10 text-sm p-3 space-y-2"
+        >
           <div className="flex justify-end">
             <button
               onClick={handleLogout}
