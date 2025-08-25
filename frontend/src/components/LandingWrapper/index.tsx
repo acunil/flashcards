@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useAppContext } from "../../contexts";
 import Header from "../header";
 import { SmileyXEyes } from "phosphor-react";
+import PageLoad from "../pageLoad";
 
 const LandingWrapper = () => {
   const navigate = useNavigate();
@@ -40,12 +41,7 @@ const LandingWrapper = () => {
     );
   }
 
-  if (loading)
-    return (
-      <div className="fixed inset-0 bg-green-200 flex items-center justify-center z-50">
-        <div className="animate-spin rounded-full h-12 w-12 border-4 border-black border-t-transparent"></div>
-      </div>
-    );
+  if (loading) return <PageLoad />;
 
   return null;
 };

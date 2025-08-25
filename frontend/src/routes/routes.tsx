@@ -8,6 +8,7 @@ import BulkUpload from "../pages/BulkUpload";
 import Login from "../pages/Login";
 import SubjectsPage from "../pages/Subjects";
 import LandingWrapper from "../components/LandingWrapper";
+import UserStats from "../pages/UserStats";
 
 export const AppRoutes = () => {
   return (
@@ -21,6 +22,7 @@ export const AppRoutes = () => {
       <Route path="/add-card/:cardId?" element={<AddCard />} />
       <Route path="/upload" element={<BulkUpload />} />
       <Route path="/subjects" element={<SubjectsPage />} />
+      <Route path="/user-stats" element={<UserStats />} />
     </Routes>
   );
 };

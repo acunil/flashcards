@@ -4,6 +4,7 @@ import { CaretLeft, DownloadSimple } from "phosphor-react";
 import React, { useEffect, useState } from "react";
 import { useAppContext } from "../contexts";
 import useCsvUpload from "../hooks/cards/useCsvUpload";
+import PageLoad from "../components/pageLoad";
 
 const sampleCsv = `front,back,decks
 Hello,Hallo,greetings
@@ -57,11 +58,7 @@ const BulkUpload = () => {
       )}
 
       {/* ✅ Spinner while uploading */}
-      {loading && (
-        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-          <div className="animate-spin rounded-full h-12 w-12 border-4 border-white border-t-transparent"></div>
-        </div>
-      )}
+      {loading && <PageLoad />}
 
       <Header />
       <div className="flex justify-center">
