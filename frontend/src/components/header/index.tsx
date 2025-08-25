@@ -26,7 +26,7 @@ const Header = ({
   const [showRevisionDropdown, setShowRevisionDropdown] = useState(false);
   const [showUserDropdown, setShowUserDropdown] = useState(false);
   const { selectedSubject } = useAppContext();
-  const { logout, user } = useAuth0();
+  const { logout } = useAuth0();
 
   // Get context values
   const {
@@ -57,8 +57,6 @@ const Header = ({
     { display: "Show", value: "Show" },
     { display: "Hide", value: "Hide" },
   ];
-
-  console.log(user);
 
   const handleLogout = () => {
     logout({
