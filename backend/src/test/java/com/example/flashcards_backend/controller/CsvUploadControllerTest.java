@@ -2,6 +2,7 @@ package com.example.flashcards_backend.controller;
 
 import com.example.flashcards_backend.dto.CsvUploadResponseDto;
 import com.example.flashcards_backend.service.CsvUploadServiceImpl;
+import com.example.flashcards_backend.service.CurrentUserService;
 import nl.altindag.log.LogCaptor;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -30,6 +31,9 @@ class CsvUploadControllerTest {
 
     @MockitoBean
     private CsvUploadServiceImpl csvUploadService;
+
+    @MockitoBean
+    private CurrentUserService currentUserService;
 
     @Autowired
     private MockMvc mockMvc;
