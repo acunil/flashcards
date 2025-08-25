@@ -1,4 +1,4 @@
-import { Books, Cards, Gear, House } from "phosphor-react";
+import { Books, Cards, Gear, House, UserCircle } from "phosphor-react";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Toggle, { type ToggleOption } from "../toggle";
@@ -9,6 +9,7 @@ import type {
   DeckVisibility,
   Familiarity,
 } from "../../contexts/ReviseSettingsContext";
+import { useAuth0 } from "@auth0/auth0-react";
 
 interface HeaderProps {
   isHomePage?: boolean;
@@ -22,8 +23,10 @@ const Header = ({
   isErrorMode = false,
 }: HeaderProps) => {
   const navigate = useNavigate();
-  const [showDropdown, setShowDropdown] = useState(false);
+  const [showRevisionDropdown, setShowRevisionDropdown] = useState(false);
+  const [showUserDropdown, setShowUserDropdown] = useState(false);
   const { selectedSubject } = useAppContext();
+  const { logout, user } = useAuth0();
 
   // Get context values
   const {
@@ -54,6 +57,16 @@ const Header = ({
     { display: "Show", value: "Show" },
     { display: "Hide", value: "Hide" },
   ];
+
+  console.log(user);
+
+  const handleLogout = () => {
+    logout({
+      logoutParams: {
+        returnTo: window.location.origin, // where to go after logout
+      },
+    });
+  };
 
   return (
     <header className="relative h-16 flex items-center px-4 py-3 border-b shadow-sm">
@@ -92,24 +105,38 @@ const Header = ({
       )}
 
       {/* Right Section */}
-      <div className="flex justify-end w-1/3">
+      <div className="flex justify-end w-full">
         {isRevising && (
           <div
             className={`p-1 border-2 rounded transition-colors ${
-              showDropdown ? "bg-white border-black" : "border-transparent"
+              showRevisionDropdown
+                ? "bg-white border-black"
+                : "border-transparent"
             }`}
           >
             <Gear
               size={24}
               className="cursor-pointer"
-              onClick={() => setShowDropdown((prev) => !prev)}
+              onClick={() => setShowRevisionDropdown((prev) => !prev)}
             />
           </div>
         )}
+
+        <div
+          className={`p-1 border-2 rounded transition-colors ${
+            showUserDropdown ? "bg-white border-black" : "border-transparent"
+          }`}
+        >
+          <UserCircle
+            size={24}
+            className="cursor-pointer"
+            onClick={() => setShowUserDropdown((prev) => !prev)}
+          />
+        </div>
       </div>
 
-      {/* Dropdown */}
-      {showDropdown && (
+      {/* Revision Dropdown */}
+      {showRevisionDropdown && (
         <div className="absolute right-4 top-full mt-2 w-100 bg-white border-2 rounded z-10 text-sm p-3 space-y-2">
           <div className="flex items-center justify-between">
             <label>Card display:</label>
@@ -137,10 +164,24 @@ const Header = ({
           </div>
           <div className="flex justify-end pt-2">
             <button
-              onClick={() => setShowDropdown(false)}
+              onClick={() => setShowRevisionDropdown(false)}
               className="border-2 bg-sky-200 px-4 py-1 rounded-md cursor-pointer hover:bg-sky-300 transition"
             >
               Done
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* User Dropdown */}
+      {showUserDropdown && (
+        <div className="absolute right-4 top-full mt-2 w-30 bg-white border-2 rounded z-10 text-sm p-3 space-y-2">
+          <div className="flex justify-end">
+            <button
+              onClick={handleLogout}
+              className="border-2 bg-sky-200 px-4 py-1 rounded-md cursor-pointer w-full hover:bg-sky-300 transition"
+            >
+              Logout
             </button>
           </div>
         </div>

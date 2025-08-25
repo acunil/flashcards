@@ -16,8 +16,8 @@ const AuthGuard = ({ children }: { children: React.ReactNode }) => {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center h-screen text-xl">
-        Loading...
+      <div className="fixed inset-0 bg-green-200 flex items-center justify-center z-50">
+        <div className="animate-spin rounded-full h-12 w-12 border-4 border-black border-t-transparent"></div>
       </div>
     );
   }
@@ -32,6 +32,8 @@ function App() {
       clientId={import.meta.env.VITE_AUTH0_CLIENT_ID!}
       authorizationParams={{
         redirect_uri: window.location.origin,
+        audience: import.meta.env.VITE_AUTH0_AUDIENCE, // if you have an API
+        scope: "openid profile email", // adjust based on your needs
       }}
     >
       <AuthGuard>
