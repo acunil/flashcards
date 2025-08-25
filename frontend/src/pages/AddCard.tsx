@@ -4,10 +4,13 @@ import useCreateCard from "../hooks/cards/useCreateCard";
 import type { Deck } from "../types/deck";
 import SearchableMultiSelect from "../components/searchableMultiSelect";
 import { useAppContext } from "../contexts";
-import { CaretLeft } from "phosphor-react";
-import { useNavigate, useParams, useSearchParams } from "react-router-dom";
+import { useParams, useSearchParams } from "react-router-dom";
 import useUpdateCard from "../hooks/cards/useUpdateCard";
 import type { Card } from "../types/card";
+import PageWrapper from "../components/pageWrapper";
+import BackButton from "../components/backButton";
+import Heading from "../components/heading";
+import ContentWrapper from "../components/contentWrapper";
 
 const AddCard = () => {
   const [front, setFront] = useState("");
@@ -17,16 +20,16 @@ const AddCard = () => {
   const [selectedDecks, setSelectedDecks] = useState<Deck[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [showToast, setShowToast] = useState(false);
+  const [showErrorToast, setShowErrorToast] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+
   const { decks, cards, selectedSubject, fetchDecks, refetchCards } =
     useAppContext();
-  const navigate = useNavigate();
   const { createCard } = useCreateCard();
   const { updateCard } = useUpdateCard();
   const { cardId } = useParams<{ cardId: string }>();
   const [isEditing, setIsEditing] = useState(false);
   const [cardToEdit, setCardToEdit] = useState<Card>();
-
   const [searchParams] = useSearchParams();
   const deckId = searchParams.get("deckId");
 
@@ -42,21 +45,20 @@ const AddCard = () => {
   useEffect(() => {
     if (cardId) {
       setIsEditing(true);
-      setCardToEdit(cards.find((c) => c.id === Number(cardId)));
-      if (cardToEdit) {
-        setFront(cardToEdit.front);
-        setBack(cardToEdit.back);
-        setFrontHint(cardToEdit.hintFront);
-        setBackHint(cardToEdit.hintBack);
-        setSelectedDecks(cardToEdit.decks);
+      const foundCard = cards.find((c) => c.id === Number(cardId));
+      setCardToEdit(foundCard);
+      if (foundCard) {
+        setFront(foundCard.front);
+        setBack(foundCard.back);
+        setFrontHint(foundCard.hintFront);
+        setBackHint(foundCard.hintBack);
+        setSelectedDecks(foundCard.decks);
       }
     } else if (deckId) {
       const matchedDeck = decks.find((d) => d.id === Number(deckId));
-      if (matchedDeck) {
-        setSelectedDecks([matchedDeck]);
-      }
+      if (matchedDeck) setSelectedDecks([matchedDeck]);
     }
-  }, [cardId, cards, cardToEdit, deckId, decks]);
+  }, [cardId, cards, deckId, decks]);
 
   useEffect(() => {
     if (showToast) {
@@ -64,6 +66,13 @@ const AddCard = () => {
       return () => clearTimeout(timer);
     }
   }, [showToast]);
+
+  useEffect(() => {
+    if (showErrorToast) {
+      const timer = setTimeout(() => setShowErrorToast(false), 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [showErrorToast]);
 
   const handleSubmit = async (e?: React.FormEvent) => {
     e?.preventDefault();
@@ -104,45 +113,39 @@ const AddCard = () => {
       await refetchCards(selectedSubject?.id || 0);
 
       setShowToast(true);
+      if (!isEditing) resetForm();
     } catch {
-      // handled inside hooks
+      setShowErrorToast(true);
     } finally {
-      if (!isEditing) {
-        resetForm();
-      }
       setIsSaving(false);
     }
   };
 
   return (
-    <div className="bg-yellow-200 min-h-screen">
+    <PageWrapper className="bg-yellow-200">
+      <Header />
+
+      {/* Toasts */}
       {showToast && (
         <div className="fixed top-20 left-1/2 -translate-x-1/2 bg-green-200 border-2 border-black px-4 py-2 rounded shadow transition-opacity z-50">
           Card saved!
         </div>
       )}
+      {showErrorToast && (
+        <div className="fixed top-20 left-1/2 -translate-x-1/2 bg-red-200 border-2 border-black px-4 py-2 rounded shadow transition-opacity z-50">
+          Could not add card.
+        </div>
+      )}
 
-      <Header />
-      <div className="flex relative justify-center items-start m-4 px-2">
-        <form
-          onSubmit={handleSubmit}
-          className="bg-white p-6 rounded shadow-md w-full max-w-md space-y-4 border-2 border-black"
-        >
-          <div className="relative mb-6">
-            <button
-              id="decks-back-button"
-              className="absolute left-0 top-1/2 -translate-y-1/2 cursor-pointer"
-              onClick={() => navigate(-1)}
-            >
-              <CaretLeft size={24} />
-            </button>
-            <h1 className="text-xl font-bold text-center">
-              {isEditing ? "Edit Card" : "Add a New Card"}
-            </h1>
+      <ContentWrapper>
+        <form onSubmit={handleSubmit} className="p-1 sm:p-2">
+          <div className="flex items-center mb-4 sm:mb-6 gap-2 sm:gap-4">
+            <BackButton />
+            <Heading>{isEditing ? "Edit Card" : "Add a New Card"}</Heading>
           </div>
 
-          <div className="pt-4 pb-4 space-y-4">
-            {/* Front Content */}
+          {/* Front Section */}
+          <div className="space-y-2 sm:space-y-4">
             <div className="flex flex-col space-y-1">
               <label className="block font-medium text-gray-700">
                 {selectedSubject?.frontLabel || "Front"}
@@ -150,29 +153,28 @@ const AddCard = () => {
               <textarea
                 value={front}
                 onChange={(e) => setFront(e.target.value)}
-                className="w-full p-3 border-2 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-sky-300 border-black"
-                rows={4}
+                className="w-full p-2 sm:p-3 border-2 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-sky-300 border-black"
+                rows={3}
                 placeholder="Enter front text..."
               />
             </div>
 
-            {/* Front Hint */}
             <div className="flex flex-col space-y-1">
               <label className="block font-medium text-gray-700">
-                {`${selectedSubject?.frontLabel ?? "Front"} hint`}
+                {`${selectedSubject?.frontLabel ?? "Front"} hint (optional)`}
               </label>
               <textarea
                 value={frontHint || ""}
                 onChange={(e) => setFrontHint(e.target.value)}
-                className="w-full p-2 border rounded-lg resize-none bg-gray-50 border-gray-300 text-gray-600 focus:outline-none focus:ring-2 focus:ring-sky-200"
-                rows={3}
+                className="w-full p-2 sm:p-3 border rounded-lg resize-none bg-white border-gray-300 text-gray-700 focus:outline-none focus:ring-2 focus:ring-sky-300"
+                rows={2}
                 placeholder="Optional hint..."
               />
             </div>
           </div>
 
-          <div className="pt-4 pb-4 space-y-4">
-            {/* Back Content */}
+          {/* Back Section */}
+          <div className="mt-4 space-y-2 sm:space-y-4">
             <div className="flex flex-col space-y-1">
               <label className="block font-medium text-gray-700">
                 {selectedSubject?.backLabel || "Back"}
@@ -180,29 +182,29 @@ const AddCard = () => {
               <textarea
                 value={back}
                 onChange={(e) => setBack(e.target.value)}
-                className="w-full p-3 border-2 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-sky-300 border-black"
-                rows={4}
+                className="w-full p-2 sm:p-3 border-2 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-sky-300 border-black"
+                rows={3}
                 placeholder="Enter back text..."
               />
             </div>
 
-            {/* Back Hint */}
             <div className="flex flex-col space-y-1">
               <label className="block font-medium text-gray-700">
-                {`${selectedSubject?.backLabel ?? "Back"} hint`}
+                {`${selectedSubject?.backLabel ?? "Back"} hint (optional)`}
               </label>
               <textarea
                 value={backHint || ""}
                 onChange={(e) => setBackHint(e.target.value)}
-                className="w-full p-2 border rounded-lg resize-none bg-gray-50 border-gray-300 text-gray-600 focus:outline-none focus:ring-2 focus:ring-sky-200"
-                rows={3}
+                className="w-full p-2 sm:p-3 border rounded-lg resize-none bg-white border-gray-300 text-gray-700 focus:outline-none focus:ring-2 focus:ring-sky-300"
+                rows={2}
                 placeholder="Optional hint..."
               />
             </div>
           </div>
 
-          <div>
-            <label className="block font-medium">Decks</label>
+          {/* Deck Selector */}
+          <div className="mt-4">
+            <label className="block font-medium mb-1">Decks</label>
             <SearchableMultiSelect
               options={decks}
               selected={selectedDecks}
@@ -210,9 +212,11 @@ const AddCard = () => {
             />
           </div>
 
-          {error && <p className="text-red-400 text-sm">{error}</p>}
+          {/* Error */}
+          {error && <p className="text-red-400 text-sm mt-2">{error}</p>}
 
-          <div className="flex justify-end">
+          {/* Submit Button */}
+          <div className="flex justify-end mt-4">
             <button
               type="submit"
               disabled={isSaving}
@@ -226,8 +230,8 @@ const AddCard = () => {
             </button>
           </div>
         </form>
-      </div>
-    </div>
+      </ContentWrapper>
+    </PageWrapper>
   );
 };
 

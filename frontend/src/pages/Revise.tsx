@@ -10,6 +10,8 @@ import type { Card } from "../types/card";
 import ReviseButtons from "../components/reviseButtons";
 import { useNavigate } from "react-router-dom";
 import PageLoad from "../components/pageLoad";
+import PageWrapper from "../components/pageWrapper";
+import ContentWrapper from "../components/contentWrapper";
 
 interface ReviseProps {
   hardMode?: boolean;
@@ -87,7 +89,7 @@ const Revise = ({ hardMode = false, deckId }: ReviseProps) => {
   };
 
   return (
-    <div className={`min-h-screen ${hardMode ? "bg-pink-300" : "bg-pink-200"}`}>
+    <PageWrapper className={`${hardMode ? "bg-pink-300" : "bg-pink-200"}`}>
       <Header isRevising={true} />
       <main className="flex flex-col items-center my-2">
         {loading && <PageLoad />}
@@ -97,16 +99,24 @@ const Revise = ({ hardMode = false, deckId }: ReviseProps) => {
           </div>
         )}
         {!loading && !error && revisionCards.length === 0 && (
-          <div className="bg-white w-full max-w-screen-sm border-black border-2 p-3 rounded m-4 text-center">
-            <p>You don't have any cards!</p>
-            <p>Create a card to start revising</p>
-            <button
-              className="cursor-pointer border-2 m-2 border-black p-2 rounded bg-yellow-200"
-              onClick={() => navigate("/add-card/")}
-            >
-              Add a card
-            </button>
-          </div>
+          <ContentWrapper>
+            <div className="flex flex-col items-center">
+              <p>You don't have any cards!</p>
+              <p>Add a card to start revising</p>
+              <button
+                className="cursor-pointer border-2 m-2 border-black p-2 rounded bg-yellow-200"
+                onClick={() => navigate("/add-card/")}
+              >
+                Add a card
+              </button>
+              <button
+                className="cursor-pointer border-2 border-black p-2 rounded bg-green-200"
+                onClick={() => navigate("/upload/")}
+              >
+                Bulk upload
+              </button>
+            </div>
+          </ContentWrapper>
         )}
         {!loading && !error && revisionCards.length > 0 && (
           <>
@@ -133,7 +143,7 @@ const Revise = ({ hardMode = false, deckId }: ReviseProps) => {
           </>
         )}
       </main>
-    </div>
+    </PageWrapper>
   );
 };
 

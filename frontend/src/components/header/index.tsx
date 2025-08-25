@@ -170,7 +170,7 @@ const Header = ({
       {showRevisionDropdown && (
         <div
           ref={revisionDropdownRef}
-          className="absolute right-0 top-full mt-2 w-64 bg-white border-2 rounded z-10 text-sm p-3 space-y-4 sm:space-y-3 shadow-lg max-w-[95vw] sm:right-3 sm:mt-2 sm:p-3"
+          className="absolute right-0 top-full mt-2 w-full mr-3 sm:w-[400px] bg-white border-2 rounded z-10 text-sm p-3 space-y-4 sm:space-y-3 shadow-lg max-w-[95vw] sm:right-3 sm:mt-2 sm:p-3"
         >
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
             <label className="whitespace-nowrap">Card display:</label>

@@ -12,7 +12,7 @@ const ReviseButtons = ({
   onShowHint,
 }: ReviseButtonProps) => {
   return (
-    <div className="flex flex-row justify-end p-2 w-sm gap-2">
+    <div className="flex flex-row justify-end py-2 px-4 w-sm gap-2 max-w-screen">
       <button
         onClick={onEdit}
         className="bg-blue-200 p-2 border-black border-2 rounded cursor-pointer hover:bg-sky-300"
