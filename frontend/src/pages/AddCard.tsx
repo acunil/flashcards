@@ -18,7 +18,8 @@ const AddCard = () => {
   const [error, setError] = useState<string | null>(null);
   const [showToast, setShowToast] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-  const { decks, cards, selectedSubject } = useAppContext();
+  const { decks, cards, selectedSubject, fetchDecks, refetchCards } =
+    useAppContext();
   const navigate = useNavigate();
   const { createCard } = useCreateCard();
   const { updateCard } = useUpdateCard();
@@ -90,6 +91,9 @@ const AddCard = () => {
           subjectId: selectedSubject?.id || 0,
         });
       }
+
+      await fetchDecks();
+      await refetchCards();
 
       setShowToast(true);
     } catch {

@@ -8,6 +8,7 @@ interface CardCarouselProps {
   currentIndex: number;
   setCurrentIndex?: (index: number) => void; // optional callback to update parent
   cardColors?: Record<string, string>;
+  displayCurrentHint: boolean;
 }
 
 const CardCarousel = ({
@@ -15,6 +16,7 @@ const CardCarousel = ({
   currentIndex,
   setCurrentIndex,
   cardColors = {},
+  displayCurrentHint = false,
 }: CardCarouselProps) => {
   const [flippedMap, setFlippedMap] = useState<Record<string, boolean>>({});
   const [windowWidth, setWindowWidth] = useState(
@@ -111,6 +113,7 @@ const CardCarousel = ({
                 onFlip={() => handleFlip(card.id)}
                 showDecks={showDeckNames === "Show"}
                 cardBgColor={cardColors[card.id] || "bg-white"}
+                showHint={displayCurrentHint}
               />
             </div>
           );
