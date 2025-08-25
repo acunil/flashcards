@@ -5,15 +5,18 @@ import { Trash } from "phosphor-react";
 import useUpdateCard from "../../../hooks/cards/useUpdateCard"; // assuming you have this
 import useDeleteCards from "../../../hooks/cards/useDeleteCards";
 import { useAppContext } from "../../../contexts";
+import useRemoveCardsFromDeck from "../../../hooks/decks/useRemoveCardsFromDeck";
 
 interface CardListProps {
   cards: Card[];
   isAllCardsList?: boolean;
+  deckId: number;
 }
 
-const CardList = ({ cards, isAllCardsList }: CardListProps) => {
+const CardList = ({ cards, isAllCardsList, deckId }: CardListProps) => {
   const { updateCard } = useUpdateCard();
   const { deleteCards } = useDeleteCards();
+  const { removeCards } = useRemoveCardsFromDeck();
   const [bulkSelectMode, setBulkSelectMode] = useState(false);
   const [selectedCards, setSelectedCards] = useState<Set<number>>(new Set());
   const [searchQuery, setSearchQuery] = useState("");
@@ -31,6 +34,8 @@ const CardList = ({ cards, isAllCardsList }: CardListProps) => {
 
     if (isAllCardsList) {
       deleteCards(Array.from(selectedCards));
+    } else {
+      removeCards(Array.from(selectedCards), deckId);
     }
 
     setSelectedCards(new Set());
