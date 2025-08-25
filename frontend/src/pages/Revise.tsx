@@ -37,10 +37,6 @@ const Revise = ({ hardMode = false, deckId }: ReviseProps) => {
   const [revisionCards, setRevisionCards] = useState<Card[]>([]);
   const [cardColors, setCardColors] = useState<Record<string, string>>({});
 
-  useEffect(() => {
-    setShowHint(false);
-  }, [currentIndex]);
-
   const buildRevisionCards = useCallback(() => {
     const deckFiltered = cards.filter(
       (card) => !deckId || card.decks.some((deck: Deck) => deck.id === deckId)
@@ -61,6 +57,7 @@ const Revise = ({ hardMode = false, deckId }: ReviseProps) => {
     setRevisionCards(newDeck);
     setCurrentIndex(0);
     setCardColors({});
+    setShowHint(false); // reset hint when deck changes
   }, [buildRevisionCards]);
 
   const handleDifficultySelect = (rating: number) => {
@@ -77,15 +74,19 @@ const Revise = ({ hardMode = false, deckId }: ReviseProps) => {
       [currentCard.id]: newColor,
     }));
 
-    // 🔄 Loop through cards instead of resetting
     setCurrentIndex((prev) => (prev + 1) % revisionCards.length);
+    setShowHint(false); // reset hint when moving to next card
   };
+
   const handleEditCard = () => {
     navigate(`/add-card/${revisionCards[currentIndex].id}`);
   };
 
-  const handleShowHint = () => {
-    setShowHint(true);
+  const toggleHint = () => {
+    const currentCard = revisionCards[currentIndex];
+    if (currentCard.hintFront || currentCard.hintBack) {
+      setShowHint((prev) => !prev); // toggle
+    }
   };
 
   return (
@@ -125,10 +126,10 @@ const Revise = ({ hardMode = false, deckId }: ReviseProps) => {
                 !(
                   revisionCards[currentIndex].hintFront ||
                   revisionCards[currentIndex].hintBack
-                ) || showHint
+                )
               }
               onEdit={handleEditCard}
-              onShowHint={handleShowHint}
+              onShowHint={toggleHint}
             />
             <div className="w-full overflow-hidden flex flex-col items-center">
               <CardCarousel
