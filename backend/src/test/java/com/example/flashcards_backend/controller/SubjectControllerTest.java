@@ -92,17 +92,17 @@ class SubjectControllerTest {
                         .header("Authorization", "Bearer jwt")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"name\":\"Subject 1\"}"))
-                .andExpect(status().isOk());
+                .andExpect(status().isCreated());
 
         ArgumentCaptor<SubjectRequest> captor = ArgumentCaptor.forClass(SubjectRequest.class);
-        verify(subjectService).create(captor.capture(), eq(user));
+        verify(subjectService).create(captor.capture(), eq(USER_ID));
         assertThat(captor.getValue().name()).isEqualTo("Subject 1");
     }
 
     @Test
     void createSubjectInvalidInput() throws Exception {
         doThrow(new IllegalArgumentException("Invalid input")).when(subjectService)
-                .create(any(SubjectRequest.class), any(User.class));
+                .create(any(SubjectRequest.class), any(UUID.class));
 
         mockMvc.perform(post(ENDPOINT)
                         .param("userId", USER_ID.toString())
