@@ -21,15 +21,12 @@ const useAllSubjects = () => {
       try {
         setLoading(true);
         const token = await getAccessTokenSilently();
-        const response = await fetch(
-          `${API_URL}/subjects?userId=22222222-2222-2222-2222-222222222225`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-              "Content-Type": "application/json",
-            },
-          }
-        );
+        const response = await fetch(`${API_URL}/subjects`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        });
         if (!response.ok) {
           throw new Error("Failed to fetch subjects");
         }
@@ -44,7 +41,7 @@ const useAllSubjects = () => {
     };
 
     fetchSubjects();
-  }, []); // 👈 only run once
+  }, [getAccessTokenSilently]); // 👈 only run once
 
   return { subjects, selectedSubject, loading, error };
 };
