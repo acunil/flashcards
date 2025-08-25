@@ -22,6 +22,12 @@ databaseChangeLog:
                     unique: true
                     nullable: false
               - column:
+                  name: auth0_id
+                  type: varchar(255)
+                  constraints:
+                    nullable: true
+                    unique: true
+              - column:
                   name: is_active
                   type: boolean
                   defaultValueBoolean: true
@@ -67,7 +73,6 @@ databaseChangeLog:
                   type: varchar(100)
                   constraints:
                     nullable: false
-                    unique: true
               - column:
                   name: front_label
                   type: varchar(255)
@@ -90,6 +95,10 @@ databaseChangeLog:
                     foreignKeyName: fk_subject_user
                     references: app_user(id)
                     onDelete: CASCADE
+        - addUniqueConstraint:
+            tableName: subject
+            columnNames: user_id, name
+            constraintName: uq_subject_user_name
         - createIndex:
             indexName: idx_subject_name
             tableName: subject
@@ -139,6 +148,10 @@ databaseChangeLog:
                     foreignKeyName: fk_deck_user
                     references: app_user(id)
                     onDelete: CASCADE
+        - addUniqueConstraint:
+            tableName: deck
+            columnNames: user_id, name
+            constraintName: uq_deck_user_name
         - createIndex:
             indexName: idx_deck_subject
             tableName: deck
@@ -207,8 +220,8 @@ databaseChangeLog:
                     onDelete: CASCADE
         - addUniqueConstraint:
             tableName: card
-            columnNames: front, back
-            constraintName: uq_card_front_back
+            columnNames: user_id, front, back
+            constraintName: uq_card_user_front_back
         - createIndex:
             indexName: idx_card_subject
             tableName: card
@@ -292,7 +305,7 @@ databaseChangeLog:
               - column:
                   name: last_viewed
 
-      # --- CARD_DECK (join table) ---
+  # --- CARD_DECK (join table) ---
   - changeSet:
       id: 006_create_card_deck_table
       author: lucian
