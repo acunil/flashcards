@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import DifficultyButtons from "../components/difficultyButtons";
 import Header from "../components/header";
 import useRateCard from "../hooks/cards/useRateCard";
@@ -7,6 +7,8 @@ import { levels } from "../components/difficultyButtons/levels";
 import type { Deck } from "../types/deck";
 import { useAppContext } from "../contexts";
 import type { Card } from "../types/card";
+import ReviseButtons from "../components/reviseButtons";
+import { useNavigate } from "react-router-dom";
 
 interface ReviseProps {
   hardMode?: boolean;
@@ -16,8 +18,14 @@ interface ReviseProps {
 const Revise = ({ hardMode = false, deckId }: ReviseProps) => {
   const { rateCard } = useRateCard();
   const { cards, loading, error } = useAppContext();
+  const navigate = useNavigate();
 
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [showHint, setShowHint] = useState(false);
+
+  useEffect(() => {
+    setShowHint(false);
+  }, [currentIndex]);
 
   // filter all cards for the revision deck
   const revisionCards: Card[] = useMemo(() => {
@@ -60,10 +68,18 @@ const Revise = ({ hardMode = false, deckId }: ReviseProps) => {
     );
   };
 
+  const handleEditCard = () => {
+    navigate(`/add-card/${revisionCards[currentIndex].id}`);
+  };
+
+  const handleShowHint = () => {
+    setShowHint(true);
+  };
+
   return (
     <div className={`min-h-screen ${hardMode ? "bg-pink-300" : "bg-pink-200"}`}>
       <Header isRevising={true} />
-      <main className="flex flex-col items-center">
+      <main className="flex flex-col items-center my-2">
         {loading && <p>Loading cards...</p>}
         {error && (
           <div className="bg-white w-full max-w-screen-sm border-black border-2 p-3 rounded m-4 text-center">
@@ -72,12 +88,24 @@ const Revise = ({ hardMode = false, deckId }: ReviseProps) => {
         )}
         {!loading && !error && cards.length > 0 && (
           <>
+            <ReviseButtons
+              disableHint={
+                // Disable if the card has no hint OR if the hint has already been shown
+                !(
+                  revisionCards[currentIndex].hintFront ||
+                  revisionCards[currentIndex].hintBack
+                ) || showHint
+              }
+              onEdit={handleEditCard}
+              onShowHint={handleShowHint}
+            />
             <div className="w-full overflow-hidden flex flex-col items-center">
               <CardCarousel
                 cards={revisionCards}
                 currentIndex={currentIndex}
                 setCurrentIndex={setCurrentIndex}
                 cardColors={cardColors}
+                displayCurrentHint={showHint}
               />
               <DifficultyButtons onSelectDifficulty={handleDifficultySelect} />
             </div>
