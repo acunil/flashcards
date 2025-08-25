@@ -17,9 +17,9 @@ const useAllCards = (subjectId: number | null) => {
 
       try {
         const token = await getAccessTokenSilently();
+        console.log("token:");
         console.log(token);
 
-        console.log(token);
         const response = await fetch(
           `${API_URL}/cards?subjectId=${subjectIdParam}`,
           {
