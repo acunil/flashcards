@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { API_URL } from "../urls";
 import type { SaveSubjectPayload } from "./useUpdateSubject";
+import { useAuthFetch } from "../../utils/authFetch";
 
 interface CreateSubjectResult {
   isLoading: boolean;
@@ -13,6 +14,7 @@ interface CreateSubjectResult {
 const useCreateSubject = (): CreateSubjectResult => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const { authFetch } = useAuthFetch();
 
   const createSubject = async (
     data?: Partial<Omit<SaveSubjectPayload, "id">>
@@ -30,7 +32,7 @@ const useCreateSubject = (): CreateSubjectResult => {
     };
 
     try {
-      const response = await fetch(`${API_URL}/subjects`, {
+      const response = await authFetch(`${API_URL}/subjects`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
