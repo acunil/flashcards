@@ -231,7 +231,6 @@ public class CardService {
     }
 
     protected CreateCardResponse mapCardToCreateCardResponse(Card card, boolean alreadyExisted) {
-        log.info("Mapping card {} to CreateCardResponse", card.getId());
         return CreateCardResponse.builder()
                 .id(card.getId())
                 .front(card.getFront())
