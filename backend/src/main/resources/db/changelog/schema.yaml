@@ -39,20 +39,6 @@ databaseChangeLog:
               - column:
                   name: username
 
-  - changeSet:
-      id: 001_add_auth0_id_to_app_user
-      author: lucian
-      changes:
-        - addColumn:
-            tableName: app_user
-            columns:
-              - column:
-                  name: auth0_id
-                  type: varchar(255)
-                  constraints:
-                    nullable: true
-                    unique: true
-
   # --- SUBJECTS ---
   - changeSet:
       id: 002_create_subject_table
