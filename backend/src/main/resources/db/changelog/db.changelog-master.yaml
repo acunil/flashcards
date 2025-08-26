@@ -1,5 +1,10 @@
 databaseChangeLog:
   - include:
-      file: db/changelog/schema.yaml
+      file: schema.yaml
+      relativeToChangelogFile: true
   - include:
-      file: db/changelog/seed.yaml
+      file: seed.yaml
+      relativeToChangelogFile: true
+  - include:
+      file: procedure.yaml
+      relativeToChangelogFile: true
