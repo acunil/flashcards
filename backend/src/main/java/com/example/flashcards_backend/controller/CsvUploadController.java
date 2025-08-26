@@ -58,7 +58,7 @@ public class CsvUploadController {
                     required = true,
                     content = @Content(mediaType = "text/csv")
             )
-            @RequestBody MultipartFile file,
+            @RequestParam MultipartFile file,
             @PathVariable("subjectId") Long subjectId,
             @AuthenticationPrincipal Jwt jwt
             ) {
