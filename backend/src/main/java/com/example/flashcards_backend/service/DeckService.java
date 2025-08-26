@@ -22,12 +22,14 @@ public class DeckService {
     private final DeckRepository deckRepository;
 
     public Set<DeckSummary> getDeckSummariesBySubjectId(Long subjectId) {
+        log.info("Getting deck summaries for subject with id {}", subjectId);
         return deckRepository.findBySubjectId(subjectId).stream()
                 .map(DeckSummary::fromEntity)
                 .collect(Collectors.toSet());
     }
 
     public Deck getDeckById(Long id) {
+        log.info("Getting deck with id {}", id);
         return deckRepository.findById(id)
             .orElseThrow(() -> new DeckNotFoundException(id));
     }
@@ -39,6 +41,7 @@ public class DeckService {
 
     @Transactional
     public Deck renameDeck(Long id, @DeckName String name) {
+        log.info("Renaming deck with id {} to {}", id, name);
         Deck deck = getDeckById(id);
         if (deckRepository.existsByNameAndSubject(name.trim(), deck.getSubject())) {
             throw new DuplicateDeckNameException("Deck name must be unique: " + name);
@@ -49,6 +52,7 @@ public class DeckService {
 
     @Transactional
     public void deleteDeck(Long id) {
+        log.info("Deleting deck with id {}", id);
         Deck deck = getDeckById(id);
         deckRepository.delete(deck);
     }

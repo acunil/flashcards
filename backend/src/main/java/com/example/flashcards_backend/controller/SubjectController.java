@@ -2,6 +2,8 @@ package com.example.flashcards_backend.controller;
 
 import com.example.flashcards_backend.dto.SubjectRequest;
 import com.example.flashcards_backend.dto.SubjectDto;
+import com.example.flashcards_backend.model.User;
+import com.example.flashcards_backend.service.CurrentUserService;
 import com.example.flashcards_backend.model.Subject;
 import com.example.flashcards_backend.service.SubjectService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -11,19 +13,21 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
 
+import java.net.URI;
 import java.util.List;
-import java.util.UUID;
-
-import static org.springframework.http.HttpStatus.CREATED;
 
 @RestController
 @RequestMapping("/subjects")
 @RequiredArgsConstructor
 public class SubjectController {
 
+    public static final String REQUEST_MAPPING = "/subjects/";
     private final SubjectService subjectService;
+    private final CurrentUserService currentUserService;
 
     @Operation(summary = "Get all subjects", description = "Returns all subjects for a user.")
     @ApiResponses(value = {
@@ -33,8 +37,10 @@ public class SubjectController {
                     ))
     })
     @GetMapping
-    public ResponseEntity<List<SubjectDto>> getAllForUser(@RequestParam UUID userId) {
-        return ResponseEntity.ok(subjectService.findByUserId(userId).stream().map(SubjectDto::fromEntity).toList());
+    public ResponseEntity<List<SubjectDto>> getAllForUser(@AuthenticationPrincipal Jwt jwt) {
+        User currentUser = currentUserService.getCurrentUser(jwt);
+        return ResponseEntity.ok(subjectService.findByUserId(currentUser.getId()).stream()
+                .map(SubjectDto::fromEntity).toList());
     }
 
     @Operation(summary = "Get subject by ID", description = "Returns a subject by its ID.")
@@ -46,7 +52,11 @@ public class SubjectController {
                     content = @Content)
     })
     @GetMapping("/{id}")
-    public ResponseEntity<SubjectDto> getById(@PathVariable Long id) {
+    public ResponseEntity<SubjectDto> getById(
+            @PathVariable Long id,
+            @AuthenticationPrincipal Jwt jwt
+    ) {
+        currentUserService.getCurrentUser(jwt);
         return ResponseEntity.ok(SubjectDto.fromEntity(subjectService.findById(id)));
     }
 
@@ -60,9 +70,15 @@ public class SubjectController {
                     content = @Content)
     })
     @PostMapping
-    public ResponseEntity<SubjectDto> create(@RequestBody SubjectRequest subjectRequest, @RequestParam UUID userId) {
-        Subject subject = subjectService.create(subjectRequest, userId);
-        return ResponseEntity.status(CREATED).body(SubjectDto.fromEntity(subject));
+    public ResponseEntity<SubjectDto> create(
+            @RequestBody SubjectRequest subjectRequest,
+            @AuthenticationPrincipal Jwt jwt
+    ) {
+        User currentUser = currentUserService.getCurrentUser(jwt);
+        Subject subject = subjectService.create(subjectRequest, currentUser.getId());
+        return ResponseEntity
+                .created(URI.create(REQUEST_MAPPING + subject.getId()))
+                .body(SubjectDto.fromEntity(subject));
     }
 
     @Operation(summary = "Update subject", description = "Updates an existing subject by ID.")
@@ -74,7 +90,12 @@ public class SubjectController {
                     content = @Content)
     })
     @PutMapping("/{id}")
-    public ResponseEntity<SubjectDto> update(@PathVariable Long id, @RequestBody SubjectRequest subjectRequest) {
+    public ResponseEntity<SubjectDto> update(
+            @PathVariable Long id,
+            @RequestBody SubjectRequest subjectRequest,
+            @AuthenticationPrincipal Jwt jwt
+    ) {
+        currentUserService.getCurrentUser(jwt);
         return ResponseEntity.ok(SubjectDto.fromEntity(subjectService.update(id, subjectRequest)));
     }
 
@@ -85,7 +106,11 @@ public class SubjectController {
                     content = @Content)
     })
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@PathVariable Long id) {
+    public ResponseEntity<Void> delete(
+            @PathVariable Long id,
+            @AuthenticationPrincipal Jwt jwt
+    ) {
+        currentUserService.getCurrentUser(jwt);
         subjectService.delete(id);
         return ResponseEntity.noContent().build();
     }

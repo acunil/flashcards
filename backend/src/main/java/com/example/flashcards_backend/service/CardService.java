@@ -5,6 +5,7 @@ import com.example.flashcards_backend.exception.CardNotFoundException;
 import com.example.flashcards_backend.model.Card;
 import com.example.flashcards_backend.model.Deck;
 import com.example.flashcards_backend.model.Subject;
+import com.example.flashcards_backend.model.User;
 import com.example.flashcards_backend.repository.CardDeckRowProjection;
 import com.example.flashcards_backend.repository.CardRepository;
 import lombok.AllArgsConstructor;
@@ -27,14 +28,24 @@ public class CardService {
     private final CardDeckService cardDeckService;
     private final SubjectService subjectService;
 
-    @Transactional(readOnly = true)
-    public List<CardResponse> getAllCardResponsesFromSubject(Long subjectId) {
+    /* GET methods */
+    protected List<CardResponse> getAllCardResponsesFromSubject(Long subjectId) {
         List<CardDeckRowProjection> rows = cardRepository.findCardDeckRowsBySubjectId(subjectId);
         return mapRowsToResponses(rows);
     }
 
     @Transactional(readOnly = true)
+    public List<CardResponse> getAllCardResponsesForUserAndSubject(User user, Long subjectId) {
+        Subject subject = subjectService.findById(subjectId);
+        if (!subject.getUser().equals(user)) {
+            throw new IllegalArgumentException("User does not own subject");
+        }
+        return getAllCardResponsesFromSubject(subjectId);
+    }
+
+    @Transactional(readOnly = true)
     public CardResponse getCardResponseById(Long id) {
+        log.info("Getting card response for id {}", id);
         List<CardDeckRowProjection> rows = cardRepository.findCardDeckRowsByCardId(id);
         if (rows.isEmpty()) {
             throw new CardNotFoundException(id);
@@ -44,8 +55,10 @@ public class CardService {
 
     @Transactional
     public CreateCardResponse createCard(CardRequest request) {
+        log.info("Creating card with front: '{}'", request.front());
         Optional<Card> exists = getExistingCard(request);
         if (exists.isPresent()) {
+            log.info("Card already exists with id: {}", exists.get().getId());
             return mapCardToCreateCardResponse(exists.get(), true);
         }
         Card cardToCreate = Card.builder()
@@ -57,14 +70,16 @@ public class CardService {
         Subject subject = subjectService.findById(request.subjectId());
         cardToCreate.setSubject(subject);
         cardToCreate.setUser(subject.getUser());
+        log.info("Saving new card with id");
         Card saved = cardRepository.saveAndFlush(cardToCreate);
+        log.info("Saved card with id {}", saved.getId());
         addDecksIfPresent(request, saved);
         return mapCardToCreateCardResponse(saved, false);
     }
 
     @Transactional
     public List<CreateCardResponse> createCards(@NonNull List<CardRequest> requests) {
-        log.info("createCards called with {} requests", requests.size());
+        log.info("Creating cards from {} requests", requests.size());
         if (requests.isEmpty()) {
             log.error("No card requests provided");
             throw new IllegalArgumentException("No card requests provided");
@@ -98,6 +113,134 @@ public class CardService {
                 .map(p -> mapCardToCreateCardResponse(p.card, p.existed))
                 .toList();
     }
+
+
+
+    @Transactional
+    public void updateCard(Long id, CardRequest request) {
+        // Completely replace the card's front and back text and set its decks to those of the request.
+        log.info("Updating card {}", id);
+        Card card = fetchCardById(id);
+        card.setFront(request.front());
+        card.setBack(request.back());
+        card.setHintFront(request.hintFront());
+        card.setHintBack(request.hintBack());
+        boolean decksDiffer = !card.getDeckNames().equals(getDeckNames(request));
+        if (decksDiffer) {
+            log.info("Decks differ, updating card decks");
+            card.removeAllDecks();
+            if (request.deckNames() != null && !request.deckNames().isEmpty()) {
+                Set<Deck> decks = cardDeckService.getOrCreateDecksByNamesAndSubjectId(
+                        request.deckNames(), request.subjectId());
+                card.addDecks(decks);
+            }
+        }
+        cardRepository.saveAndFlush(card);
+        log.info("Card {} successfully updated", id);
+    }
+
+    @Transactional
+    public void rateCard(Long cardId, int rating) throws CardNotFoundException, DataAccessException {
+        cardHistoryService.recordRating(cardId, rating);
+    }
+
+    @Transactional
+    public void deleteCards(List<Long> ids) throws CardNotFoundException {
+        log.info("Deleting {} cards", ids.size());
+        if (ids == null || ids.isEmpty()) {
+            return;
+        }
+
+        // Fetch to check existence (future-proof for partial failures)
+        List<Card> cards = fetchCardsByIds(ids);
+        if (cards.size() != ids.size()) {
+            log.info("Found {} cards, expected {}", cards.size(), ids.size());
+            Set<Long> foundIds = cards.stream().map(Card::getId).collect(Collectors.toSet());
+            List<Long> missingIds = ids.stream().filter(id -> !foundIds.contains(id)).toList();
+            throw new CardNotFoundException(missingIds);
+        }
+
+        cardHistoryService.deleteByCardIds(ids);
+
+        log.info("Deleting associations between cards and decks");
+        cardRepository.deleteDeckAssociationsByCardIds(ids);
+
+        log.info("Deleting cards");
+        cardRepository.deleteByIds(ids); // Or cardRepository.deleteAllById(ids) if using Spring Data's built-in
+    }
+
+    @Transactional
+    public CardResponse setHints(HintRequest request, Long id) {
+        log.info("Setting hints for card {}", id);
+        Card card = fetchCardById(id);
+        card.setHintFront(Strings.trimToNull(request.hintFront()));
+        card.setHintBack(Strings.trimToNull(request.hintBack()));
+        return CardResponse.fromEntity(card);
+    }
+
+
+    /* Helpers */
+    private Card fetchCardById(Long id) {
+        log.info("Fetching card with id {}", id);
+        return cardRepository.findById(id)
+                .orElseThrow(() -> new CardNotFoundException(id));
+    }
+
+    private List<Card> fetchCardsByIds(List<Long> ids) {
+        log.info("Fetching {} cards by id", ids.size());
+        return cardRepository.findAllById(ids);
+    }
+
+    private void addDecksIfPresent(CardRequest request, Card cardToCreate) {
+        log.info("Checking for decks to add...");
+        if (request.deckNames() != null && !request.deckNames().isEmpty()) {
+            log.info("Adding decks {} to card {}", request.deckNames(), cardToCreate.getId());
+            cardToCreate.addDecks(cardDeckService.getOrCreateDecksByNamesAndSubjectId(
+                    getDeckNames(request), request.subjectId()));
+        }
+    }
+
+    protected Optional<Card> getExistingCard(CardRequest request) {
+        return cardRepository.findBySubjectIdAndFrontAndBack(
+                request.subjectId(),
+                request.front(),
+                request.back()
+        );
+    }
+
+    private static Set<String> getDeckNames(CardRequest request) {
+        return request.deckNames() == null
+                ? Set.of()
+                : request.deckNames();
+    }
+
+    private List<CardResponse> mapRowsToResponses(List<CardDeckRowProjection> rows) {
+        log.info("Mapping {} projection rows to CardResponses", rows.size());
+        Map<Long, CardResponse> cardMap = new LinkedHashMap<>();
+        for (CardDeckRowProjection row : rows) {
+            CardResponse existing = cardMap.get(row.getCardId());
+            if (existing == null) {
+                existing = CardResponse.fromEntity(row);
+                cardMap.put(row.getCardId(), existing);
+            }
+            if (row.getDeckId() != null) {
+                existing.decks().add(new DeckSummary(row.getDeckId(), row.getDeckName()));
+            }
+        }
+        return new ArrayList<>(cardMap.values());
+    }
+
+    protected CreateCardResponse mapCardToCreateCardResponse(Card card, boolean alreadyExisted) {
+        log.info("Mapping card {} to CreateCardResponse", card.getId());
+        return CreateCardResponse.builder()
+                .id(card.getId())
+                .front(card.getFront())
+                .back(card.getBack())
+                .decks(card.getDecks().stream().map(DeckSummary::fromEntity).toList())
+                .alreadyExisted(alreadyExisted)
+                .build();
+    }
+
 
     private List<CardCreationTask> processCardRequests(List<CardRequest> requests) {
         Subject subject = subjectService.findById(enforceSingleSubjectId(requests).iterator().next());
@@ -171,122 +314,6 @@ public class CardService {
         log.info("Found single subjectId: {}", subjectIds.iterator().next());
         return subjectIds;
     }
-
-
-    @Transactional
-    public void updateCard(Long id, CardRequest request) {
-        // Completely replace the card's front and back text and set its decks to those of the request.
-        log.info("Updating card {} with request {}", id, request);
-        Card card = fetchCardById(id);
-        card.setFront(request.front());
-        card.setBack(request.back());
-        card.setHintFront(request.hintFront());
-        card.setHintBack(request.hintBack());
-        boolean decksDiffer = !card.getDeckNames().equals(getDeckNames(request));
-        if (decksDiffer) {
-            card.removeAllDecks();
-            if (request.deckNames() != null && !request.deckNames().isEmpty()) {
-                Set<Deck> decks = cardDeckService.getOrCreateDecksByNamesAndSubjectId(
-                        request.deckNames(), request.subjectId());
-                card.addDecks(decks);
-            }
-        }
-        cardRepository.saveAndFlush(card);
-        log.info("Card {} successfully updated", id);
-    }
-
-    @Transactional
-    public void rateCard(Long cardId, int rating) throws CardNotFoundException, DataAccessException {
-        cardHistoryService.recordRating(cardId, rating);
-    }
-
-    @Transactional
-    public void deleteCards(List<Long> ids) throws CardNotFoundException {
-        if (ids == null || ids.isEmpty()) {
-            return;
-        }
-
-        // Fetch to check existence (future-proof for partial failures)
-        List<Card> cards = fetchCardsByIds(ids);
-        if (cards.size() != ids.size()) {
-            Set<Long> foundIds = cards.stream().map(Card::getId).collect(Collectors.toSet());
-            List<Long> missingIds = ids.stream().filter(id -> !foundIds.contains(id)).toList();
-            throw new CardNotFoundException(missingIds);
-        }
-
-        cardHistoryService.deleteByCardIds(ids);
-
-        cardRepository.deleteDeckAssociationsByCardIds(ids);
-
-        cardRepository.deleteByIds(ids); // Or cardRepository.deleteAllById(ids) if using Spring Data's built-in
-    }
-
-    @Transactional
-    public CardResponse setHints(HintRequest request, Long id) {
-        Card card = fetchCardById(id);
-        card.setHintFront(Strings.trimToNull(request.hintFront()));
-        card.setHintBack(Strings.trimToNull(request.hintBack()));
-        return CardResponse.fromEntity(card);
-    }
-
-
-    /* Helpers */
-    private Card fetchCardById(Long id) {
-        return cardRepository.findById(id)
-                .orElseThrow(() -> new CardNotFoundException(id));
-    }
-
-    private List<Card> fetchCardsByIds(List<Long> ids) {
-        return cardRepository.findAllById(ids);
-    }
-
-    private void addDecksIfPresent(CardRequest request, Card cardToCreate) {
-        if (request.deckNames() != null && !request.deckNames().isEmpty()) {
-            log.info("Adding decks {} to card {}", request.deckNames(), cardToCreate.getId());
-            cardToCreate.addDecks(cardDeckService.getOrCreateDecksByNamesAndSubjectId(
-                    getDeckNames(request), request.subjectId()));
-        }
-    }
-
-    protected Optional<Card> getExistingCard(CardRequest request) {
-        return cardRepository.findBySubjectIdAndFrontAndBack(
-                request.subjectId(),
-                request.front(),
-                request.back()
-        );
-    }
-
-    private static Set<String> getDeckNames(CardRequest request) {
-        return request.deckNames() == null
-                ? Set.of()
-                : request.deckNames();
-    }
-
-    private List<CardResponse> mapRowsToResponses(List<CardDeckRowProjection> rows) {
-        Map<Long, CardResponse> cardMap = new LinkedHashMap<>();
-        for (CardDeckRowProjection row : rows) {
-            CardResponse existing = cardMap.get(row.getCardId());
-            if (existing == null) {
-                existing = CardResponse.fromEntity(row);
-                cardMap.put(row.getCardId(), existing);
-            }
-            if (row.getDeckId() != null) {
-                existing.decks().add(new DeckSummary(row.getDeckId(), row.getDeckName()));
-            }
-        }
-        return new ArrayList<>(cardMap.values());
-    }
-
-    protected CreateCardResponse mapCardToCreateCardResponse(Card card, boolean alreadyExisted) {
-        return CreateCardResponse.builder()
-                .id(card.getId())
-                .front(card.getFront())
-                .back(card.getBack())
-                .decks(card.getDecks().stream().map(DeckSummary::fromEntity).toList())
-                .alreadyExisted(alreadyExisted)
-                .build();
-    }
-
 
     private record CardCreationTask(CardRequest req, boolean existed, Card card) {
     }

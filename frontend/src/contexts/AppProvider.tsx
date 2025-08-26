@@ -2,13 +2,24 @@ import { useEffect, useState, useMemo } from "react";
 import { AppContext } from "./AppContext";
 import useAllDecks from "../hooks/decks/useAllDecks";
 import type { Deck } from "../types/deck";
-
 import useAllCards from "../hooks/cards/useAllCards";
 import useAllSubjects from "../hooks/subjects/useAllSubjects";
 
 export const AppProvider = ({ children }: { children: React.ReactNode }) => {
-  const { subjects: subjectsFromHook, error: errorSubjects } = useAllSubjects();
-  const [allSubjects, setAllSubjects] = useState(subjectsFromHook);
+  const {
+    subjects: subjectsFromHook,
+    error: errorSubjects,
+    loading: loadingSubjects,
+  } = useAllSubjects();
+
+  // Keep local subjects but initialize from hook
+  const [allSubjects, setAllSubjects] = useState<typeof subjectsFromHook>([]);
+  useEffect(() => {
+    if (subjectsFromHook.length > 0) {
+      setAllSubjects(subjectsFromHook);
+    }
+  }, [subjectsFromHook]);
+
   const [selectedSubjectId, setSelectedSubjectId] = useState<number | null>(
     null
   );
@@ -21,7 +32,12 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
     error: errorDecks,
   } = useAllDecks(selectedSubjectId);
 
-  const [allDecks, setAllDecks] = useState<Deck[]>(allDecksFromHook);
+  const [allDecks, setAllDecks] = useState<Deck[]>([]);
+  useEffect(() => {
+    if (allDecksFromHook.length > 0) {
+      setAllDecks(allDecksFromHook);
+    }
+  }, [allDecksFromHook]);
 
   // Fetch cards for the selected subject
   const {
@@ -34,14 +50,10 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
 
   // Ensure first subject is selected by default
   useEffect(() => {
-    if (allSubjects.length > 0 && selectedSubjectId === null) {
-      setSelectedSubjectId(allSubjects[0].id);
+    if (subjectsFromHook.length > 0 && selectedSubjectId === null) {
+      setSelectedSubjectId(subjectsFromHook[0].id);
     }
-  }, [allSubjects, selectedSubjectId]);
-
-  // Sync decks and subjects with hooks
-  useEffect(() => setAllDecks(allDecksFromHook), [allDecksFromHook]);
-  useEffect(() => setAllSubjects(subjectsFromHook), [subjectsFromHook]);
+  }, [subjectsFromHook, selectedSubjectId]);
 
   // Refetch cards whenever selectedSubjectId changes
   useEffect(() => {
@@ -52,7 +64,6 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
     }
   }, [selectedSubjectId, refetch, setCards]);
 
-  // Currently selected subject object
   const selectedSubject = useMemo(
     () => allSubjects.find((s) => s.id === selectedSubjectId) || null,
     [allSubjects, selectedSubjectId]
@@ -79,27 +90,15 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
     );
   };
 
-  const refreshDecks = async () => {
-    if (selectedSubjectId !== null) {
-      await fetchDecks(selectedSubjectId);
-    }
-  };
-
-  const refreshCards = async () => {
-    if (selectedSubjectId !== null) {
-      await refetch(selectedSubjectId);
-    }
-  };
-
   return (
     <AppContext.Provider
       value={{
         decks: allDecks,
         cards,
-        loading: loadingDecks || loadingCards,
-        error: errorDecks || errorCards || errorSubjects,
-        fetchDecks: refreshDecks,
-        refetchCards: refreshCards,
+        loading: loadingSubjects || loadingDecks || loadingCards,
+        error: errorSubjects || errorDecks || errorCards,
+        fetchDecks: fetchDecks,
+        refetchCards: refetch,
         setDecks,
         setCards,
         subjects: allSubjects,

@@ -72,27 +72,27 @@ const CardList = ({ cards, isAllCardsList, deckId }: CardListProps) => {
   );
 
   return (
-    <div className="max-w-xl w-full mx-auto relative">
+    <div className="w-full mx-auto relative">
       {/* Top controls */}
-      <div className="flex justify-between mb-4 gap-2">
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-2 mb-4">
         {/* Search bar */}
         <input
           type="text"
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           placeholder="Search cards..."
-          className="flex-1 px-4 py-3 rounded shadow-lg border-2 border-black focus:outline-none"
+          className="w-full sm:flex-1 px-4 py-3 rounded shadow-lg border-2 border-black focus:outline-none"
         />
 
         {/* Bulk select / delete buttons */}
         {!bulkSelectMode ? (
           <button
             onClick={toggleBulkSelectMode}
-            className={`${
+            className={`w-full sm:w-auto mt-2 sm:mt-0 ${
               isEditing
                 ? "disabled bg-gray-100 cursor-not-allowed"
                 : "cursor-pointer bg-sky-200 hover:bg-sky-100"
-            } flex items-center text-black py-3 px-4 rounded shadow-lg   border-black border-2`}
+            } flex items-center justify-center text-black py-3 px-4 rounded shadow-lg border-black border-2`}
           >
             Select...
           </button>
@@ -100,7 +100,7 @@ const CardList = ({ cards, isAllCardsList, deckId }: CardListProps) => {
           <button
             onClick={handleDeleteSelected}
             disabled={selectedCards.size === 0}
-            className={`flex text-black py-3 px-4 rounded shadow-lg cursor-pointer bg-red-300 border-black border-2 items-center gap-2 ${
+            className={`w-full sm:w-auto mt-2 sm:mt-0 flex text-black py-3 px-4 rounded shadow-lg cursor-pointer bg-red-300 border-black border-2 items-center justify-center gap-2 ${
               selectedCards.size === 0 ? "opacity-50 cursor-not-allowed" : ""
             }`}
           >
@@ -115,17 +115,17 @@ const CardList = ({ cards, isAllCardsList, deckId }: CardListProps) => {
       </div>
 
       {/* Card list */}
-      <div className="flex flex-col gap-4 relative">
+      <div className="flex flex-col gap-4">
         {filteredCards.map((card) => (
           <div key={card.id} className="relative group">
             {bulkSelectMode && (
               <div
                 className={`absolute top-2 left-2 w-6 h-6 rounded-full border-2 border-gray-400 flex items-center justify-center transition-all duration-100
-      ${
-        selectedCards.has(card.id)
-          ? "bg-red-300 border-red-400"
-          : "bg-white group-hover:bg-gray-100"
-      }`}
+              ${
+                selectedCards.has(card.id)
+                  ? "bg-red-300 border-red-400"
+                  : "bg-white group-hover:bg-gray-100"
+              }`}
               >
                 {selectedCards.has(card.id) && (
                   <div className="w-3 h-3 bg-white rounded-full" />

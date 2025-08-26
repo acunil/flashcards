@@ -10,6 +10,8 @@ import type { Card } from "../types/card";
 import ReviseButtons from "../components/reviseButtons";
 import { useNavigate } from "react-router-dom";
 import PageLoad from "../components/pageLoad";
+import PageWrapper from "../components/pageWrapper";
+import ContentWrapper from "../components/contentWrapper";
 
 interface ReviseProps {
   hardMode?: boolean;
@@ -35,10 +37,6 @@ const Revise = ({ hardMode = false, deckId }: ReviseProps) => {
   const [revisionCards, setRevisionCards] = useState<Card[]>([]);
   const [cardColors, setCardColors] = useState<Record<string, string>>({});
 
-  useEffect(() => {
-    setShowHint(false);
-  }, [currentIndex]);
-
   const buildRevisionCards = useCallback(() => {
     const deckFiltered = cards.filter(
       (card) => !deckId || card.decks.some((deck: Deck) => deck.id === deckId)
@@ -59,6 +57,7 @@ const Revise = ({ hardMode = false, deckId }: ReviseProps) => {
     setRevisionCards(newDeck);
     setCurrentIndex(0);
     setCardColors({});
+    setShowHint(false); // reset hint when deck changes
   }, [buildRevisionCards]);
 
   const handleDifficultySelect = (rating: number) => {
@@ -75,19 +74,23 @@ const Revise = ({ hardMode = false, deckId }: ReviseProps) => {
       [currentCard.id]: newColor,
     }));
 
-    // 🔄 Loop through cards instead of resetting
     setCurrentIndex((prev) => (prev + 1) % revisionCards.length);
+    setShowHint(false); // reset hint when moving to next card
   };
+
   const handleEditCard = () => {
     navigate(`/add-card/${revisionCards[currentIndex].id}`);
   };
 
-  const handleShowHint = () => {
-    setShowHint(true);
+  const toggleHint = () => {
+    const currentCard = revisionCards[currentIndex];
+    if (currentCard.hintFront || currentCard.hintBack) {
+      setShowHint((prev) => !prev); // toggle
+    }
   };
 
   return (
-    <div className={`min-h-screen ${hardMode ? "bg-pink-300" : "bg-pink-200"}`}>
+    <PageWrapper className={`${hardMode ? "bg-pink-300" : "bg-pink-200"}`}>
       <Header isRevising={true} />
       <main className="flex flex-col items-center my-2">
         {loading && <PageLoad />}
@@ -96,6 +99,26 @@ const Revise = ({ hardMode = false, deckId }: ReviseProps) => {
             <p>No cards found</p>
           </div>
         )}
+        {!loading && !error && revisionCards.length === 0 && (
+          <ContentWrapper>
+            <div className="flex flex-col items-center">
+              <p>You don't have any cards!</p>
+              <p>Add a card to start revising</p>
+              <button
+                className="cursor-pointer border-2 m-2 border-black p-2 rounded bg-yellow-200"
+                onClick={() => navigate("/add-card/")}
+              >
+                Add a card
+              </button>
+              <button
+                className="cursor-pointer border-2 border-black p-2 rounded bg-green-200"
+                onClick={() => navigate("/upload/")}
+              >
+                Bulk upload
+              </button>
+            </div>
+          </ContentWrapper>
+        )}
         {!loading && !error && revisionCards.length > 0 && (
           <>
             <ReviseButtons
@@ -103,10 +126,10 @@ const Revise = ({ hardMode = false, deckId }: ReviseProps) => {
                 !(
                   revisionCards[currentIndex].hintFront ||
                   revisionCards[currentIndex].hintBack
-                ) || showHint
+                )
               }
               onEdit={handleEditCard}
-              onShowHint={handleShowHint}
+              onShowHint={toggleHint}
             />
             <div className="w-full overflow-hidden flex flex-col items-center">
               <CardCarousel
@@ -121,7 +144,7 @@ const Revise = ({ hardMode = false, deckId }: ReviseProps) => {
           </>
         )}
       </main>
-    </div>
+    </PageWrapper>
   );
 };
 

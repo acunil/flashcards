@@ -9,11 +9,13 @@ import com.example.flashcards_backend.repository.SubjectRepository;
 import com.example.flashcards_backend.repository.UserRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.UUID;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class SubjectService {
@@ -26,10 +28,14 @@ public class SubjectService {
     }
 
     public List<Subject> findByUserId(UUID userId) {
-        return repository.findByUserId(userId);
+        log.info("Finding subjects for user {}", userId);
+        List<Subject> subjects = repository.findByUserId(userId);
+        log.info("Found {} subjects for user {}", subjects.size(), userId);
+        return subjects;
     }
 
     public Subject findById(Long id) {
+        log.info("Finding subject with id {}", id);
         return repository.findById(id)
                 .orElseThrow(() -> new SubjectNotFoundException(id));
     }
@@ -37,6 +43,12 @@ public class SubjectService {
     @Transactional
     public Subject create(SubjectRequest request, UUID userId) {
         User user = userRepository.findById(userId).orElseThrow(() -> new UserNotFoundException(userId));
+        return create(request, user);
+    }
+
+    @Transactional
+    public Subject create(SubjectRequest request, User user) {
+        log.info("Creating subject for user {}", user.getId());
         Subject subject = request.toEntity();
         subject.setUser(user);
         return repository.save(subject);

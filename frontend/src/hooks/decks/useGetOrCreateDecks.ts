@@ -1,36 +1,42 @@
 import { useCallback, useState } from "react";
 import type { Deck } from "../../types/deck";
 import { API_URL } from "../urls";
+import { useAuthFetch } from "../../utils/authFetch";
 
 const useGetOrCreateDecks = () => {
   const [decks, setDecks] = useState<Deck[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const { authFetch } = useAuthFetch();
 
-  const getOrCreateDecks = useCallback(async (names: string[]) => {
-    setLoading(true);
-    setError(null);
+  const getOrCreateDecks = useCallback(
+    async (names: string[]) => {
+      setLoading(true);
+      setError(null);
 
-    try {
-      const response = await fetch(`${API_URL}/decks`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ names }),
-      });
-      if (!response.ok) {
-        throw new Error("Failed to get or create decks");
+      try {
+        const data: Deck[] | undefined = await authFetch(`${API_URL}/decks`, {
+          method: "POST",
+          body: JSON.stringify({ names }),
+        });
+
+        if (!data) {
+          // User was likely redirected to login
+          return [];
+        }
+
+        setDecks(data);
+        return data;
+      } catch (err: unknown) {
+        if (err instanceof Error) setError(err.message);
+        else setError("Unknown error occurred");
+        return [];
+      } finally {
+        setLoading(false);
       }
-      const data: Deck[] = await response.json();
-      setDecks(data);
-      return data;
-    } catch (err: unknown) {
-      if (err instanceof Error) setError(err.message);
-      else setError("Unknown error occurred");
-      return [];
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+    },
+    [authFetch]
+  );
 
   return { decks, getOrCreateDecks, loading, error };
 };

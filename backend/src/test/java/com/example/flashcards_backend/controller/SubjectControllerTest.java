@@ -3,11 +3,14 @@ package com.example.flashcards_backend.controller;
 import com.example.flashcards_backend.dto.SubjectRequest;
 import com.example.flashcards_backend.exception.SubjectNotFoundException;
 import com.example.flashcards_backend.model.Subject;
+import com.example.flashcards_backend.model.User;
+import com.example.flashcards_backend.service.CurrentUserService;
 import com.example.flashcards_backend.service.SubjectService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
@@ -22,6 +25,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(SubjectController.class)
+@AutoConfigureMockMvc(addFilters = false)
 class SubjectControllerTest {
 
     public static final String ENDPOINT = "/subjects";
@@ -30,24 +34,30 @@ class SubjectControllerTest {
     @MockitoBean
     private SubjectService subjectService;
 
+    @MockitoBean
+    private CurrentUserService currentUserService;
+
     @Autowired
     private MockMvc mockMvc;
 
     private Subject subject1;
     private Subject subject2;
+    private User user;
 
     @BeforeEach
     void setUp() {
+        user = User.builder().id(USER_ID).username("me").build();
         subject1 = Subject.builder().id(1L).name("Subject 1").build();
         subject2 = Subject.builder().id(2L).name("Subject 2").build();
+        when(currentUserService.getCurrentUser(any())).thenReturn(user);
     }
 
     @Test
     void getAllForUserSubjects() throws Exception {
-
         when(subjectService.findByUserId(USER_ID)).thenReturn(List.of(subject1, subject2));
 
-        mockMvc.perform(get(ENDPOINT).param("userId", USER_ID.toString()))
+        mockMvc.perform(get(ENDPOINT)
+                .header("Authorization", "Bearer jwt"))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$[0].id").value(1))
@@ -79,10 +89,10 @@ class SubjectControllerTest {
     void createSubject() throws Exception {
         when(subjectService.create(any(SubjectRequest.class), any(UUID.class))).thenReturn(subject1);
         mockMvc.perform(post(ENDPOINT)
-                        .param("userId", USER_ID.toString())
+                        .header("Authorization", "Bearer jwt")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"name\":\"Subject 1\"}"))
-                .andExpect(status().isOk());
+                .andExpect(status().isCreated());
 
         ArgumentCaptor<SubjectRequest> captor = ArgumentCaptor.forClass(SubjectRequest.class);
         verify(subjectService).create(captor.capture(), eq(USER_ID));
@@ -91,7 +101,8 @@ class SubjectControllerTest {
 
     @Test
     void createSubjectInvalidInput() throws Exception {
-        doThrow(new IllegalArgumentException("Invalid input")).when(subjectService).create(any(SubjectRequest.class), any(UUID.class));
+        doThrow(new IllegalArgumentException("Invalid input")).when(subjectService)
+                .create(any(SubjectRequest.class), any(UUID.class));
 
         mockMvc.perform(post(ENDPOINT)
                         .param("userId", USER_ID.toString())

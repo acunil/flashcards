@@ -6,6 +6,8 @@ export interface PageWrapperProps {
 }
 
 const PageWrapper = ({ className, children }: PageWrapperProps) => {
-  return <div className={`${className} min-h-screen`}>{children}</div>;
+  return (
+    <div className={`${className} min-h-screen flex flex-col`}>{children}</div>
+  );
 };
 export default PageWrapper;

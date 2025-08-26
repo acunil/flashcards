@@ -1,27 +1,33 @@
 import { useState } from "react";
 import { API_URL } from "../urls";
 import type { SaveSubjectPayload } from "./useUpdateSubject";
+import { useAuthFetch } from "../../utils/authFetch";
+
+// Subject should include id
+export interface Subject extends SaveSubjectPayload {
+  id: number;
+}
 
 interface CreateSubjectResult {
   isLoading: boolean;
   error: string | null;
   createSubject: (
     data?: Partial<Omit<SaveSubjectPayload, "id">>
-  ) => Promise<SaveSubjectPayload>;
+  ) => Promise<Subject>;
 }
 
 const useCreateSubject = (): CreateSubjectResult => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const { authFetch } = useAuthFetch();
 
   const createSubject = async (
     data?: Partial<Omit<SaveSubjectPayload, "id">>
-  ): Promise<SaveSubjectPayload> => {
+  ): Promise<Subject> => {
     setIsLoading(true);
     setError(null);
 
-    // Default payload
-    const payload: SaveSubjectPayload = {
+    const payload: Omit<SaveSubjectPayload, "id"> = {
       name: data?.name || "New Subject",
       frontLabel: data?.frontLabel || "Front",
       backLabel: data?.backLabel || "Back",
@@ -30,21 +36,12 @@ const useCreateSubject = (): CreateSubjectResult => {
     };
 
     try {
-      const response = await fetch(`${API_URL}/subjects`, {
+      const newSubject: Subject = await authFetch(`${API_URL}/subjects`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
         body: JSON.stringify(payload),
       });
 
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => null);
-        throw new Error(errorData?.message || "Failed to create subject");
-      }
-
-      const newSubject: SaveSubjectPayload = await response.json();
-      return newSubject;
+      return newSubject; // guaranteed to have id from server
     } catch (err: unknown) {
       if (err instanceof Error) {
         setError(err.message);

@@ -2,6 +2,7 @@ package com.example.flashcards_backend.controller;
 
 import com.example.flashcards_backend.dto.CsvUploadResponseDto;
 import com.example.flashcards_backend.service.CsvUploadServiceImpl;
+import com.example.flashcards_backend.service.CurrentUserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -13,6 +14,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -33,7 +36,9 @@ public class CsvUploadController {
         die Katze,cat,Animals;German Basics
         das Haus,house,Buildings;German Basics
     """;
+
     private final CsvUploadServiceImpl csvUploadService;
+    private final CurrentUserService currentUserService;
 
     @Operation(summary = "Upload CSV file for card import",
                description = "Uploads a CSV file containing flashcards and processes it for import.")
@@ -54,7 +59,11 @@ public class CsvUploadController {
                     content = @Content(mediaType = "text/csv")
             )
             @RequestBody MultipartFile file,
-            @PathVariable("subjectId") Long subjectId) {
+            @PathVariable("subjectId") Long subjectId,
+            @AuthenticationPrincipal Jwt jwt
+            ) {
+        currentUserService.getCurrentUser(jwt);
+        log.info("CSV upload for subject {}", subjectId);
         if (Objects.isNull(file) || file.isEmpty()) {
             log.error("CSV upload failed: no file provided");
             return ResponseEntity.badRequest().build();

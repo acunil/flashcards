@@ -7,6 +7,7 @@ import com.example.flashcards_backend.exception.DuplicateDeckNameException;
 import com.example.flashcards_backend.model.Deck;
 import com.example.flashcards_backend.model.Subject;
 import com.example.flashcards_backend.service.CardDeckService;
+import com.example.flashcards_backend.service.CurrentUserService;
 import com.example.flashcards_backend.service.DeckService;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -14,6 +15,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
@@ -31,6 +33,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(DeckController.class)
+@AutoConfigureMockMvc(addFilters = false)
 class DeckControllerTest {
 
     public static final String ENDPOINT = "/decks";
@@ -40,6 +43,9 @@ class DeckControllerTest {
 
     @MockitoBean
     private DeckService deckService;
+
+    @MockitoBean
+    private CurrentUserService currentUserService;
 
     @Autowired
     private MockMvc mockMvc;

@@ -5,8 +5,8 @@ interface ContentWrapperProps {
 }
 const ContentWrapper = ({ children }: ContentWrapperProps) => {
   return (
-    <div className="flex justify-center">
-      <div className="bg-white w-full max-w-screen-sm border-black border-2 p-4 rounded m-4">
+    <div className="flex justify-center m-4">
+      <div className="bg-white w-full max-w-screen-sm border-black border-2 p-4 rounded">
         {children}
       </div>
     </div>

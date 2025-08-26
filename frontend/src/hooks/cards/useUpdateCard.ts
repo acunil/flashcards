@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { API_URL } from "../urls";
+import { useAuthFetch } from "../../utils/authFetch";
 
 interface UpdateCardPayload {
   id: number;
@@ -20,6 +21,7 @@ interface UpdateCardResult {
 const useUpdateCard = (): UpdateCardResult => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const { authFetch } = useAuthFetch();
 
   const updateCard = async (data: UpdateCardPayload) => {
     setIsLoading(true);
@@ -27,22 +29,19 @@ const useUpdateCard = (): UpdateCardResult => {
 
     if (!data.subjectId || data.subjectId === 0) {
       setError("No subject selected");
+      setIsLoading(false);
       return;
     }
 
     try {
-      const response = await fetch(`${API_URL}/cards/${data.id}`, {
+      const result = await authFetch(`${API_URL}/cards/${data.id}`, {
         method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
         body: JSON.stringify(data),
       });
 
-      if (!response.ok) {
-        // You can customize error handling here
-        const errorData = await response.json();
-        throw new Error(errorData.message || "Failed to update card");
+      if (result === undefined) {
+        // User was likely redirected to login
+        return;
       }
     } catch (err: unknown) {
       if (err instanceof Error) {

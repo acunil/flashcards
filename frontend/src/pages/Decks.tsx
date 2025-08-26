@@ -1,14 +1,14 @@
 import useCreateDeck from "../hooks/decks/useCreateDeck";
 import DeckList from "../components/deck/deckList";
 import Header from "../components/header";
-import { CaretLeft } from "phosphor-react";
-import { useNavigate } from "react-router-dom";
-import DeckListSkeleton from "../components/deck/deckList/deckListSkeleton";
 import { useAppContext } from "../contexts";
+import PageWrapper from "../components/pageWrapper";
+import PageLoad from "../components/pageLoad";
+import ContentWrapper from "../components/contentWrapper";
+import BackButton from "../components/backButton";
+import Heading from "../components/heading";
 
 const Decks = () => {
-  const navigate = useNavigate();
-
   const { decks, loading, setDecks, selectedSubjectId, fetchDecks } =
     useAppContext();
   const { createDeck, loading: creating } = useCreateDeck(selectedSubjectId);
@@ -25,32 +25,19 @@ const Decks = () => {
   };
 
   return (
-    <div className="bg-sky-200">
+    <PageWrapper className="bg-sky-200">
       <Header />
-      <div className="min-h-screen flex justify-center">
-        <div className="bg-white w-full max-w-screen-sm border-black border-2 p-3 rounded m-4">
-          <div className="relative flex items-center h-12">
-            <div className="absolute left-0">
-              <button
-                id="decks-back-button"
-                className="cursor-pointer"
-                onClick={() => navigate("/")}
-              >
-                <CaretLeft size={24} />
-              </button>
-            </div>
-            <h1 className="text-xl font-bold text-center mx-auto">Decks</h1>
-          </div>
-
-          {(loading || creating) && <DeckListSkeleton />}
-          {decks.length === 0 && <p className="text-center">No decks found</p>}
-
-          {!loading && !creating && decks.length > 0 && (
-            <DeckList decks={decks} onAddDeck={handleAddDeck} />
-          )}
+      <ContentWrapper>
+        <div className="flex items-center mb-6">
+          <BackButton />
+          <Heading>Decks</Heading>
         </div>
-      </div>
-    </div>
+        {(loading || creating) && <PageLoad />}
+        {!loading && !creating && (
+          <DeckList decks={decks} onAddDeck={handleAddDeck} />
+        )}
+      </ContentWrapper>
+    </PageWrapper>
   );
 };
 

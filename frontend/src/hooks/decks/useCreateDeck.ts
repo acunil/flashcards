@@ -1,10 +1,12 @@
 import { useState } from "react";
 import type { Deck } from "../../types/deck";
 import { API_URL } from "../urls";
+import { useAuthFetch } from "../../utils/authFetch";
 
 const useCreateDeck = (subjectId: number | null) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const { authFetch } = useAuthFetch();
 
   /**
    * Create a new deck for the given subject
@@ -20,18 +22,19 @@ const useCreateDeck = (subjectId: number | null) => {
     setError(null);
 
     try {
-      const response = await fetch(`${API_URL}/decks?subjectId=${subjectId}`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify([name]),
-      });
+      const data: Deck[] | undefined = await authFetch(
+        `${API_URL}/decks?subjectId=${subjectId}`,
+        {
+          method: "POST",
+          body: JSON.stringify([name]),
+        }
+      );
 
-      if (!response.ok) {
-        const text = await response.text();
-        throw new Error(text || "Failed to create deck");
+      if (!data) {
+        // User was likely redirected to login
+        return null;
       }
 
-      const data: Deck[] = await response.json();
       // Return the first deck created
       return data[0] || null;
     } catch (err: unknown) {

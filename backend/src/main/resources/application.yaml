@@ -1,0 +1,7 @@
+spring:
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: https://dev-2rqhk7k4rkbvzvn0.us.auth0.com/
+          audience: https://dev-2rqhk7k4rkbvzvn0.us.auth0.com/api/v2/

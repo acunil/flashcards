@@ -2,37 +2,30 @@ import { useState } from "react";
 import { API_URL } from "../urls";
 import { useAuthFetch } from "../../utils/authFetch";
 
-const useUpdateDeck = () => {
+const useDeleteSubject = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { authFetch } = useAuthFetch();
 
-  const updateDeckName = async (id: number, newName: string) => {
+  const deleteSubject = async (id: number) => {
     setLoading(true);
     setError(null);
 
     try {
-      const updatedDeck = await authFetch(`${API_URL}/decks/${id}`, {
-        method: "PUT",
-        body: JSON.stringify({ newName }),
+      await authFetch(`${API_URL}/subjects/${id}`, {
+        method: "DELETE",
       });
-
-      if (!updatedDeck) {
-        // User was likely redirected to login
-        return null;
-      }
-
-      return updatedDeck; // Return updated deck
+      return true;
     } catch (err: unknown) {
       if (err instanceof Error) setError(err.message);
       else setError("Unknown error occurred");
-      return null;
+      return false;
     } finally {
       setLoading(false);
     }
   };
 
-  return { updateDeckName, loading, error };
+  return { deleteSubject, loading, error };
 };
 
-export default useUpdateDeck;
+export default useDeleteSubject;

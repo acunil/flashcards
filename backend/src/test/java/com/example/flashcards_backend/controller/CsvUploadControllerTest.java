@@ -2,11 +2,13 @@ package com.example.flashcards_backend.controller;
 
 import com.example.flashcards_backend.dto.CsvUploadResponseDto;
 import com.example.flashcards_backend.service.CsvUploadServiceImpl;
+import com.example.flashcards_backend.service.CurrentUserService;
 import nl.altindag.log.LogCaptor;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
@@ -22,12 +24,16 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(CsvUploadController.class)
+@AutoConfigureMockMvc(addFilters = false)
 class CsvUploadControllerTest {
 
     public static final String PATH = "/csv/1";
 
     @MockitoBean
     private CsvUploadServiceImpl csvUploadService;
+
+    @MockitoBean
+    private CurrentUserService currentUserService;
 
     @Autowired
     private MockMvc mockMvc;

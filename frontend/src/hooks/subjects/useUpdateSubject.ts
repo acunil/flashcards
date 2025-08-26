@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { API_URL } from "../urls";
+import { useAuthFetch } from "../../utils/authFetch";
 
 export interface SaveSubjectPayload {
   id?: number;
@@ -19,27 +20,30 @@ interface UpdateSubjectResult {
 const useUpdateSubject = (): UpdateSubjectResult => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const { authFetch } = useAuthFetch();
 
   const updateSubject = async (data: SaveSubjectPayload) => {
+    if (!data.id) {
+      setError("Subject ID is required");
+      return;
+    }
+
     setIsLoading(true);
     setError(null);
-    console.log(data);
+
+    // Ensure default values
     data.defaultSide = "FRONT";
     data.displayDeckNames = false;
 
     try {
-      const response = await fetch(`${API_URL}/subjects/${data.id}`, {
+      const result = await authFetch(`${API_URL}/subjects/${data.id}`, {
         method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
         body: JSON.stringify(data),
       });
 
-      if (!response.ok) {
-        // You can customize error handling here
-        const errorData = await response.json();
-        throw new Error(errorData.message || "Failed to update subject");
+      if (result === undefined) {
+        // User was likely redirected to login
+        return;
       }
     } catch (err: unknown) {
       if (err instanceof Error) {
