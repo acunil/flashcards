@@ -9,6 +9,8 @@ public record CreateCardResponse(
         Long id,
         String front,
         String back,
+        String hintFront,
+        String hintBack,
         List<DeckSummary> decks,
         Boolean alreadyExisted
 ) {

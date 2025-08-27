@@ -29,6 +29,8 @@ public class CsvUploadServiceImpl implements CsvUploadService {
     public static final String FRONT = "front";
     public static final String BACK = "back";
     public static final String DECKS = "decks";
+    public static final String HINT_FRONT = "hint_front";
+    public static final String HINT_BACK = "hint_back";
     private final CardRepository cardRepository;
     private final SubjectRepository subjectRepository;
     private final CardService cardService;
@@ -93,6 +95,8 @@ public class CsvUploadServiceImpl implements CsvUploadService {
             CardRequest request = CardRequest.builder()
                     .front(r.get(FRONT))
                     .back(r.get(BACK))
+                    .hintFront(r.get(HINT_FRONT))
+                    .hintBack(r.get(HINT_BACK))
                     .subjectId(subjectId)
                     .deckNames(deckNames)
                     .build();

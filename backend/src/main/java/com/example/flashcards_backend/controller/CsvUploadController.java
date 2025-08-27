@@ -28,13 +28,13 @@ import java.util.Objects;
 @Slf4j
 public class CsvUploadController {
     public static final String CSV_UPLOAD_FORMAT = """
-        CSV file to upload. Format: front,back,decks. Headers required. ; = separator for decks.
+        CSV file to upload. Format: front,back,hint_front,hint_back,decks. Headers required. ; = separator for decks.
         \s
         Example:
         \s
-        front,back,decks
-        die Katze,cat,Animals;German Basics
-        das Haus,house,Buildings;German Basics
+        front,back,hint_front,hint_back,decks
+        die Katze,cat,Animals,,sounds like cat;German Basics
+        das Haus,house,Buildings,,;German Basics
     """;
 
     private final CsvUploadServiceImpl csvUploadService;

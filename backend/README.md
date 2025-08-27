@@ -48,13 +48,14 @@ To upload a CSV file, you can use the `/csv/{subjectId}` endpoint with a POST re
 
 The CSV file should have the following format: `front,back,decks`
 
-Where `front` is the text displayed on the front of the flashcard and `back` is the text displayed on the back and `decks` is a semicolon-separated list of deck names.
+Where `front` is the text displayed on the front of the flashcard and `back` is the text displayed on the back. `hint_front` and `hint_back` are optional,
+and `decks` is a semicolon-separated list of deck names, also optional. All headers must be present, even if the entries are empty.
 
 #### Example CSV Content
 ``` csv
-front,back,decks
-die Katze,cat,Animals;German Basics
-das Haus,house,Buildings;German Basics
+front,back,hint_front,hint_back,decks
+die Katze,cat,Animals,,sounds like cat;German Basics
+das Haus,house,Buildings,,;German Basics
 ```
 
 
