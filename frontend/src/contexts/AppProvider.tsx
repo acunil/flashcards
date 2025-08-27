@@ -15,9 +15,7 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
   // Keep local subjects but initialize from hook
   const [allSubjects, setAllSubjects] = useState<typeof subjectsFromHook>([]);
   useEffect(() => {
-    if (subjectsFromHook.length > 0) {
-      setAllSubjects(subjectsFromHook);
-    }
+    setAllSubjects(subjectsFromHook);
   }, [subjectsFromHook]);
 
   const [selectedSubjectId, setSelectedSubjectId] = useState<number | null>(
@@ -36,6 +34,8 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
   useEffect(() => {
     if (allDecksFromHook.length > 0) {
       setAllDecks(allDecksFromHook);
+    } else {
+      setAllDecks([]);
     }
   }, [allDecksFromHook]);
 

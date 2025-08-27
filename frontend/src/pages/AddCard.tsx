@@ -11,6 +11,7 @@ import PageWrapper from "../components/pageWrapper";
 import BackButton from "../components/backButton";
 import Heading from "../components/heading";
 import ContentWrapper from "../components/contentWrapper";
+import Toast from "../components/toast";
 
 const AddCard = () => {
   const [front, setFront] = useState("");
@@ -126,16 +127,8 @@ const AddCard = () => {
       <Header />
 
       {/* Toasts */}
-      {showToast && (
-        <div className="fixed top-20 left-1/2 -translate-x-1/2 bg-green-200 border-2 border-black px-4 py-2 rounded shadow transition-opacity z-50">
-          Card saved!
-        </div>
-      )}
-      {showErrorToast && (
-        <div className="fixed top-20 left-1/2 -translate-x-1/2 bg-red-200 border-2 border-black px-4 py-2 rounded shadow transition-opacity z-50">
-          Could not add card.
-        </div>
-      )}
+      {showToast && <Toast>Card saved!</Toast>}
+      {showErrorToast && <Toast isError={true}>Could not add card.</Toast>}
 
       <ContentWrapper>
         <form onSubmit={handleSubmit} className="p-1 sm:p-2">
