@@ -8,7 +8,7 @@ const BackButton = () => {
       <button
         id="decks-back-button"
         className="cursor-pointer"
-        onClick={() => navigate("/")}
+        onClick={() => navigate(-1)}
       >
         <CaretLeft size={24} />
       </button>
