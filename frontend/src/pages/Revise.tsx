@@ -83,6 +83,7 @@ const Revise = ({ hardMode = false, deckId }: ReviseProps) => {
   };
 
   const toggleHint = () => {
+    console.log("toggle hint");
     const currentCard = revisionCards[currentIndex];
     if (currentCard.hintFront || currentCard.hintBack) {
       setShowHint((prev) => !prev); // toggle
@@ -122,8 +123,8 @@ const Revise = ({ hardMode = false, deckId }: ReviseProps) => {
         {!loading && !error && revisionCards.length > 0 && (
           <>
             <ReviseButtons
-              disableHint={
-                !(
+              showHintButton={
+                !!(
                   revisionCards[currentIndex].hintFront ||
                   revisionCards[currentIndex].hintBack
                 )
