@@ -147,13 +147,13 @@ const DeckDetails = () => {
           <div className="flex gap-2 mt-2 flex-wrap justify-center sm:justify-end">
             <button
               onClick={handleClickAddCard}
-              className="flex items-center justify-center p-2 bg-yellow-200 hover:bg-yellow-300 border-black border-2 rounded shadow"
+              className="flex items-center cursor-pointer justify-center p-2 bg-yellow-200 hover:bg-yellow-300 border-black border-2 rounded shadow"
             >
               <Plus size={20} />
             </button>
             <button
               onClick={handleClickRevise}
-              className="flex items-center justify-center p-2 bg-pink-200 hover:bg-pink-300 border-black border-2 rounded shadow"
+              className="flex items-center cursor-pointer justify-center p-2 bg-pink-200 hover:bg-pink-300 border-black border-2 rounded shadow"
             >
               <GraduationCap size={20} />
             </button>
