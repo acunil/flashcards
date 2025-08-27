@@ -56,6 +56,11 @@ const SubjectForm = ({ subject, mode, onSave, onCancel }: SubjectFormProps) => {
     }
 
     onSave(values);
+    setValues({
+      name: "",
+      frontLabel: "",
+      backLabel: "",
+    });
   };
 
   return (
