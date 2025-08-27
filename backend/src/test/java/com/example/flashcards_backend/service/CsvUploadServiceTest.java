@@ -59,11 +59,11 @@ class CsvUploadServiceTest {
         when(subjectRepository.findByIdWithUserAndSubjects(1L)).thenReturn(Optional.of(subject));
 
         String csv = """
-                front,back,decks
-                ,b1,
-                f2,,
-                f3,b3,d1;d2
-                f4,b4,
+                front,back,hint_front,hint_back,decks
+                ,b1,,,
+                f2,,,,
+                f3,b3,hf1,hb1,d1;d2
+                f4,b4,,hb2,
                 """;
         InputStream csvInputStream = new ByteArrayInputStream(csv.getBytes(StandardCharsets.UTF_8));
 
@@ -80,6 +80,8 @@ class CsvUploadServiceTest {
                 .id(42L)
                 .front("f3")
                 .back("b3")
+                .hintFront("hf1")
+                .hintBack("hb1")
                 .subject(subject)
                 .user(user)
                 .build();
@@ -90,6 +92,8 @@ class CsvUploadServiceTest {
                         .id(savedCard.getId())
                         .front(savedCard.getFront())
                         .back(savedCard.getBack())
+                        .hintFront(savedCard.getHintFront())
+                        .hintBack(savedCard.getHintBack())
                         .decks(savedCard.getDecks().stream().map(DeckSummary::fromEntity).toList())
                         .alreadyExisted(false)
                         .build()));
@@ -105,6 +109,8 @@ class CsvUploadServiceTest {
         assertThat(saved).singleElement().satisfies(card -> {
             assertThat(card.front()).isEqualTo("f3");
             assertThat(card.back()).isEqualTo("b3");
+            assertThat(card.hintFront()).isEqualTo("hf1");
+            assertThat(card.hintBack()).isEqualTo("hb1");
             assertThat(card.decks()).hasSize(2)
                     .containsExactlyInAnyOrder(DeckSummary.fromEntity(deck1), DeckSummary.fromEntity(deck2));
         });

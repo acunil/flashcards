@@ -77,7 +77,9 @@ public record CardResponse(
                 .id(ccr.id())
                 .front(ccr.front())
                 .back(ccr.back())
-                .decks(ccr.decks().stream().collect(Collectors.toSet()))
+                .hintFront(ccr.hintFront())
+                .hintBack(ccr.hintBack())
+                .decks(new HashSet<>(ccr.decks()))
                 .build();
     }
 }
