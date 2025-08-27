@@ -25,6 +25,10 @@ const DeckList = ({ decks, onAddDeck }: DeckListProps) => {
       .length;
   };
 
+  const sortedDecks = [...decks].sort(
+    (a, b) => getDeckCardCount(b.id) - getDeckCardCount(a.id)
+  );
+
   return (
     <div className="flex flex-col items-center gap-2 m-2 p-2 mb-4 max-w-xs mx-auto w-full">
       <DeckListItem
@@ -34,7 +38,7 @@ const DeckList = ({ decks, onAddDeck }: DeckListProps) => {
         onClick={() => handleDeckClick(0)}
         totalCards={totalCardCount}
       />
-      {decks.map((deck) => (
+      {sortedDecks.map((deck) => (
         <DeckListItem
           key={deck.id}
           deck={deck}
