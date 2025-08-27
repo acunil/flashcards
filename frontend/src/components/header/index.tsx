@@ -10,6 +10,7 @@ import type {
   Familiarity,
 } from "../../contexts/ReviseSettingsContext";
 import { useAuth0 } from "@auth0/auth0-react";
+import useUpdateSubject from "../../hooks/subjects/useUpdateSubject";
 
 interface HeaderProps {
   isHomePage?: boolean;
@@ -27,6 +28,7 @@ const Header = ({
   const [showUserDropdown, setShowUserDropdown] = useState(false);
   const { selectedSubject } = useAppContext();
   const { logout } = useAuth0();
+  const { updateSubject } = useUpdateSubject();
 
   const {
     cardDisplay,
@@ -56,6 +58,52 @@ const Header = ({
     { display: "Show", value: "Show" },
     { display: "Hide", value: "Hide" },
   ];
+
+  const persistDefaultSide = async (value: CardDisplay) => {
+    // Optimistic UI
+    setCardDisplay(value);
+
+    if (!selectedSubject?.id) return; // no subject yet
+
+    try {
+      await updateSubject({
+        id: selectedSubject.id,
+        name: selectedSubject.name,
+        frontLabel: selectedSubject.frontLabel || "Front",
+        backLabel: selectedSubject.backLabel || "Back",
+        defaultSide: value.toUpperCase(),
+      });
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        console.log(err.message);
+      } else {
+        console.log(String(err));
+      }
+    }
+  };
+
+  const persistDeckVisibility = async (value: DeckVisibility) => {
+    // Optimistic UI
+    setShowDeckNames(value);
+
+    if (!selectedSubject?.id) return;
+
+    try {
+      await updateSubject({
+        id: selectedSubject.id,
+        name: selectedSubject.name,
+        frontLabel: selectedSubject.frontLabel || "Front",
+        backLabel: selectedSubject.backLabel || "Back",
+        displayDeckNames: value === "Show",
+      });
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        console.log(err.message);
+      } else {
+        console.log(String(err));
+      }
+    }
+  };
 
   const handleLogout = () => {
     logout({ logoutParams: { returnTo: window.location.origin } });
@@ -171,7 +219,7 @@ const Header = ({
             <Toggle
               options={cardOptions}
               selected={cardDisplay}
-              onChange={setCardDisplay}
+              onChange={persistDefaultSide}
             />
           </div>
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
@@ -187,7 +235,7 @@ const Header = ({
             <Toggle
               options={deckOptions}
               selected={showDeckNames}
-              onChange={setShowDeckNames}
+              onChange={persistDeckVisibility}
             />
           </div>
           <div className="flex justify-end pt-2">

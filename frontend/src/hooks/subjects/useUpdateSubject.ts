@@ -31,10 +31,6 @@ const useUpdateSubject = (): UpdateSubjectResult => {
     setIsLoading(true);
     setError(null);
 
-    // Ensure default values
-    data.defaultSide = "FRONT";
-    data.displayDeckNames = false;
-
     try {
       const result = await authFetch(`${API_URL}/subjects/${data.id}`, {
         method: "PUT",
