@@ -11,7 +11,7 @@ import PageWrapper from "../components/pageWrapper";
 import BackButton from "../components/backButton";
 import Heading from "../components/heading";
 import ContentWrapper from "../components/contentWrapper";
-import Toast from "../components/toast";
+import Toast, { type ToastConfig } from "../components/toast";
 
 const AddCard = () => {
   const [front, setFront] = useState("");
@@ -20,8 +20,8 @@ const AddCard = () => {
   const [backHint, setBackHint] = useState("");
   const [selectedDecks, setSelectedDecks] = useState<Deck[]>([]);
   const [error, setError] = useState<string | null>(null);
-  const [showToast, setShowToast] = useState(false);
-  const [showErrorToast, setShowErrorToast] = useState(false);
+  const [toast, setToast] = useState<ToastConfig | null>(null);
+
   const [isSaving, setIsSaving] = useState(false);
 
   const { decks, cards, selectedSubject, fetchDecks, refetchCards } =
@@ -61,25 +61,15 @@ const AddCard = () => {
     }
   }, [cardId, cards, deckId, decks]);
 
-  useEffect(() => {
-    if (showToast) {
-      const timer = setTimeout(() => setShowToast(false), 2000);
-      return () => clearTimeout(timer);
-    }
-  }, [showToast]);
-
-  useEffect(() => {
-    if (showErrorToast) {
-      const timer = setTimeout(() => setShowErrorToast(false), 2000);
-      return () => clearTimeout(timer);
-    }
-  }, [showErrorToast]);
-
   const handleSubmit = async (e?: React.FormEvent) => {
     e?.preventDefault();
 
     if (!front.trim() || !back.trim()) {
-      setError("Both front and back are required.");
+      setToast({
+        message: "Both front and back are required.",
+        isError: true,
+        duration: 3000,
+      });
       return;
     }
 
@@ -100,7 +90,7 @@ const AddCard = () => {
           subjectId: selectedSubject?.id || 0,
         });
       } else {
-        await createCard({
+        const result = await createCard({
           front,
           back,
           hintFront: frontHint,
@@ -108,15 +98,28 @@ const AddCard = () => {
           deckNames,
           subjectId: selectedSubject?.id || 0,
         });
+
+        if (result.alreadyExisted == true) {
+          setToast({
+            message: "Card already exists!",
+            isError: true,
+            duration: 3000,
+          });
+          return;
+        }
       }
 
       await fetchDecks();
       await refetchCards(selectedSubject?.id || 0);
 
-      setShowToast(true);
+      setToast({ message: "Card saved!", duration: 2000 });
       if (!isEditing) resetForm();
     } catch {
-      setShowErrorToast(true);
+      setToast({
+        message: "Could not add card.",
+        isError: true,
+        duration: 2000,
+      });
     } finally {
       setIsSaving(false);
     }
@@ -126,9 +129,15 @@ const AddCard = () => {
     <PageWrapper className="bg-yellow-200">
       <Header />
 
-      {/* Toasts */}
-      {showToast && <Toast>Card saved!</Toast>}
-      {showErrorToast && <Toast isError={true}>Could not add card.</Toast>}
+      {toast && (
+        <Toast
+          message={toast.message}
+          isError={toast.isError}
+          confirm={toast.confirm}
+          duration={toast.duration}
+          onClose={() => setToast(null)}
+        />
+      )}
 
       <ContentWrapper>
         <form onSubmit={handleSubmit} className="p-1 sm:p-2">
