@@ -6,6 +6,7 @@ import {
   FilePlus,
   ChartBar,
   UploadSimple,
+  Graph,
 } from "phosphor-react";
 
 const buttons = [
@@ -20,6 +21,12 @@ const buttons = [
     path: "/revise?hardMode=true",
     buttonClassName: "bg-pink-300 hover:bg-pink-400",
     Icon: Barbell,
+  },
+  {
+    label: "multiple choice",
+    path: "/multiple-choice",
+    buttonClassName: "bg-purple-200 hover:bg-purple-300",
+    Icon: Graph,
   },
   {
     label: "decks",
@@ -56,7 +63,7 @@ const HomeButtons = () => {
         <button
           key={label}
           onClick={() => navigate(path)}
-          className={`relative flex items-center text-black py-3 px-4 w-50 rounded shadow-lg cursor-pointer border-black border-2 ${buttonClassName}`}
+          className={`relative flex items-center text-black py-3 px-4 w-60 rounded shadow-lg cursor-pointer border-black border-2 ${buttonClassName}`}
         >
           <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 font-medium">
             {label}
