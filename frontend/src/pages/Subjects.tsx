@@ -11,14 +11,14 @@ import PageWrapper from "../components/pageWrapper";
 import ContentWrapper from "../components/contentWrapper";
 import BackButton from "../components/backButton";
 import Heading from "../components/heading";
-import Toast from "../components/toast";
+import Toast, { type ToastConfig } from "../components/toast";
 
 const SubjectsPage = () => {
   const { subjects, selectedSubjectId, setSelectedSubjectId, setSubjects } =
     useAppContext();
 
   const [editSubjectId, setEditSubjectId] = useState<number | null>(null);
-  const [subjectToDelete, setSubjectToDelete] = useState<Subject | null>(null);
+  const [toastConfig, setToastConfig] = useState<ToastConfig>(null);
 
   const { updateSubject } = useUpdateSubject();
   const { createSubject } = useCreateSubject();
@@ -46,14 +46,9 @@ const SubjectsPage = () => {
         backLabel: updated.backLabel,
       });
 
-      setSubjects((prev) => {
-        const exists = prev.some((s) => s.id === id);
-        if (exists) {
-          return prev.map((s) => (s.id === id ? { ...s, ...updated } : s));
-        }
-        const newSubject: Subject = { id, ...updated };
-        return [...prev, newSubject];
-      });
+      setSubjects((prev) =>
+        prev.map((s) => (s.id === id ? { ...s, ...updated } : s))
+      );
 
       setEditSubjectId(null);
     } catch (err) {
@@ -68,7 +63,6 @@ const SubjectsPage = () => {
   }) => {
     try {
       const created = await createSubject(newSub);
-
       if (created && created.id) {
         setSubjects((prev) => [...prev, created]);
         setSelectedSubjectId(created.id);
@@ -78,28 +72,32 @@ const SubjectsPage = () => {
     }
   };
 
-  const confirmDeleteSubject = async (subjectId: number) => {
-    try {
-      const success = await deleteSubject(subjectId);
-      if (success) {
-        setSubjects((prev) => {
-          const newSubjects = prev.filter((s) => s.id !== subjectId);
+  const confirmDeleteSubject = (subject: Subject) => {
+    setToastConfig({
+      message: `Are you sure you want to delete "${subject.name}"?`,
+      isError: true,
+      confirm: {
+        onConfirm: async () => {
+          try {
+            const success = await deleteSubject(subject.id);
+            if (success) {
+              setSubjects((prev) => prev.filter((s) => s.id !== subject.id));
 
-          setSelectedSubjectId((prevSelected) => {
-            if (prevSelected === subjectId) {
-              return newSubjects.length > 0 ? newSubjects[0].id : null;
+              setSelectedSubjectId((prevSelected) =>
+                prevSelected === subject.id && subjects.length > 1
+                  ? subjects.find((s) => s.id !== subject.id)?.id || null
+                  : prevSelected === subject.id
+                  ? null
+                  : prevSelected
+              );
             }
-            return prevSelected;
-          });
-
-          return newSubjects;
-        });
-      }
-    } catch (err) {
-      console.error("Failed to delete subject:", err);
-    } finally {
-      setSubjectToDelete(null); // clear confirmation state
-    }
+          } catch (err) {
+            console.error("Failed to delete subject:", err);
+          }
+        },
+        onCancel: () => {},
+      },
+    });
   };
 
   return (
@@ -163,7 +161,7 @@ const SubjectsPage = () => {
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
-                          setSubjectToDelete(subject); // trigger confirmation
+                          confirmDeleteSubject(subject);
                         }}
                         className="p-2 border-inherit border-2 bg-black hover:border-black hover:bg-pink-600 rounded hover:cursor-pointer"
                       >
@@ -183,18 +181,14 @@ const SubjectsPage = () => {
         </div>
       </ContentWrapper>
 
-      {/* Confirmation Toast */}
-      {subjectToDelete && (
+      {/* Toast */}
+      {toastConfig && (
         <Toast
-          isError
-          confirm={{
-            message: `Are you sure you want to delete "${subjectToDelete.name}"?`,
-            onConfirm: () => confirmDeleteSubject(subjectToDelete.id),
-            onCancel: () => setSubjectToDelete(null),
-          }}
-        >
-          This action cannot be undone.
-        </Toast>
+          message={toastConfig.message}
+          isError={toastConfig.isError}
+          confirm={toastConfig.confirm}
+          onClose={() => setToastConfig(null)}
+        />
       )}
     </PageWrapper>
   );
