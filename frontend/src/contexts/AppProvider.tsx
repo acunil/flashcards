@@ -19,7 +19,10 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
   }, [subjectsFromHook]);
 
   const [selectedSubjectId, setSelectedSubjectId] = useState<number | null>(
-    null
+    () => {
+      const stored = localStorage.getItem("selectedSubjectId");
+      return stored ? Number(stored) : null;
+    }
   );
 
   // Fetch decks based on subjectId
@@ -47,6 +50,14 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
     error: errorCards,
     refetch,
   } = useAllCards(selectedSubjectId);
+
+  useEffect(() => {
+    if (selectedSubjectId !== null) {
+      localStorage.setItem("selectedSubjectId", String(selectedSubjectId));
+    } else {
+      localStorage.removeItem("selectedSubjectId");
+    }
+  }, [selectedSubjectId]);
 
   // Ensure first subject is selected by default
   useEffect(() => {
