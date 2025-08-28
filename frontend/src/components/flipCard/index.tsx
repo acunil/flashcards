@@ -9,6 +9,7 @@ interface FlipCardProps {
   cardBgColor?: string;
   showDecks?: boolean;
   showHint?: boolean;
+  isActive: boolean;
 }
 
 const FlipCard = ({
@@ -18,15 +19,17 @@ const FlipCard = ({
   showDecks = false,
   cardBgColor = "bg-white",
   showHint = false,
+  isActive = false,
 }: FlipCardProps) => {
   const { selectedSubject } = useAppContext();
 
-  const handleClick = () => {
-    if (onFlip) onFlip();
-  };
-
   return (
-    <div className={`w-80 h-52 cursor-pointer`} onClick={handleClick}>
+    <div
+      className={`relative  w-80 h-52 ${
+        isActive ? "cursor-pointer" : "cursor-default"
+      }`}
+      onClick={isActive ? onFlip : undefined}
+    >
       <div className="relative w-full h-full [perspective:1000px]">
         <div
           className={`relative w-full h-full transition-transform duration-500 [transform-style:preserve-3d] ${

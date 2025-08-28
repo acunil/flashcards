@@ -86,6 +86,8 @@ const CardCarousel = ({
     filteredCards.length > 0 ? currentIndex % filteredCards.length : 0;
   const translateX = -(index * fullCardWidth) + (windowWidth - cardWidth) / 2;
 
+  console.log(cardColors);
+
   return (
     <div className="relative w-full py-6">
       <div
@@ -108,17 +110,16 @@ const CardCarousel = ({
                 margin: `0 ${cardMargin / 2}px`,
                 transform: `scale(${scale}) translateY(${translateY}px)`,
                 transition: "transform 0.5s ease",
-                cursor: i === currentIndex ? "pointer" : "default",
-                zIndex: i === currentIndex ? 10 : 1,
               }}
             >
               <FlipCard
                 card={card}
                 flipped={flipped}
-                onFlip={() => handleFlip(card.id)}
+                onFlip={i === index ? () => handleFlip(card.id) : undefined}
                 showDecks={showDeckNames === "Show"}
                 cardBgColor={cardColors[card.id] || "bg-white"}
-                showHint={displayCurrentHint}
+                showHint={displayCurrentHint && i === index}
+                isActive={i === index}
               />
             </div>
           );
