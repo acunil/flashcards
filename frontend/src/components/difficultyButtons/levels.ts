@@ -1,10 +1,5 @@
-import {
-  Lightning,
-  Smiley,
-  SmileyMeh,
-  SmileyNervous,
-  SmileyXEyes,
-} from "phosphor-react";
+import { Smiley, SmileyMeh, SmileyNervous, SmileyXEyes } from "phosphor-react";
+import GrinIcon from "./grin";
 
 export const levels = [
   {
@@ -37,7 +32,7 @@ export const levels = [
   },
   {
     label: "Easy",
-    Icon: Lightning,
+    Icon: GrinIcon,
     buttonClassName: "bg-sky-200 hover:bg-sky-300",
     rating: 1,
     color: "#0284C7",
