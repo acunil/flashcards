@@ -9,6 +9,7 @@ interface DeckListItemProps {
   totalCards?: number;
   Icon?: ComponentType<IconProps>;
   onClick?: MouseEventHandler<HTMLButtonElement>;
+  showReviseButton?: boolean;
 }
 
 const DeckListItem = ({
@@ -17,6 +18,7 @@ const DeckListItem = ({
   Icon,
   onClick,
   totalCards,
+  showReviseButton = false,
 }: DeckListItemProps) => {
   const navigate = useNavigate();
 
@@ -43,12 +45,14 @@ const DeckListItem = ({
           <span className="text-gray-500">{totalCards}</span>
         )}
       </button>
-      <button
-        onClick={handleReviseClick}
-        className="relative flex items-center text-black py-3 px-4 rounded shadow-lg cursor-pointer hover:bg-yellow-200 border-black border-2"
-      >
-        <GraduationCap size={20} />
-      </button>
+      {showReviseButton && (
+        <button
+          onClick={handleReviseClick}
+          className="relative flex items-center text-black py-3 px-4 rounded shadow-lg cursor-pointer hover:bg-yellow-200 border-black border-2"
+        >
+          <GraduationCap size={20} />
+        </button>
+      )}
     </div>
   );
 };
