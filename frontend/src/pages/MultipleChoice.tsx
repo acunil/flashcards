@@ -14,7 +14,7 @@ const MultipleChoice = () => {
       <Header />
       <ContentWrapper>
         {/* Header row */}
-        <div className="flex items-center mb-6">
+        <div className="flex items-center">
           <BackButton />
           <Heading>Multiple Choice Mode</Heading>
         </div>

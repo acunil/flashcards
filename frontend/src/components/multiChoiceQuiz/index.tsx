@@ -2,10 +2,10 @@ import { useState, useMemo, useEffect, useCallback } from "react";
 import FlipCard from "../flipCard";
 import type { Card } from "../../types/card";
 import ReviseButtons from "../reviseButtons";
+import { useNavigate } from "react-router-dom";
 
 interface MultipleChoiceQuizProps {
   cards: Card[];
-  onEditCard?: (card: Card) => void;
 }
 
 const NUM_OPTIONS = 4;
@@ -19,11 +19,12 @@ const shuffleCards = (cards: Card[]) => {
   return copy;
 };
 
-const MultipleChoiceQuiz = ({ cards, onEditCard }: MultipleChoiceQuizProps) => {
+const MultipleChoiceQuiz = ({ cards }: MultipleChoiceQuizProps) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [optionsState, setOptionsState] = useState<number[]>([]); // remaining option IDs
   const [selectedCorrect, setSelectedCorrect] = useState(false);
   const [showHint, setShowHint] = useState(false);
+  const navigate = useNavigate();
 
   // Compute current question and options
   const { questionCard, options } = useMemo(() => {
@@ -54,16 +55,17 @@ const MultipleChoiceQuiz = ({ cards, onEditCard }: MultipleChoiceQuizProps) => {
         setSelectedCorrect(true);
         setTimeout(() => setCurrentIndex((prev) => prev + 1), 1000);
       } else {
-        // Grey out wrong option
         setOptionsState((prev) => prev.filter((id) => id !== cardId));
       }
     },
     [questionCard]
   );
 
-  const handleEditCard = useCallback(() => {
-    if (onEditCard && questionCard) onEditCard(questionCard);
-  }, [onEditCard, questionCard]);
+  const handleEditCard = () => {
+    if (questionCard) {
+      navigate(`/add-card/${questionCard.id}`);
+    }
+  };
 
   const toggleHint = useCallback(() => {
     if (questionCard?.hintFront || questionCard?.hintBack) {
@@ -74,16 +76,18 @@ const MultipleChoiceQuiz = ({ cards, onEditCard }: MultipleChoiceQuizProps) => {
   if (!questionCard) return <p>No cards available!</p>;
 
   return (
-    <div className="flex flex-col items-center py-6 space-y-6 w-full">
+    <div className="flex relative flex-col items-center py-4 space-y-6 w-full">
       {/* Revise Buttons */}
-      <ReviseButtons
-        showHintButton={!!(questionCard.hintFront || questionCard.hintBack)}
-        onEdit={handleEditCard}
-        onShowHint={toggleHint}
-      />
+      <div className="flex w-full relative justify-end">
+        <ReviseButtons
+          showHintButton={!!(questionCard.hintFront || questionCard.hintBack)}
+          onEdit={handleEditCard}
+          onShowHint={toggleHint}
+        />
+      </div>
 
       {/* Question */}
-      <div className="mb-4 cursor-default">
+      <div className="mb-6 cursor-default w-full  max-w-md aspect-[4/3]">
         <FlipCard
           card={questionCard}
           flipped={selectedCorrect}
@@ -95,7 +99,7 @@ const MultipleChoiceQuiz = ({ cards, onEditCard }: MultipleChoiceQuizProps) => {
       </div>
 
       {/* Options */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 w-full max-w-screen-sm">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full max-w-screen-sm">
         {options.map((optionCard) => {
           const isDisabled = !optionsState.includes(optionCard.id);
           const isCorrect =

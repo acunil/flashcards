@@ -121,16 +121,18 @@ const Revise = ({ hardMode = false, deckId }: ReviseProps) => {
         )}
         {!loading && !error && revisionCards.length > 0 && (
           <>
-            <ReviseButtons
-              showHintButton={
-                !!(
-                  revisionCards[currentIndex].hintFront ||
-                  revisionCards[currentIndex].hintBack
-                )
-              }
-              onEdit={handleEditCard}
-              onShowHint={toggleHint}
-            />
+            <div className="py-2 px-4">
+              <ReviseButtons
+                showHintButton={
+                  !!(
+                    revisionCards[currentIndex].hintFront ||
+                    revisionCards[currentIndex].hintBack
+                  )
+                }
+                onEdit={handleEditCard}
+                onShowHint={toggleHint}
+              />
+            </div>
             <div className="w-full overflow-hidden flex flex-col items-center">
               <CardCarousel
                 cards={revisionCards}

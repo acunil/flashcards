@@ -120,6 +120,7 @@ const CardCarousel = ({
                 cardBgColor={cardColors[card.id] || "bg-white"}
                 showHint={displayCurrentHint && i === index}
                 isActive={i === index}
+                customSizeClassName="w-80 h-50"
               />
             </div>
           );
