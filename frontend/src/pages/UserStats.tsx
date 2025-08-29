@@ -6,21 +6,19 @@ import Heading from "../components/heading";
 import { useEffect } from "react";
 import useUserStats from "../hooks/userStats/useUserStats";
 import CardListItem from "../components/detailedCard/cardListItem";
+import PageLoad from "../components/pageLoad";
 
 const UserStats = () => {
   const userId = "11111111-1111-1111-1111-111111111111";
-  const { userStats, getUserStats } = useUserStats(userId);
+  const { userStats, getUserStats, loading } = useUserStats(userId);
 
   useEffect(() => {
     getUserStats();
   }, [getUserStats]);
 
-  useEffect(() => {
-    if (userStats) console.log("User Stats:", userStats);
-  }, [userStats]);
-
   return (
     <PageWrapper className="bg-sky-200 min-h-screen">
+      {loading && <PageLoad />}
       <Header />
       <ContentWrapper>
         {/* Header row */}
@@ -50,19 +48,19 @@ const UserStats = () => {
             <span className="font-bold">Ratings:</span>
             <div className="flex flex-row gap-2 my-2 justify-center">
               <div className="bg-red-300 border-2 p-2 w-12 text-center border-black rounded">
-                {userStats?.totalLastRating1}
+                {userStats?.totalLastRating1 || 0}
               </div>
               <div className="bg-orange-300 border-2 p-2 w-12 text-center border-black rounded">
-                {userStats?.totalLastRating2}
+                {userStats?.totalLastRating2 || 0}
               </div>
               <div className="bg-yellow-200 border-2 p-2 w-12 text-center border-black rounded">
-                {userStats?.totalLastRating3}
+                {userStats?.totalLastRating3 || 0}
               </div>
               <div className="bg-green-200 border-2 p-2 w-12 text-center border-black rounded">
-                {userStats?.totalLastRating4}
+                {userStats?.totalLastRating4 || 0}
               </div>
               <div className="bg-sky-200 border-2 p-2 w-12 text-center border-black rounded">
-                {userStats?.totalLastRating5}
+                {userStats?.totalLastRating5 || 0}
               </div>
             </div>
           </div>
