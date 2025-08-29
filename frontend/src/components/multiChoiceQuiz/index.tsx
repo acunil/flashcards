@@ -24,6 +24,7 @@ const MultipleChoiceQuiz = ({ cards }: MultipleChoiceQuizProps) => {
   const [optionsState, setOptionsState] = useState<number[]>([]); // remaining option IDs
   const [selectedCorrect, setSelectedCorrect] = useState(false);
   const [showHint, setShowHint] = useState(false);
+  const [showAnswer, setShowAnswer] = useState(false);
   const navigate = useNavigate();
 
   // Compute current question and options
@@ -46,21 +47,23 @@ const MultipleChoiceQuiz = ({ cards }: MultipleChoiceQuizProps) => {
     }
   }, [options]);
 
-  // Handlers
   const handleSelect = useCallback(
     (cardId: number) => {
       if (!questionCard) return;
 
       if (cardId === questionCard.id) {
-        setSelectedCorrect(true);
-        setTimeout(() => setCurrentIndex((prev) => prev + 1), 1000);
+        setShowAnswer(true);
+
+        setTimeout(() => {
+          setShowAnswer(false);
+          setCurrentIndex((prev) => prev + 1);
+        }, 1000);
       } else {
         setOptionsState((prev) => prev.filter((id) => id !== cardId));
       }
     },
     [questionCard]
   );
-
   const handleEditCard = () => {
     if (questionCard) {
       navigate(`/add-card/${questionCard.id}`);
@@ -87,10 +90,11 @@ const MultipleChoiceQuiz = ({ cards }: MultipleChoiceQuizProps) => {
       </div>
 
       {/* Question */}
-      <div className="mb-6 cursor-default w-full  max-w-md aspect-[4/3]">
+      <div className="mb-6 cursor-default w-full  max-w-md aspect-[4/3] transition-opacity duration-200">
         <FlipCard
+          key={questionCard.id}
           card={questionCard}
-          flipped={selectedCorrect}
+          flipped={showAnswer}
           showDecks={true}
           cardBgColor="bg-white"
           showHint={showHint}
