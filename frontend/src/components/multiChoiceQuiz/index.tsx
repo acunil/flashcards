@@ -80,26 +80,28 @@ const MultipleChoiceQuiz = ({ cards }: MultipleChoiceQuizProps) => {
 
   return (
     <div className="flex relative flex-col items-center py-4 space-y-6 w-full">
-      {/* Revise Buttons */}
-      <div className="flex w-full relative justify-end">
-        <ReviseButtons
-          showHintButton={!!(questionCard.hintFront || questionCard.hintBack)}
-          onEdit={handleEditCard}
-          onShowHint={toggleHint}
-        />
-      </div>
+      {/* Card + Buttons wrapper */}
+      <div className="w-full max-w-md flex flex-col">
+        <div className="flex justify-end mb-2">
+          <ReviseButtons
+            showHintButton={!!(questionCard.hintFront || questionCard.hintBack)}
+            onEdit={handleEditCard}
+            onShowHint={toggleHint}
+          />
+        </div>
 
-      {/* Question */}
-      <div className="mb-6 cursor-default w-full  max-w-md aspect-[4/3] transition-opacity duration-200">
-        <FlipCard
-          key={questionCard.id}
-          card={questionCard}
-          flipped={showAnswer}
-          showDecks={true}
-          cardBgColor="bg-white"
-          showHint={showHint}
-          isActive={false}
-        />
+        {/* FlipCard */}
+        <div className="cursor-default aspect-[4/3] w-full">
+          <FlipCard
+            key={questionCard.id}
+            card={questionCard}
+            flipped={showAnswer}
+            showDecks={true}
+            cardBgColor="bg-white"
+            showHint={showHint}
+            isActive={false}
+          />
+        </div>
       </div>
 
       {/* Options */}
