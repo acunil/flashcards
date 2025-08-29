@@ -9,8 +9,7 @@ import CardListItem from "../components/detailedCard/cardListItem";
 import PageLoad from "../components/pageLoad";
 
 const UserStats = () => {
-  const userId = "11111111-1111-1111-1111-111111111111";
-  const { userStats, getUserStats, loading } = useUserStats(userId);
+  const { userStats, getUserStats, loading } = useUserStats();
 
   useEffect(() => {
     getUserStats();

@@ -3,7 +3,7 @@ import { API_URL } from "../urls";
 import type { UserStats } from "../../types/user-stats";
 import { useAuthFetch } from "../../utils/authFetch";
 
-const useUserStats = (userId: string) => {
+const useUserStats = () => {
   const [userStats, setUserStats] = useState<UserStats | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -15,7 +15,7 @@ const useUserStats = (userId: string) => {
       setError(null);
 
       const data: UserStats | undefined = await authFetch(
-        `${API_URL}/user-stats?userId=${userId}`
+        `${API_URL}/user-stats`
       );
 
       if (!data) {
@@ -30,7 +30,7 @@ const useUserStats = (userId: string) => {
     } finally {
       setLoading(false);
     }
-  }, [userId, authFetch]);
+  }, [authFetch]);
 
   return { userStats, loading, error, getUserStats };
 };
