@@ -1,23 +1,15 @@
 import { Cards } from "phosphor-react";
 import DeckListItem from "../deckListItem";
-import AddDeckButton from "../addDeckButton";
-import { useNavigate } from "react-router-dom";
 import type { Deck } from "../../../types/deck";
 import { useAppContext } from "../../../contexts";
 
 export interface DeckListProps {
   decks: Deck[];
-  onAddDeck: (name: string) => void;
+  onSelectDeck: (id: number) => void;
 }
 
-const DeckList = ({ decks, onAddDeck }: DeckListProps) => {
-  const navigate = useNavigate();
+const SelectDeckList = ({ decks, onSelectDeck }: DeckListProps) => {
   const { cards, selectedSubjectId } = useAppContext();
-
-  const handleDeckClick = (id: number) => {
-    navigate(`/decks/${id}`);
-  };
-
   const totalCardCount = cards.length;
 
   const getDeckCardCount = (deckId: number) => {
@@ -30,27 +22,25 @@ const DeckList = ({ decks, onAddDeck }: DeckListProps) => {
   );
 
   return (
-    <div className="flex flex-col items-center gap-2 m-2 p-2 mb-4 max-w-xs mx-auto w-full">
+    <div className="flex flex-col gap-2 m-2 p-2 mb-4 w-full max-w-xs mx-auto">
       <DeckListItem
         deck={{ id: 0, name: "all cards", subjectId: selectedSubjectId || 0 }}
-        className={"bg-pink-200"}
+        className="bg-pink-200 w-full"
         Icon={Cards}
-        onClick={() => handleDeckClick(0)}
+        onClick={() => onSelectDeck(0)}
         totalCards={totalCardCount}
-        showReviseButton={true}
       />
       {sortedDecks.map((deck) => (
         <DeckListItem
           key={deck.id}
           deck={deck}
-          onClick={() => handleDeckClick(deck.id)}
+          className="w-full"
+          onClick={() => onSelectDeck(deck.id)}
           totalCards={getDeckCardCount(deck.id)}
-          showReviseButton={true}
         />
       ))}
-      <AddDeckButton onAddDeck={onAddDeck} />
     </div>
   );
 };
 
-export default DeckList;
+export default SelectDeckList;
