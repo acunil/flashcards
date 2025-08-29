@@ -10,6 +10,7 @@ interface FlipCardProps {
   showDecks?: boolean;
   showHint?: boolean;
   isActive: boolean;
+  customSizeClassName?: string;
 }
 
 const FlipCard = ({
@@ -20,14 +21,14 @@ const FlipCard = ({
   cardBgColor = "bg-white",
   showHint = false,
   isActive = false,
+  customSizeClassName,
 }: FlipCardProps) => {
   const { selectedSubject } = useAppContext();
-
   return (
     <div
-      className={`relative  w-80 h-52 ${
-        isActive ? "cursor-pointer" : "cursor-default"
-      }`}
+      className={`relative ${
+        customSizeClassName ? customSizeClassName : "w-full h-full"
+      }  ${isActive ? "cursor-pointer" : "cursor-default"}`}
       onClick={isActive ? onFlip : undefined}
     >
       <div className="relative w-full h-full [perspective:1000px]">

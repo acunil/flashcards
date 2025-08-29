@@ -12,7 +12,7 @@ const ReviseButtons = ({
   onShowHint,
 }: ReviseButtonProps) => {
   return (
-    <div className="flex flex-row justify-end py-2 px-4 w-sm gap-2 max-w-screen">
+    <div className="flex flex-row justify-end w-sm gap-2 max-w-screen">
       {showHintButton && (
         <button
           onClick={onShowHint}
