@@ -1,0 +1,3 @@
+CREATE ROLE postgres WITH LOGIN PASSWORD 'changeme';
+ALTER ROLE postgres CREATEDB;
+CREATE DATABASE appdb OWNER postgres;
