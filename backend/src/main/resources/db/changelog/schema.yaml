@@ -157,6 +157,18 @@ databaseChangeLog:
               - column:
                   name: name
 
+  - changeSet:
+      id: 003_soften_deck_unique_constraint_to_subject
+      author: lucian
+      changes:
+        - dropUniqueConstraint:
+            tableName: deck
+            constraintName: uq_deck_user_name
+        - addUniqueConstraint:
+            tableName: deck
+            columnNames: user_id, name, subject_id
+            constraintName: uq_deck_user_name_subject
+
   # --- CARDS ---
   - changeSet:
       id: 004_create_card_table
@@ -220,6 +232,18 @@ databaseChangeLog:
             columns:
               - column:
                   name: user_id
+
+  - changeSet:
+      id: 004_soften_card_unique_constraint_to_subject
+      author: lucian
+      changes:
+        - dropUniqueConstraint:
+            tableName: card
+            constraintName: uq_card_user_front_back
+        - addUniqueConstraint:
+            tableName: card
+            columnNames: user_id, front, back, subject_id
+            constraintName: uq_card_user_front_back_subject
 
   # --- CARD_HISTORY ---
   - changeSet:
