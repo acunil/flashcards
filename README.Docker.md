@@ -28,18 +28,21 @@ cd flashcards
 
 ## 2. Environment Variables
 
-Create a `.env` file in the project root with your local DB and Auth0 settings:
+Create or edit a `.env` file in the backend root directory with your local DB settings:
 
 ```env
 # Database
 DB_URL=jdbc:postgresql://db:5432/myapp
 DB_USERNAME=myuser
 DB_PASSWORD=mypass
+```
 
+And likewise for the frontend:
+```env
 # Auth0
-AUTH0_DOMAIN=your-tenant.eu.auth0.com
-AUTH0_CLIENT_ID=your-client-id
-AUTH0_AUDIENCE=your-api-audience
+VITE_AUTH0_DOMAIN=your-tenant.eu.auth0.com
+VITE_AUTH0_CLIENT_ID=your-client-id
+VITE_AUTH0_AUDIENCE=your-api-audience
 ```
 
 > **Note:** Render (or other cloud host) will inject its own environment variables in production — this `.env` is for local Docker only.
@@ -111,17 +114,18 @@ cd backend
 ./mvnw liquibase:update
 ```
 
-Or run them in a throwaway Maven container:
+>As with prod migrations, two users are seeded without JWT tokens. Connect to the DB through pgAdmin to see them, and save your own JWT to them for testing.
 
-```bash
-docker run --rm \
-  --network $(docker network ls --filter name=flashcards_default --format "{{.Name}}") \
-  -v "$PWD":/workspace \
-  -w /workspace \
-  --env-file .env \
-  maven:3.9.9-amazoncorretto-24-alpine \
-  mvn liquibase:update
-```
+### PGAdmin Setup
+Create a new server eg `Docker-local`:
+
+- Host: `localhost`
+- Port: `5432`
+- Maintenance DB: `postgres` 
+- Username: `myuser`
+- Password: `mypass`
+
+>DB name is `myapp`, schema is `public`, and `app_user` is where you will find the seeded users.
 
 ---
 

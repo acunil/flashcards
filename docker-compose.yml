@@ -2,8 +2,6 @@ services:
   db:
     image: postgres:16
     container_name: flashcards_db
-    env_file:
-      - .env
     environment:
       POSTGRES_DB: myapp
       POSTGRES_USER: myuser
