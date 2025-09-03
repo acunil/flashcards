@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo } from "react";
 import FlipCard from "../flipCard";
 import type { Card } from "../../types/card";
 import { useReviseSettings } from "../../hooks/reviseSettings";
+import { CaretLeft, CaretRight } from "phosphor-react";
 
 interface CardCarouselProps {
   cards: Card[];
@@ -86,7 +87,17 @@ const CardCarousel = ({
     filteredCards.length > 0 ? currentIndex % filteredCards.length : 0;
   const translateX = -(index * fullCardWidth) + (windowWidth - cardWidth) / 2;
 
-  console.log(cardColors);
+  const handleMoveRight = () => {
+    if (index < filteredCards.length - 1) {
+      setCurrentIndex?.(index + 1);
+    }
+  };
+
+  const handleMoveLeft = () => {
+    if (index > 0) {
+      setCurrentIndex?.(index - 1);
+    }
+  };
 
   return (
     <div className="relative w-full py-6">
@@ -104,7 +115,7 @@ const CardCarousel = ({
           return (
             <div
               key={card.id}
-              className="flex-shrink-0"
+              className="flex-shrink-0 relative"
               style={{
                 width: cardWidth,
                 margin: `0 ${cardMargin / 2}px`,
@@ -112,6 +123,16 @@ const CardCarousel = ({
                 transition: "transform 0.5s ease",
               }}
             >
+              {i === index && index > 0 && (
+                <button
+                  onClick={handleMoveLeft}
+                  className="absolute left-0 top-1/2 -translate-x-full -translate-y-1/2 cursor-pointer
+               opacity-0 animate-fadeIn"
+                >
+                  <CaretLeft size={23} />
+                </button>
+              )}
+
               <FlipCard
                 card={card}
                 flipped={flipped}
@@ -122,6 +143,16 @@ const CardCarousel = ({
                 isActive={i === index}
                 customSizeClassName="w-80 h-50"
               />
+
+              {i === index && index < filteredCards.length - 1 && (
+                <button
+                  onClick={handleMoveRight}
+                  className="absolute right-0 top-1/2 translate-x-full -translate-y-1/2 cursor-pointer
+               opacity-0 animate-fadeIn"
+                >
+                  <CaretRight size={23} />
+                </button>
+              )}
             </div>
           );
         })}
