@@ -65,16 +65,16 @@ const CardListItem = ({
 
   const handleEditClick = (e: React.MouseEvent<HTMLDivElement>) => {
     e.stopPropagation();
-    if (isAllCardsList) {
-      navigate(`/add-card/${id}`);
-    } else {
-      if (!isSelectMode) {
-        if (isEditingLocal) {
-          handleSave();
-        } else {
-          setIsEditingLocal(true);
-          onEditingChange?.(true);
-        }
+    navigate(`/add-card/${id}`);
+    return;
+
+    // used to activate inline editing - this feature is no longer desired but leaving here in case we go back to it
+    if (!isSelectMode) {
+      if (isEditingLocal) {
+        handleSave();
+      } else {
+        setIsEditingLocal(true);
+        onEditingChange?.(true);
       }
     }
   };
