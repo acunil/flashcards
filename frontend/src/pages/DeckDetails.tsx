@@ -1,20 +1,29 @@
 import { useNavigate, useParams } from "react-router-dom";
 import Header from "../components/header";
-import { GraduationCap, Pencil, FloppyDisk, X, Plus } from "phosphor-react";
+import {
+  GraduationCap,
+  Pencil,
+  FloppyDisk,
+  X,
+  Plus,
+  Trash,
+} from "phosphor-react";
 import CardList from "../components/detailedCard/cardList";
 import { useAppContext } from "../contexts";
 import { useEffect, useMemo, useState } from "react";
-import { useUpdateDeck } from "../hooks/decks";
+import { useDeleteDeck, useUpdateDeck } from "../hooks/decks";
 import PageWrapper from "../components/pageWrapper";
 import ContentWrapper from "../components/contentWrapper";
 import BackButton from "../components/backButton";
+import Toast, { type ToastConfig } from "../components/toast";
 
 const DeckDetails = () => {
   const { deckId } = useParams<{ deckId: string }>();
   const effectiveDeckId = deckId === "all" ? 0 : Number(deckId);
-  const { decks, cards, setDecks } = useAppContext();
+  const { decks, cards, setDecks, fetchDecks } = useAppContext();
   const navigate = useNavigate();
   const { updateDeckName } = useUpdateDeck();
+  const { deleteDeck } = useDeleteDeck();
 
   const deck = effectiveDeckId
     ? decks.find((d) => d.id === effectiveDeckId)
@@ -23,6 +32,8 @@ const DeckDetails = () => {
   // Optimistic state for editing
   const [isEditing, setIsEditing] = useState(false);
   const [deckName, setDeckName] = useState(deck?.name || "");
+
+  const [toastConfig, setToastConfig] = useState<ToastConfig>(null);
 
   // Sync deck name when deck changes
   useEffect(() => {
@@ -79,6 +90,42 @@ const DeckDetails = () => {
     navigate(`/add-card?deckId=${deck?.id}`);
   };
 
+  const confirmDeleteDeck = () => {
+    if (!deck) return;
+
+    setToastConfig({
+      message: `Are you sure you want to delete "${deck.name}"?`,
+      isError: true,
+      confirm: {
+        onConfirm: async () => {
+          try {
+            const deleted = await deleteDeck(deck.id);
+            if (deleted) {
+              // Optimistically remove deck from context
+              setDecks((prev) => prev.filter((d) => d.id !== deck.id));
+              await fetchDecks();
+              navigate(`/decks`);
+            } else {
+              setToastConfig({
+                message: "Sorry, the deck could not be deleted",
+                isError: true,
+              });
+              setTimeout(() => setToastConfig(null), 3000);
+            }
+          } catch (err) {
+            console.error("Failed to delete deck:", err);
+            setToastConfig({
+              message: "Sorry, the deck could not be deleted",
+              isError: true,
+            });
+            setTimeout(() => setToastConfig(null), 3000);
+          }
+        },
+        onCancel: () => {},
+      },
+    });
+  };
+
   return (
     <PageWrapper className="bg-sky-200 min-h-screen">
       <Header />
@@ -131,12 +178,20 @@ const DeckDetails = () => {
                     Deck: {deck?.name}
                   </h1>
                   {deck && (
-                    <button
-                      onClick={() => setIsEditing(true)}
-                      className="text-gray-500 hover:text-black flex-shrink-0"
-                    >
-                      <Pencil size={18} />
-                    </button>
+                    <div className="flex flex-row">
+                      <button
+                        onClick={() => setIsEditing(true)}
+                        className="text-gray-500 hover:text-black flex-shrink-0 cursor-pointer"
+                      >
+                        <Pencil size={18} />
+                      </button>
+                      <button
+                        onClick={confirmDeleteDeck}
+                        className="text-gray-500 hover:text-black flex-shrink-0 cursor-pointer"
+                      >
+                        <Trash size={18} />
+                      </button>
+                    </div>
                   )}
                 </div>
               )}
@@ -167,6 +222,15 @@ const DeckDetails = () => {
           deckId={effectiveDeckId}
         />
       </ContentWrapper>
+
+      {toastConfig && (
+        <Toast
+          message={toastConfig.message}
+          isError={toastConfig.isError}
+          confirm={toastConfig.confirm}
+          onClose={() => setToastConfig(null)}
+        />
+      )}
     </PageWrapper>
   );
 };

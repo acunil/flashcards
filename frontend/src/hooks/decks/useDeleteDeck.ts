@@ -12,14 +12,9 @@ const useDeleteDeck = () => {
     setError(null);
 
     try {
-      const result = await authFetch(`${API_URL}/decks/${id}`, {
+      await authFetch(`${API_URL}/decks/${id}`, {
         method: "DELETE",
       });
-
-      if (result === undefined) {
-        // User was likely redirected to login
-        return false;
-      }
 
       return true;
     } catch (err: unknown) {
