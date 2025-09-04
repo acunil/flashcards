@@ -125,7 +125,7 @@ public class DeckController {
             @AuthenticationPrincipal Jwt jwt
     ) {
         currentUserService.getCurrentUser(jwt);
-        deckService.deleteDeck(id);
+        cardDeckService.deleteDeck(id);
         return ResponseEntity.noContent().build();
     }
 

@@ -113,26 +113,4 @@ class DeckServiceTest {
             .hasMessageContaining("Deck name must be unique: " + newName);
     }
 
-    @Test
-    void testDeleteDeck() {
-        when(deckRepository.findById(1L)).thenReturn(Optional.of(deck1));
-
-        deckService.deleteDeck(1L);
-
-        verify(deckRepository).delete(deck1);
-    }
-
-    @Test
-    void testDeleteDeck_throwsExceptionIfDeckNotFound() {
-        when(deckRepository.findById(99L)).thenReturn(Optional.empty());
-
-        assertThatThrownBy(() ->
-            deckService.deleteDeck(99L))
-            .isInstanceOf(DeckNotFoundException.class)
-            .hasMessageContaining("Deck not found with id: 99");
-
-        verify(deckRepository, never()).delete(any(Deck.class));
-    }
-
-
 }

@@ -160,13 +160,13 @@ class DeckControllerTest {
     void deleteDeck() throws Exception {
         mockMvc.perform(delete(ENDPOINT + "/1"))
                 .andExpect(status().isNoContent());
-        verify(deckService).deleteDeck(1L);
+        verify(cardDeckService).deleteDeck(1L);
     }
 
     @Test
     void deleteDeck_NotFound() throws Exception {
         doThrow(new DeckNotFoundException(999L))
-                .when(deckService).deleteDeck(999L);
+                .when(cardDeckService).deleteDeck(999L);
         mockMvc.perform(delete(ENDPOINT + "/999"))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.error").value("Deck not found with id: 999"));

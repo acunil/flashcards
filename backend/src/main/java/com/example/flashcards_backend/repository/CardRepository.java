@@ -89,4 +89,9 @@ public interface CardRepository extends JpaRepository<Card, Long> {
         return countByLastViewedIsNullOrZeroAndUserId(userId);
     }
 
+    @Query(
+            "SELECT c FROM Card c LEFT JOIN c.decks d WHERE d.id = :deckId"
+    )
+    List<Card> findByDeckId(Long deckId);
+
 }
