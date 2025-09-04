@@ -50,11 +50,4 @@ public class DeckService {
         return deck;
     }
 
-    @Transactional
-    public void deleteDeck(Long id) {
-        log.info("Deleting deck with id {}", id);
-        Deck deck = getDeckById(id);
-        deckRepository.delete(deck);
-    }
-
 }

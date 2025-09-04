@@ -20,3 +20,5 @@ backend/mvnw.cmd
 backend/.idea/
 backend/*.iml
 backend/.env
+
+/certs/

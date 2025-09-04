@@ -114,11 +114,21 @@ public class CardDeckService {
         }
     }
 
-    private Deck findDeckById(Long id) {
-        return deckRepository.findById(id).orElseThrow(() -> new DeckNotFoundException(id));
+    @Transactional
+    public void deleteDeck(Long id) {
+        log.info("Deleting deck with id {}", id);
+
+        Deck deck = findDeckById(id);
+        List<Card> cards = cardRepository.findByDeckId(id);
+        cards.forEach(card -> card.removeDeck(deck));
+
+        deckRepository.delete(deck);
     }
 
     /* Helpers */
+    private Deck findDeckById(Long id) {
+        return deckRepository.findById(id).orElseThrow(() -> new DeckNotFoundException(id));
+    }
 
     private Set<Card> getCards(CreateDeckRequest request) {
         return new HashSet<>(cardRepository.findAllById(request.cardIds()));

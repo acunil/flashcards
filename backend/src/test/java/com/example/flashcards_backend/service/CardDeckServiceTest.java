@@ -22,10 +22,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.anySet;
 import static org.mockito.Mockito.*;
 
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 
 @ExtendWith(SpringExtension.class)
 class CardDeckServiceTest {
@@ -45,7 +42,6 @@ class CardDeckServiceTest {
     private Deck deck1;
     private Deck deck2;
     private Subject subject1;
-    private User user;
 
     @BeforeEach
     void setUp() {
@@ -53,7 +49,7 @@ class CardDeckServiceTest {
         deck1 = Deck.builder().id(1L).name("Deck 1").build();
         deck2 = Deck.builder().id(2L).name("Deck 2").build();
 
-        user = User.builder().id(UUID.randomUUID()).username("me").build();
+        User user = User.builder().id(UUID.randomUUID()).username("me").build();
         subject1 = Subject.builder().id(SUBJECT_ID).name("Subject 1").user(user).build();
         deck1.setSubject(subject1);
         deck2.setSubject(subject1);
@@ -65,15 +61,15 @@ class CardDeckServiceTest {
     void testGetOrCreateDecksByNames_withNoNewNames_AndSubject_doesNotSaveToRepo() {
         var expectedDecks = Set.of(deck1, deck2);
         when(deckRepository.findByNameInAndSubjectId(anySet(), anyLong()))
-            .thenReturn(expectedDecks);
+                .thenReturn(expectedDecks);
 
         var deckNames = Set.of("Deck 1", "Deck 2");
         Set<Deck> actualDecks = cardDeckService.getOrCreateDecksByNamesAndSubjectId(deckNames, SUBJECT_ID);
 
         assertThat(actualDecks)
-            .isNotNull()
-            .hasSize(2)
-            .containsExactlyInAnyOrderElementsOf(expectedDecks);
+                .isNotNull()
+                .hasSize(2)
+                .containsExactlyInAnyOrderElementsOf(expectedDecks);
         verify(deckRepository).findByNameInAndSubjectId(deckNames, SUBJECT_ID);
         verify(deckRepository, never()).saveAll(anySet());
     }
@@ -90,10 +86,10 @@ class CardDeckServiceTest {
         Set<Deck> actualDecks = cardDeckService.getOrCreateDecksByNamesAndSubjectId(deckNames, SUBJECT_ID);
 
         assertThat(actualDecks)
-            .isNotNull()
-            .hasSize(3)
-            .extracting("name")
-            .containsExactlyInAnyOrder("Deck 1", "Deck 2", "Deck 3");
+                .isNotNull()
+                .hasSize(3)
+                .extracting("name")
+                .containsExactlyInAnyOrder("Deck 1", "Deck 2", "Deck 3");
         verify(deckRepository).findByNameInAndSubjectId(deckNames, SUBJECT_ID);
 
         //noinspection unchecked
@@ -183,11 +179,13 @@ class CardDeckServiceTest {
 
     @Test
     void testAddDeckToCards_DeckNotFound() {
-        when(deckRepository.findById(deck1.getId())).thenReturn(Optional.empty());
-        assertThatThrownBy(() -> cardDeckService.addDeckToCards(deck1.getId(), Set.of(1L, 2L)))
+        Long deck1Id = deck1.getId();
+        when(deckRepository.findById(deck1Id)).thenReturn(Optional.empty());
+        Set<Long> cardIds = Set.of(1L, 2L);
+        assertThatThrownBy(() -> cardDeckService.addDeckToCards(deck1Id, cardIds))
                 .isInstanceOf(DeckNotFoundException.class)
                 .hasMessageContaining("Deck not found with id: 1");
-        verify(deckRepository).findById(deck1.getId());
+        verify(deckRepository).findById(deck1Id);
         verifyNoInteractions(cardRepository);
     }
 
@@ -199,12 +197,14 @@ class CardDeckServiceTest {
         when(cardRepository.findAllById(anySet())).thenReturn(cards.stream().toList());
         when(deckRepository.findById(deck1.getId())).thenReturn(Optional.of(deck1));
         Deck deck3 = Deck.builder().id(2L).name("Deck 2").subject(Subject.builder().id(2L).build()).build();
-        when(deckRepository.findById(deck3.getId())).thenReturn(Optional.of(deck3));
-        assertThatThrownBy(() -> cardDeckService.addDeckToCards(deck3.getId(), Set.of(1L, 2L)))
+        Long deck3Id = deck3.getId();
+        when(deckRepository.findById(deck3Id)).thenReturn(Optional.of(deck3));
+        Set<Long> cardIds = Set.of(1L, 2L);
+        assertThatThrownBy(() -> cardDeckService.addDeckToCards(deck3Id, cardIds))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("Card ids must belong to the same subject as the deck");
-        verify(deckRepository).findById(deck3.getId());
-        verify(cardRepository).findAllById(Set.of(1L, 2L));
+        verify(deckRepository).findById(deck3Id);
+        verify(cardRepository).findAllById(cardIds);
     }
 
     @Test
@@ -234,6 +234,52 @@ class CardDeckServiceTest {
                 .hasMessageContaining("Deck not found with id: 1");
         verify(deckRepository).findById(deckId);
         verifyNoInteractions(cardRepository);
+    }
+
+    @Test
+    void testDeleteDeck_withCards() {
+        Card card1 = Card.builder().id(1L).subject(subject1).build();
+        Card card2 = Card.builder().id(2L).subject(subject1).build();
+        List<Card> cards = List.of(card1, card2);
+        card1.addDeck(deck1);
+        card2.addDecks(Set.of(deck1, deck2));
+        Long deck1Id = deck1.getId();
+        when(deckRepository.findById(deck1Id)).thenReturn(Optional.of(deck1));
+        when(cardRepository.findByDeckId(deck1Id)).thenReturn(cards);
+
+        cardDeckService.deleteDeck(deck1Id);
+
+        verify(deckRepository).findById(deck1Id);
+        verify(cardRepository).findByDeckId(deck1Id);
+        verify(deckRepository).delete(deck1);
+        assertThat(card1.getDecks()).isEmpty();
+        assertThat(card2.getDecks()).containsExactly(deck2);
+    }
+
+    @Test
+    void testDeleteDeck_withNoCards() {
+        Long deck1Id = deck1.getId();
+        when(deckRepository.findById(deck1Id)).thenReturn(Optional.of(deck1));
+        when(cardRepository.findByDeckId(deck1Id)).thenReturn(Collections.emptyList());
+
+        cardDeckService.deleteDeck(deck1Id);
+
+        verify(deckRepository).findById(deck1Id);
+        verify(cardRepository).findByDeckId(deck1Id);
+        verify(deckRepository).delete(deck1);
+        verifyNoMoreInteractions(deckRepository);
+        verifyNoMoreInteractions(cardRepository);
+    }
+
+    @Test
+    void testDeleteDeck_DeckNotFound() {
+        Long deckId = deck1.getId();
+        when(deckRepository.findById(deckId)).thenReturn(Optional.empty());
+        assertThatThrownBy(() -> cardDeckService.deleteDeck(deckId))
+                .isInstanceOf(DeckNotFoundException.class)
+                .hasMessageContaining("Deck not found with id: 1");
+        verify(deckRepository).findById(deckId);
+        verify(cardRepository, never()).findByDeckId(deckId);
     }
 
 }
