@@ -13,13 +13,13 @@ const useDeleteCards = () => {
         body: JSON.stringify(cardIds),
       });
 
+      setCards(cards.filter((card) => !cardIds.includes(card.id)));
+      console.log("Delete successful");
+
       if (result === undefined) {
         // User was likely redirected to login
         return;
       }
-
-      setCards(cards.filter((card) => !cardIds.includes(card.id)));
-      console.log("Delete successful");
     } catch (error) {
       console.error("Failed to delete cards", error);
     }
