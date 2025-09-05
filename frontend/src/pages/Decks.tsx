@@ -30,7 +30,7 @@ const Decks = () => {
       <ContentWrapper>
         <div className="relative flex items-center mb-6">
           <div className="absolute left-0">
-            <BackButton />
+            <BackButton returnPath="/home" />
           </div>
           <Heading>Decks</Heading>
         </div>

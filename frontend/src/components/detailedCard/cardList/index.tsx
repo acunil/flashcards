@@ -11,15 +11,23 @@ interface CardListProps {
   cards: Card[];
   isAllCardsList?: boolean;
   deckId: number;
+  searchQuery: string;
+  setSearchQuery: (q: string) => void;
 }
 
-const CardList = ({ cards, isAllCardsList, deckId }: CardListProps) => {
+const CardList = ({
+  cards,
+  isAllCardsList,
+  deckId,
+  searchQuery,
+  setSearchQuery,
+}: CardListProps) => {
   const { updateCard } = useUpdateCard();
   const { deleteCards } = useDeleteCards();
   const { removeCards } = useRemoveCardsFromDeck();
   const [bulkSelectMode, setBulkSelectMode] = useState(false);
   const [selectedCards, setSelectedCards] = useState<Set<number>>(new Set());
-  const [searchQuery, setSearchQuery] = useState("");
+  // const [searchQuery, setSearchQuery] = useState("");
   const [isEditing, setIsEditing] = useState(false);
   const { selectedSubjectId } = useAppContext();
 
@@ -140,6 +148,8 @@ const CardList = ({ cards, isAllCardsList, deckId }: CardListProps) => {
               onToggleSelect={toggleCardSelection}
               onEditingChange={setIsEditing}
               isAllCardsList={isAllCardsList}
+              searchQuery={searchQuery}
+              deckId={deckId}
             />
           </div>
         ))}
