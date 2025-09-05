@@ -4,7 +4,12 @@ import useCreateCard from "../hooks/cards/useCreateCard";
 import type { Deck } from "../types/deck";
 import SearchableMultiSelect from "../components/searchableMultiSelect";
 import { useAppContext } from "../contexts";
-import { useLocation, useParams, useSearchParams } from "react-router-dom";
+import {
+  useLocation,
+  useNavigate,
+  useParams,
+  useSearchParams,
+} from "react-router-dom";
 import useUpdateCard from "../hooks/cards/useUpdateCard";
 import type { Card } from "../types/card";
 import PageWrapper from "../components/pageWrapper";
@@ -12,6 +17,8 @@ import BackButton from "../components/backButton";
 import Heading from "../components/heading";
 import ContentWrapper from "../components/contentWrapper";
 import Toast, { type ToastConfig } from "../components/toast";
+import { Trash } from "phosphor-react";
+import useDeleteCards from "../hooks/cards/useDeleteCards";
 
 const AddCard = () => {
   const [front, setFront] = useState("");
@@ -21,7 +28,8 @@ const AddCard = () => {
   const [selectedDecks, setSelectedDecks] = useState<Deck[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [toast, setToast] = useState<ToastConfig | null>(null);
-
+  const { deleteCards } = useDeleteCards();
+  const navigate = useNavigate();
   const [isSaving, setIsSaving] = useState(false);
 
   const { decks, cards, selectedSubject, fetchDecks, refetchCards } =
@@ -102,7 +110,7 @@ const AddCard = () => {
           subjectId: selectedSubject?.id || 0,
         });
 
-        if (result.alreadyExisted == true) {
+        if (result.alreadyExisted) {
           setToast({
             message: "Card already exists!",
             isError: true,
@@ -115,7 +123,11 @@ const AddCard = () => {
       await fetchDecks();
       await refetchCards(selectedSubject?.id || 0);
 
-      setToast({ message: "Card saved!", duration: 2000 });
+      setToast({
+        message: "Card saved!",
+        duration: 2000,
+      });
+
       if (!isEditing) resetForm();
     } catch {
       setToast({
@@ -126,6 +138,55 @@ const AddCard = () => {
     } finally {
       setIsSaving(false);
     }
+  };
+
+  const handleDeleteCard = () => {
+    if (!cardToEdit) {
+      // Unsaved card: just reset
+      resetForm();
+      return;
+    }
+
+    setToast({
+      message: `Are you sure you want to delete this card?`,
+      isError: true,
+      confirm: {
+        onConfirm: async () => {
+          // Close the confirm toast immediately
+          setToast(null);
+
+          try {
+            // Delete and refresh
+            await deleteCards([cardToEdit.id]);
+            await fetchDecks();
+            await refetchCards(selectedSubject?.id || 0);
+
+            // Reset form and editing state
+            resetForm();
+            setIsEditing(false);
+
+            // Show success toast
+            setToast({
+              message: "Card deleted!",
+              duration: 2000,
+            });
+            if (location.state?.returnToDeckDetails) {
+              navigate(`/decks/${location.state.deckId}`);
+            } else {
+              navigate(-1); // fallback: go back one page
+            }
+          } catch (err) {
+            console.error(err);
+            setToast({
+              message: "Failed to delete card.",
+              isError: true,
+              duration: 2000,
+            });
+          }
+        },
+        onCancel: () => setToast(null),
+      },
+    });
   };
 
   return (
@@ -157,6 +218,17 @@ const AddCard = () => {
             </div>
             <Heading>{isEditing ? "Edit Card" : "Add a New Card"}</Heading>
           </div>
+          {isEditing && (
+            <div className="flex flex-row justify-center sm:justify-end">
+              <button
+                type="button"
+                onClick={handleDeleteCard}
+                className="flex items-center cursor-pointer justify-center p-2 bg-pink-200 hover:bg-pink-300 border-black border-2 rounded shadow"
+              >
+                <Trash size={18} />
+              </button>
+            </div>
+          )}
 
           {/* Front Section */}
           <div className="space-y-2 sm:space-y-4">
