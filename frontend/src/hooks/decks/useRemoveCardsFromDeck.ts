@@ -16,13 +16,12 @@ const useRemoveCardsFromDeck = () => {
         }
       );
 
+      setCards(cards.filter((card) => !cardIds.includes(card.id)));
+
       if (result === undefined) {
         // User was likely redirected to login
         return;
       }
-
-      setCards(cards.filter((card) => !cardIds.includes(card.id)));
-      console.log("Remove successful");
     } catch (error) {
       console.error("Failed to remove cards", error);
     }
