@@ -36,12 +36,12 @@ const UserStats = () => {
           </div>
 
           <div className="flex justify-between px-2 rounded">
-            <span className="font-bold">Total card views:</span>
+            <span className="font-bold">Total card ratings:</span>
             <span>{userStats?.totalCardViews ?? "-"}</span>
           </div>
 
           <div className="flex justify-between px-2 rounded">
-            <span className="font-bold">Total unviewed cards:</span>
+            <span className="font-bold">Total unrated cards:</span>
             <span>{userStats?.totalUnviewedCards ?? "-"}</span>
           </div>
 
@@ -89,7 +89,7 @@ const UserStats = () => {
 
           {userStats?.mostViewedCard && (
             <div className="flex flex-col justify-between p-2 rounded">
-              <span className="font-bold">Most viewed card:</span>
+              <span className="font-bold">Most rated card:</span>
               <div className="py-2">
                 <CardListItem
                   id={userStats?.mostViewedCard.id}
