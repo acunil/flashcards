@@ -12,9 +12,9 @@ export const ReviseSettingsProvider = ({
 }: {
   children: ReactNode;
 }) => {
-  const [cardDisplay, setCardDisplay] = useState<CardDisplay>("Any");
+  const [cardDisplay, setCardDisplay] = useState<CardDisplay>("Front");
   const [familiarity, setFamiliarity] = useState<Familiarity>("All");
-  const [showDeckNames, setShowDeckNames] = useState<DeckVisibility>("Hide");
+  const [showDeckNames, setShowDeckNames] = useState<DeckVisibility>("Show");
 
   return (
     <ReviseSettingsContext.Provider
