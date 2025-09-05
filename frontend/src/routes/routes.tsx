@@ -9,6 +9,7 @@ import SubjectsPage from "../pages/Subjects";
 import LandingWrapper from "../components/LandingWrapper";
 import UserStats from "../pages/UserStats";
 import MultipleChoice from "../pages/MultipleChoice";
+import ErrorPage from "../pages/Error";
 
 export const AppRoutes = () => {
   return (
@@ -23,6 +24,7 @@ export const AppRoutes = () => {
       <Route path="/upload" element={<BulkUpload />} />
       <Route path="/subjects" element={<SubjectsPage />} />
       <Route path="/user-stats" element={<UserStats />} />
+      <Route path="/error" element={<ErrorPage />} />
     </Routes>
   );
 };

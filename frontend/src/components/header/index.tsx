@@ -117,11 +117,12 @@ const Header = ({
   const persistCardOrder = async (value: CardOrder) => {
     setCardOrder(value);
 
-    // add logic for updating preference in database subject record
+    // TODO: add logic for updating preference in database subject record
     // if (!selectedSubject?.id) return;
   };
 
   const handleLogout = () => {
+    localStorage.removeItem("selectedSubjectId");
     logout({ logoutParams: { returnTo: window.location.origin } });
   };
 
