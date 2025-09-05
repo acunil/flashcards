@@ -141,8 +141,10 @@ const AddCard = () => {
 
       <ContentWrapper>
         <form onSubmit={handleSubmit} className="p-1 sm:p-2">
-          <div className="flex items-center mb-4 sm:mb-6 gap-2 sm:gap-4">
-            <BackButton />
+          <div className="relative flex items-center mb-4 sm:mb-6">
+            <div className="absolute left-0">
+              <BackButton />
+            </div>
             <Heading>{isEditing ? "Edit Card" : "Add a New Card"}</Heading>
           </div>
 

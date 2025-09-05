@@ -65,8 +65,10 @@ const BulkUpload = () => {
       <Header />
       <ContentWrapper>
         {/* Header with Back Button */}
-        <div className="flex items-center mb-6">
-          <BackButton />
+        <div className="relative flex items-center mb-4 sm:mb-6">
+          <div className="absolute left-0">
+            <BackButton />
+          </div>
           <Heading>Upload Cards</Heading>
         </div>
 

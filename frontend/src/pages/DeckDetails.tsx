@@ -132,9 +132,9 @@ const DeckDetails = () => {
       <ContentWrapper>
         <div className="flex flex-col w-full mb-4 gap-2">
           {/* Top row: Back button + centered heading */}
-          <div className="flex items-center w-full">
+          <div className="relative flex items-center w-full">
             {/* Back button always left */}
-            <div className="flex-shrink-0">
+            <div className="absolute left-0">
               <BackButton />
             </div>
 

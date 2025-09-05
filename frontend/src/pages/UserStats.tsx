@@ -21,8 +21,10 @@ const UserStats = () => {
       <Header />
       <ContentWrapper>
         {/* Header row */}
-        <div className="flex items-center mb-6">
-          <BackButton />
+        <div className="flex items-center mb-6 relative">
+          <div className="absolute left-0">
+            <BackButton />
+          </div>
           <Heading>User Stats</Heading>
         </div>
 

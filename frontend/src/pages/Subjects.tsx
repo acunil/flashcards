@@ -104,8 +104,12 @@ const SubjectsPage = () => {
     <PageWrapper className="bg-yellow-200 min-h-screen">
       <Header />
       <ContentWrapper>
-        <div className="flex items-center mb-6">
-          {subjects.length > 0 && <BackButton />}
+        <div className="flex items-center mb-6 relative">
+          {subjects.length > 0 && (
+            <div className="absolute left-0">
+              <BackButton />
+            </div>
+          )}
           <Heading>Subjects</Heading>
         </div>
 

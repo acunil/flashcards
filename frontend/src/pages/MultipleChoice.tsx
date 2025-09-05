@@ -51,8 +51,10 @@ const MultipleChoice = () => {
       <Header />
       <ContentWrapper>
         {/* Header row */}
-        <div className="flex items-center">
-          <BackButton onClick={handleClickBack} />
+        <div className="flex items-center relative">
+          <div className="absolute left-0">
+            <BackButton onClick={handleClickBack} />
+          </div>
           <Heading>Multiple Choice Mode</Heading>
         </div>
         {selectedDeck === undefined ? (
