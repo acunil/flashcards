@@ -12,6 +12,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import PageLoad from "../components/pageLoad";
 import PageWrapper from "../components/pageWrapper";
 import ContentWrapper from "../components/contentWrapper";
+import { useReviseSettings } from "../hooks/reviseSettings";
 
 interface ReviseProps {
   hardMode?: boolean;
@@ -28,6 +29,7 @@ const shuffleCards = (cards: Card[]) => {
 };
 const Revise = ({ hardMode = false, deckId }: ReviseProps) => {
   const { cards, loading, error } = useAppContext();
+  const { cardOrder } = useReviseSettings();
   const { rateCard } = useRateCard();
   const navigate = useNavigate();
   const location = useLocation();
@@ -40,7 +42,7 @@ const Revise = ({ hardMode = false, deckId }: ReviseProps) => {
   const [cardColors, setCardColors] = useState<Record<string, string>>({});
 
   useEffect(() => {
-    if (!loading && cards.length > 0 && revisionCards === null) {
+    if (!loading && cards.length > 0) {
       let deckFiltered = cards.filter(
         (card) => !deckId || card.decks.some((deck: Deck) => deck.id === deckId)
       );
@@ -50,22 +52,30 @@ const Revise = ({ hardMode = false, deckId }: ReviseProps) => {
         deckFiltered = hardFiltered.length > 0 ? hardFiltered : deckFiltered;
       }
 
-      let shuffled = shuffleCards(deckFiltered);
+      let ordered: Card[];
+
+      if (cardOrder === "Shuffle") {
+        ordered = shuffleCards(deckFiltered);
+      } else if (cardOrder === "Newest") {
+        ordered = [...deckFiltered].reverse();
+      } else {
+        ordered = [...deckFiltered];
+      }
 
       if (frontCardIdFromState) {
-        const index = shuffled.findIndex((c) => c.id === frontCardIdFromState);
+        const index = ordered.findIndex((c) => c.id === frontCardIdFromState);
         if (index > -1) {
-          const [frontCard] = shuffled.splice(index, 1);
-          shuffled = [frontCard, ...shuffled];
+          const [frontCard] = ordered.splice(index, 1);
+          ordered = [frontCard, ...ordered];
         }
       }
 
-      setRevisionCards(shuffled);
+      setRevisionCards(ordered);
       setCurrentIndex(0);
       setCardColors({});
       setShowHint(false);
     }
-  }, [loading, cards, revisionCards, deckId, hardMode, frontCardIdFromState]);
+  }, [loading, cards, deckId, hardMode, frontCardIdFromState, cardOrder]);
 
   // Until revisionCards is ready, show loader
   if (revisionCards === null) return <PageLoad />;
