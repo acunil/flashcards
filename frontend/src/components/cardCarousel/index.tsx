@@ -27,12 +27,17 @@ const CardCarousel = ({
 
   // Memoize filtered cards
   const filteredCards = useMemo(() => {
-    return cards.filter((card) => {
-      if (familiarity === "All") return true;
-      if (familiarity === "Hard") return card.avgRating >= 4;
-      if (familiarity === "Easy") return card.avgRating < 4;
-      return true;
-    });
+    if (familiarity === "All") return cards;
+
+    let filtered: Card[] = [];
+    if (familiarity === "Hard") {
+      filtered = cards.filter((card) => card.avgRating >= 4);
+    } else if (familiarity === "Easy") {
+      filtered = cards.filter((card) => card.avgRating < 4);
+    }
+
+    // If no cards matched, return all
+    return filtered.length > 0 ? filtered : cards;
   }, [cards, familiarity]);
 
   // Precompute initial flippedMap before first render
@@ -56,14 +61,6 @@ const CardCarousel = ({
     setFlippedMap(initialFlipMap);
   }, [initialFlipMap]);
 
-  // Adjust currentIndex if the filtered cards remove the current card
-  useEffect(() => {
-    if (currentIndex >= filteredCards.length && filteredCards.length > 0) {
-      const newIndex = filteredCards.length - 1;
-      setCurrentIndex?.(newIndex);
-    }
-  }, [filteredCards, currentIndex, setCurrentIndex]);
-
   // Window resize
   useEffect(() => {
     const handleResize = () => setWindowWidth(window.innerWidth);
@@ -83,20 +80,38 @@ const CardCarousel = ({
     }));
   };
 
-  const index =
-    filteredCards.length > 0 ? currentIndex % filteredCards.length : 0;
-  const translateX = -(index * fullCardWidth) + (windowWidth - cardWidth) / 2;
+  const activeIndex = useMemo(() => {
+    const currentCard = cards[currentIndex];
+    if (!currentCard) return 0;
+
+    const i = filteredCards.findIndex((c) => c.id === currentCard.id);
+    return i >= 0 ? i : 0;
+  }, [cards, currentIndex, filteredCards]);
+
+  const translateX =
+    -(activeIndex * fullCardWidth) + (windowWidth - cardWidth) / 2;
+
+  const moveToFilteredIndex = (filteredIdx: number) => {
+    if (filteredIdx < 0 || filteredIdx >= filteredCards.length) return;
+    const nextCard = filteredCards[filteredIdx];
+    const newIndex = cards.findIndex((c) => c.id === nextCard.id);
+    setCurrentIndex?.(newIndex);
+  };
+
+  useEffect(() => {
+    if (filteredCards.length > 0) {
+      const firstCard = filteredCards[0];
+      const newIndex = cards.findIndex((c) => c.id === firstCard.id);
+      setCurrentIndex?.(newIndex);
+    }
+  }, [filteredCards, cards, setCurrentIndex]);
 
   const handleMoveRight = () => {
-    if (index < filteredCards.length - 1) {
-      setCurrentIndex?.(index + 1);
-    }
+    moveToFilteredIndex(activeIndex + 1);
   };
 
   const handleMoveLeft = () => {
-    if (index > 0) {
-      setCurrentIndex?.(index - 1);
-    }
+    moveToFilteredIndex(activeIndex - 1);
   };
 
   return (
@@ -106,10 +121,10 @@ const CardCarousel = ({
         style={{ transform: `translateX(${translateX}px)` }}
       >
         {filteredCards.map((card, i) => {
-          const distance = Math.abs(i - index);
-          let scale = i === index ? 1 : 0.9;
-          if (i !== index && windowWidth < 640) scale = 0.8;
-          const translateY = i === index ? 0 : distance * 8;
+          const distance = Math.abs(i - activeIndex);
+          let scale = i === activeIndex ? 1 : 0.9;
+          if (i !== activeIndex && windowWidth < 640) scale = 0.8;
+          const translateY = i === activeIndex ? 0 : distance * 8;
           const flipped = flippedMap[card.id] ?? false;
 
           return (
@@ -123,7 +138,7 @@ const CardCarousel = ({
                 transition: "transform 0.5s ease",
               }}
             >
-              {i === index && index > 0 && (
+              {i === activeIndex && activeIndex > 0 && (
                 <button
                   onClick={handleMoveLeft}
                   className="absolute left-0 top-1/2 -translate-x-full -translate-y-1/2 cursor-pointer
@@ -136,15 +151,17 @@ const CardCarousel = ({
               <FlipCard
                 card={card}
                 flipped={flipped}
-                onFlip={i === index ? () => handleFlip(card.id) : undefined}
+                onFlip={
+                  i === activeIndex ? () => handleFlip(card.id) : undefined
+                }
                 showDecks={showDeckNames === "Show"}
                 cardBgColor={cardColors[card.id] || "bg-white"}
-                showHint={displayCurrentHint && i === index}
-                isActive={i === index}
+                showHint={displayCurrentHint && i === activeIndex}
+                isActive={i === activeIndex}
                 customSizeClassName="w-80 h-50"
               />
 
-              {i === index && index < filteredCards.length - 1 && (
+              {i === activeIndex && activeIndex < filteredCards.length - 1 && (
                 <button
                   onClick={handleMoveRight}
                   className="absolute right-0 top-1/2 translate-x-full -translate-y-1/2 cursor-pointer

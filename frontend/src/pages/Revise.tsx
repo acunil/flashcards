@@ -42,7 +42,7 @@ const Revise = ({ hardMode = false, deckId }: ReviseProps) => {
   const [cardColors, setCardColors] = useState<Record<string, string>>({});
 
   useEffect(() => {
-    if (!loading && cards.length > 0) {
+    if (!loading) {
       let deckFiltered = cards.filter(
         (card) => !deckId || card.decks.some((deck: Deck) => deck.id === deckId)
       );
