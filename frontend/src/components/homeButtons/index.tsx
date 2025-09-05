@@ -1,7 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import {
   GraduationCap,
-  Barbell,
+  // Barbell,
   Cards,
   FilePlus,
   ChartBar,
@@ -13,15 +13,15 @@ const buttons = [
   {
     label: "revise",
     path: "/revise",
-    buttonClassName: "bg-pink-200 hover:bg-pink-400",
+    buttonClassName: "bg-pink-300 hover:bg-pink-400",
     Icon: GraduationCap,
   },
-  {
-    label: "revise hard",
-    path: "/revise?hardMode=true",
-    buttonClassName: "bg-pink-300 hover:bg-pink-400",
-    Icon: Barbell,
-  },
+  // {
+  //   label: "revise hard",
+  //   path: "/revise?hardMode=true",
+  //   buttonClassName: "bg-pink-300 hover:bg-pink-400",
+  //   Icon: Barbell,
+  // },
   {
     label: "multiple choice",
     path: "/multiple-choice",

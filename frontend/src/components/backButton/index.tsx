@@ -1,5 +1,5 @@
 import { CaretLeft } from "phosphor-react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 
 interface BackButtonProps {
   onClick?: () => void;
@@ -7,10 +7,16 @@ interface BackButtonProps {
 
 const BackButton = ({ onClick }: BackButtonProps) => {
   const navigate = useNavigate();
+  const location = useLocation();
 
   const handleClick = () => {
     if (onClick) {
       onClick();
+    } else if (location.state?.returnToRevise) {
+      const { cardId, deckId, hardMode } = location.state;
+      navigate(`/revise${deckId ? `?deckId=${deckId}` : ""}`, {
+        state: { frontCardId: cardId, hardMode },
+      });
     } else {
       navigate(-1);
     }
