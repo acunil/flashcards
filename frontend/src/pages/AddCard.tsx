@@ -4,7 +4,7 @@ import useCreateCard from "../hooks/cards/useCreateCard";
 import type { Deck } from "../types/deck";
 import SearchableMultiSelect from "../components/searchableMultiSelect";
 import { useAppContext } from "../contexts";
-import { useParams, useSearchParams } from "react-router-dom";
+import { useLocation, useParams, useSearchParams } from "react-router-dom";
 import useUpdateCard from "../hooks/cards/useUpdateCard";
 import type { Card } from "../types/card";
 import PageWrapper from "../components/pageWrapper";
@@ -33,6 +33,9 @@ const AddCard = () => {
   const [cardToEdit, setCardToEdit] = useState<Card>();
   const [searchParams] = useSearchParams();
   const deckId = searchParams.get("deckId");
+
+  const location = useLocation();
+  console.log(location);
 
   const resetForm = () => {
     setFront("");
@@ -143,7 +146,14 @@ const AddCard = () => {
         <form onSubmit={handleSubmit} className="p-1 sm:p-2">
           <div className="relative flex items-center mb-4 sm:mb-6">
             <div className="absolute left-0">
-              <BackButton />
+              <BackButton
+                returnPath={
+                  location.state?.returnToDeckDetails
+                    ? `/decks/${location.state.deckId}`
+                    : undefined
+                }
+                returnState={{ searchTerm: location.state?.searchTerm }}
+              />
             </div>
             <Heading>{isEditing ? "Edit Card" : "Add a New Card"}</Heading>
           </div>

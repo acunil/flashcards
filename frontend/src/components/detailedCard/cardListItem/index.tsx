@@ -12,6 +12,8 @@ interface CardListItemProps extends Card {
   onToggleSelect?: (id: number) => void; // new prop
   onEditingChange?: (editing: boolean) => void;
   isAllCardsList?: boolean;
+  searchQuery: string;
+  deckId?: number;
 }
 
 const CardListItem = ({
@@ -30,6 +32,8 @@ const CardListItem = ({
   onToggleSelect,
   onEditingChange,
   isAllCardsList = true,
+  searchQuery,
+  deckId,
 }: CardListItemProps) => {
   const lastLevel = getClosestLevel(lastRating);
   const avgLevel = getClosestLevel(avgRating);
@@ -65,7 +69,15 @@ const CardListItem = ({
 
   const handleEditClick = (e: React.MouseEvent<HTMLDivElement>) => {
     e.stopPropagation();
-    navigate(`/add-card/${id}`);
+
+    navigate(`/add-card/${id}`, {
+      state: {
+        returnToDeckDetails: true,
+        searchTerm: searchQuery,
+        deckId: deckId || 0,
+      },
+    });
+
     return;
 
     // used to activate inline editing - this feature is no longer desired but leaving here in case we go back to it

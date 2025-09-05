@@ -1,4 +1,4 @@
-import { useNavigate, useParams } from "react-router-dom";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import Header from "../components/header";
 import {
   GraduationCap,
@@ -34,6 +34,11 @@ const DeckDetails = () => {
   const [deckName, setDeckName] = useState(deck?.name || "");
 
   const [toastConfig, setToastConfig] = useState<ToastConfig>(null);
+
+  const location = useLocation();
+  const [searchQuery, setSearchQuery] = useState(
+    location.state?.searchTerm || ""
+  );
 
   // Sync deck name when deck changes
   useEffect(() => {
@@ -87,7 +92,13 @@ const DeckDetails = () => {
   };
 
   const handleClickAddCard = () => {
-    navigate(`/add-card?deckId=${deck?.id}`);
+    navigate(`/add-card?deckId=${deck != null ? deck.id : 0}`, {
+      state: {
+        returnToDeckDetails: true,
+        searchTerm: searchQuery,
+        deckId: deck != null ? deck.id : 0,
+      },
+    });
   };
 
   const confirmDeleteDeck = () => {
@@ -135,7 +146,7 @@ const DeckDetails = () => {
           <div className="relative flex items-center w-full">
             {/* Back button always left */}
             <div className="absolute left-0">
-              <BackButton />
+              <BackButton returnPath="/decks" />
             </div>
 
             {/* Heading / edit input centered */}
@@ -220,6 +231,8 @@ const DeckDetails = () => {
           cards={filteredCards}
           isAllCardsList={effectiveDeckId === 0}
           deckId={effectiveDeckId}
+          searchQuery={searchQuery}
+          setSearchQuery={setSearchQuery}
         />
       </ContentWrapper>
 
