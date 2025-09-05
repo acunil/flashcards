@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import DifficultyButtons from "../components/difficultyButtons";
 import Header from "../components/header";
 import useRateCard from "../hooks/cards/useRateCard";
@@ -8,7 +8,7 @@ import type { Deck } from "../types/deck";
 import { useAppContext } from "../contexts";
 import type { Card } from "../types/card";
 import ReviseButtons from "../components/reviseButtons";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import PageLoad from "../components/pageLoad";
 import PageWrapper from "../components/pageWrapper";
 import ContentWrapper from "../components/contentWrapper";
@@ -26,80 +26,93 @@ const shuffleCards = (cards: Card[]) => {
   }
   return copy;
 };
-
 const Revise = ({ hardMode = false, deckId }: ReviseProps) => {
-  const { rateCard } = useRateCard();
   const { cards, loading, error } = useAppContext();
+  const { rateCard } = useRateCard();
   const navigate = useNavigate();
+  const location = useLocation();
 
+  const frontCardIdFromState = location.state?.frontCardId;
+
+  const [revisionCards, setRevisionCards] = useState<Card[] | null>(null); // null until ready
   const [currentIndex, setCurrentIndex] = useState(0);
   const [showHint, setShowHint] = useState(false);
-  const [revisionCards, setRevisionCards] = useState<Card[]>([]);
   const [cardColors, setCardColors] = useState<Record<string, string>>({});
 
-  const buildRevisionCards = useCallback(() => {
-    const deckFiltered = cards.filter(
-      (card) => !deckId || card.decks.some((deck: Deck) => deck.id === deckId)
-    );
-
-    if (hardMode) {
-      const hardFiltered = deckFiltered.filter((card) => card.avgRating >= 4);
-      return shuffleCards(
-        hardFiltered.length > 0 ? hardFiltered : deckFiltered
-      );
-    }
-
-    return shuffleCards(deckFiltered);
-  }, [cards, deckId, hardMode]);
-
   useEffect(() => {
-    const newDeck = buildRevisionCards();
-    setRevisionCards(newDeck);
-    setCurrentIndex(0);
-    setCardColors({});
-    setShowHint(false); // reset hint when deck changes
-  }, [buildRevisionCards]);
+    if (!loading && cards.length > 0 && revisionCards === null) {
+      let deckFiltered = cards.filter(
+        (card) => !deckId || card.decks.some((deck: Deck) => deck.id === deckId)
+      );
+
+      if (hardMode) {
+        const hardFiltered = deckFiltered.filter((card) => card.avgRating >= 4);
+        deckFiltered = hardFiltered.length > 0 ? hardFiltered : deckFiltered;
+      }
+
+      let shuffled = shuffleCards(deckFiltered);
+
+      if (frontCardIdFromState) {
+        const index = shuffled.findIndex((c) => c.id === frontCardIdFromState);
+        if (index > -1) {
+          const [frontCard] = shuffled.splice(index, 1);
+          shuffled = [frontCard, ...shuffled];
+        }
+      }
+
+      setRevisionCards(shuffled);
+      setCurrentIndex(0);
+      setCardColors({});
+      setShowHint(false);
+    }
+  }, [loading, cards, revisionCards, deckId, hardMode, frontCardIdFromState]);
+
+  // Until revisionCards is ready, show loader
+  if (revisionCards === null) return <PageLoad />;
 
   const handleDifficultySelect = (rating: number) => {
-    if (revisionCards.length === 0) return;
-
+    if (!revisionCards.length) return;
     const currentCard = revisionCards[currentIndex];
     rateCard(currentCard.id, rating);
 
     const level = levels.find((l) => l.rating === rating);
     const newColor = level ? level.buttonClassName : "bg-white";
 
-    setCardColors((prevColors) => ({
-      ...prevColors,
-      [currentCard.id]: newColor,
-    }));
-
+    setCardColors((prev) => ({ ...prev, [currentCard.id]: newColor }));
     setCurrentIndex((prev) => (prev + 1) % revisionCards.length);
-    setShowHint(false); // reset hint when moving to next card
+    setShowHint(false);
   };
 
   const handleEditCard = () => {
-    navigate(`/add-card/${revisionCards[currentIndex].id}`);
+    navigate(`/add-card/${revisionCards[currentIndex].id}`, {
+      state: {
+        returnToRevise: true,
+        cardId: revisionCards[currentIndex].id,
+        deckId,
+        hardMode,
+      },
+    });
   };
 
   const toggleHint = () => {
     const currentCard = revisionCards[currentIndex];
-    if (currentCard.hintFront || currentCard.hintBack) {
-      setShowHint((prev) => !prev); // toggle
-    }
+    if (currentCard.hintFront || currentCard.hintBack)
+      setShowHint((prev) => !prev);
   };
 
   return (
     <PageWrapper className={`${hardMode ? "bg-pink-300" : "bg-pink-200"}`}>
-      <Header isRevising={true} />
+      <Header isRevising />
       <main className="flex flex-col items-center my-2">
-        {loading && <PageLoad />}
         {error && (
-          <div className="bg-white w-full max-w-screen-sm border-black border-2 p-3 rounded m-4 text-center">
-            <p>No cards found</p>
-          </div>
+          <ContentWrapper>
+            <div className="bg-white w-full max-w-screen-sm border-black border-2 p-3 rounded m-4 text-center">
+              <p>No cards found</p>
+            </div>
+          </ContentWrapper>
         )}
-        {!loading && !error && revisionCards.length === 0 && (
+
+        {!error && revisionCards.length === 0 && (
           <ContentWrapper>
             <div className="flex flex-col items-center">
               <p>You don't have any cards!</p>
@@ -119,7 +132,8 @@ const Revise = ({ hardMode = false, deckId }: ReviseProps) => {
             </div>
           </ContentWrapper>
         )}
-        {!loading && !error && revisionCards.length > 0 && (
+
+        {revisionCards.length > 0 && (
           <>
             <div className="py-2 px-4">
               <ReviseButtons
