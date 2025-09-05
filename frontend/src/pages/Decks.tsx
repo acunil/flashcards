@@ -28,8 +28,10 @@ const Decks = () => {
     <PageWrapper className="bg-sky-200">
       <Header />
       <ContentWrapper>
-        <div className="flex items-center mb-6">
-          <BackButton />
+        <div className="relative flex items-center mb-6">
+          <div className="absolute left-0">
+            <BackButton />
+          </div>
           <Heading>Decks</Heading>
         </div>
         {(loading || creating) && <PageLoad />}
