@@ -38,8 +38,6 @@ const CardList = ({
   };
 
   const handleDeleteSelected = () => {
-    console.log("Deleting cards:", Array.from(selectedCards));
-
     if (isAllCardsList) {
       deleteCards(Array.from(selectedCards));
     } else {

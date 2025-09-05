@@ -14,7 +14,6 @@ const useDeleteCards = () => {
       });
 
       setCards(cards.filter((card) => !cardIds.includes(card.id)));
-      console.log("Delete successful");
 
       if (result === undefined) {
         // User was likely redirected to login
