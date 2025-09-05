@@ -4,6 +4,7 @@ import { createContext } from "react";
 export type CardDisplay = "Front" | "Back" | "Any";
 export type Familiarity = "All" | "Hard" | "Easy";
 export type DeckVisibility = "Show" | "Hide";
+export type CardOrder = "Newest" | "Oldest" | "Shuffle";
 
 // Interface for context value
 export interface ReviseSettings {
@@ -13,6 +14,8 @@ export interface ReviseSettings {
   setFamiliarity: (val: Familiarity) => void;
   showDeckNames: DeckVisibility;
   setShowDeckNames: (val: DeckVisibility) => void;
+  cardOrder: CardOrder;
+  setCardOrder: (val: CardOrder) => void;
 }
 
 // Create context with undefined as default

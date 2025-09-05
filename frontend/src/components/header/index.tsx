@@ -6,6 +6,7 @@ import { useAppContext } from "../../contexts";
 import { useReviseSettings } from "../../hooks/reviseSettings";
 import type {
   CardDisplay,
+  CardOrder,
   DeckVisibility,
   Familiarity,
 } from "../../contexts/ReviseSettingsContext";
@@ -37,6 +38,8 @@ const Header = ({
     setFamiliarity,
     showDeckNames,
     setShowDeckNames,
+    cardOrder,
+    setCardOrder,
   } = useReviseSettings();
 
   const frontLabel = selectedSubject?.frontLabel || "Front";
@@ -57,6 +60,12 @@ const Header = ({
   const deckOptions: ToggleOption<DeckVisibility>[] = [
     { display: "Show", value: "Show" },
     { display: "Hide", value: "Hide" },
+  ];
+
+  const cardOrderOptions: ToggleOption<CardOrder>[] = [
+    { display: "Newest", value: "Newest" },
+    { display: "Oldest", value: "Oldest" },
+    { display: "Random", value: "Shuffle" },
   ];
 
   const persistDefaultSide = async (value: CardDisplay) => {
@@ -103,6 +112,13 @@ const Header = ({
         console.log(String(err));
       }
     }
+  };
+
+  const persistCardOrder = async (value: CardOrder) => {
+    setCardOrder(value);
+
+    // add logic for updating preference in database subject record
+    // if (!selectedSubject?.id) return;
   };
 
   const handleLogout = () => {
@@ -236,6 +252,14 @@ const Header = ({
               options={deckOptions}
               selected={showDeckNames}
               onChange={persistDeckVisibility}
+            />
+          </div>
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
+            <label className="whitespace-nowrap">Card order:</label>
+            <Toggle
+              options={cardOrderOptions}
+              selected={cardOrder}
+              onChange={persistCardOrder}
             />
           </div>
           <div className="flex justify-end pt-2">

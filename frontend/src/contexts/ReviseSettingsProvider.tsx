@@ -4,6 +4,7 @@ import {
   type CardDisplay,
   type Familiarity,
   type DeckVisibility,
+  type CardOrder,
 } from "./ReviseSettingsContext";
 
 // Provider component
@@ -15,6 +16,7 @@ export const ReviseSettingsProvider = ({
   const [cardDisplay, setCardDisplay] = useState<CardDisplay>("Front");
   const [familiarity, setFamiliarity] = useState<Familiarity>("All");
   const [showDeckNames, setShowDeckNames] = useState<DeckVisibility>("Show");
+  const [cardOrder, setCardOrder] = useState<CardOrder>("Newest");
 
   return (
     <ReviseSettingsContext.Provider
@@ -25,6 +27,8 @@ export const ReviseSettingsProvider = ({
         setFamiliarity,
         showDeckNames,
         setShowDeckNames,
+        cardOrder,
+        setCardOrder,
       }}
     >
       {children}
