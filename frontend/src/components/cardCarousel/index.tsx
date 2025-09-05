@@ -68,10 +68,10 @@ const CardCarousel = ({
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  const maxCardWidth = 320;
   const cardMargin = 8;
-  const cardWidth = Math.min(maxCardWidth, windowWidth - 2 * cardMargin);
-  const fullCardWidth = cardWidth + cardMargin;
+
+  const cardWidthPx = windowWidth < 390 ? windowWidth * 0.8 : 320; // 320 = w-80
+  const fullCardWidth = cardWidthPx + cardMargin;
 
   const handleFlip = (cardId: number) => {
     setFlippedMap((prev) => ({
@@ -89,7 +89,7 @@ const CardCarousel = ({
   }, [cards, currentIndex, filteredCards]);
 
   const translateX =
-    -(activeIndex * fullCardWidth) + (windowWidth - cardWidth) / 2;
+    -(activeIndex * fullCardWidth) + (windowWidth - cardWidthPx) / 2;
 
   const moveToFilteredIndex = (filteredIdx: number) => {
     if (filteredIdx < 0 || filteredIdx >= filteredCards.length) return;
@@ -114,6 +114,8 @@ const CardCarousel = ({
     moveToFilteredIndex(activeIndex - 1);
   };
 
+  const sizeClass = windowWidth < 390 ? "w-[80vw] h-[50vw]" : "w-80 h-50";
+
   return (
     <div className="relative w-full py-6">
       <div
@@ -132,7 +134,7 @@ const CardCarousel = ({
               key={card.id}
               className="flex-shrink-0 relative"
               style={{
-                width: cardWidth,
+                width: cardWidthPx,
                 margin: `0 ${cardMargin / 2}px`,
                 transform: `scale(${scale}) translateY(${translateY}px)`,
                 transition: "transform 0.5s ease",
@@ -158,7 +160,7 @@ const CardCarousel = ({
                 cardBgColor={cardColors[card.id] || "bg-white"}
                 showHint={displayCurrentHint && i === activeIndex}
                 isActive={i === activeIndex}
-                customSizeClassName="w-80 h-50"
+                customSizeClassName={sizeClass}
               />
 
               {i === activeIndex && activeIndex < filteredCards.length - 1 && (
