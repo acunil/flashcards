@@ -43,7 +43,6 @@ const AddCard = () => {
   const deckId = searchParams.get("deckId");
 
   const location = useLocation();
-  console.log(location);
 
   const resetForm = () => {
     setFront("");
