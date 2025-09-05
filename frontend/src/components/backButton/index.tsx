@@ -30,6 +30,7 @@ const BackButton = ({ onClick, returnState, returnPath }: BackButtonProps) => {
     <div>
       <button
         id="decks-back-button"
+        type="button"
         className="cursor-pointer"
         onClick={handleClick}
       >
