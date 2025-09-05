@@ -12,7 +12,7 @@ interface CardListItemProps extends Card {
   onToggleSelect?: (id: number) => void; // new prop
   onEditingChange?: (editing: boolean) => void;
   isAllCardsList?: boolean;
-  searchQuery: string;
+  searchQuery?: string;
   deckId?: number;
 }
 
