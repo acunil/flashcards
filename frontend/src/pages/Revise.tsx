@@ -145,7 +145,7 @@ const Revise = ({ hardMode = false, deckId }: ReviseProps) => {
 
         {revisionCards.length > 0 && (
           <>
-            <div className="py-2 px-4">
+            <div className="py-2 right-2 relative">
               <ReviseButtons
                 showHintButton={
                   !!(

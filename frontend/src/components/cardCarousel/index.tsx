@@ -7,7 +7,7 @@ import { CaretLeft, CaretRight } from "phosphor-react";
 interface CardCarouselProps {
   cards: Card[];
   currentIndex: number;
-  setCurrentIndex?: (index: number) => void; // optional callback to update parent
+  setCurrentIndex?: (index: number) => void;
   cardColors?: Record<string, string>;
   displayCurrentHint: boolean;
 }
@@ -25,30 +25,25 @@ const CardCarousel = ({
 
   const { cardDisplay, showDeckNames, familiarity } = useReviseSettings();
 
-  // Memoize filtered cards
+  // Filter cards based on familiarity
   const filteredCards = useMemo(() => {
     if (familiarity === "All") return cards;
 
-    let filtered: Card[] = [];
-    if (familiarity === "Hard") {
-      filtered = cards.filter((card) => card.avgRating >= 4);
-    } else if (familiarity === "Easy") {
-      filtered = cards.filter((card) => card.avgRating < 4);
-    }
+    const filtered =
+      familiarity === "Hard"
+        ? cards.filter((c) => c.avgRating >= 4)
+        : cards.filter((c) => c.avgRating < 4);
 
-    // If no cards matched, return all
-    return filtered.length > 0 ? filtered : cards;
+    return filtered.length ? filtered : cards;
   }, [cards, familiarity]);
 
-  // Precompute initial flippedMap before first render
+  // Initial flipped map
   const initialFlipMap = useMemo(() => {
     const map: Record<string, boolean> = {};
     filteredCards.forEach((card) => {
       if (cardDisplay === "Front") map[card.id] = false;
       else if (cardDisplay === "Back") map[card.id] = true;
-      else if (cardDisplay === "Any") {
-        map[card.id] = Math.random() < 0.5;
-      }
+      else map[card.id] = Math.random() < 0.5;
     });
     return map;
   }, [filteredCards, cardDisplay]);
@@ -56,7 +51,6 @@ const CardCarousel = ({
   const [flippedMap, setFlippedMap] =
     useState<Record<string, boolean>>(initialFlipMap);
 
-  // Reset flippedMap whenever card set or display mode changes
   useEffect(() => {
     setFlippedMap(initialFlipMap);
   }, [initialFlipMap]);
@@ -68,32 +62,30 @@ const CardCarousel = ({
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  const maxCardWidth = 320;
   const cardMargin = 8;
-  const cardWidth = Math.min(maxCardWidth, windowWidth - 2 * cardMargin);
-  const fullCardWidth = cardWidth + cardMargin;
+  const activeCardScale = 1;
+  const sideScale = windowWidth < 640 ? 0.75 : 0.9;
+  const cardWidthPx = windowWidth < 390 ? windowWidth * 0.8 : 320;
 
   const handleFlip = (cardId: number) => {
-    setFlippedMap((prev) => ({
-      ...prev,
-      [cardId]: !prev[cardId],
-    }));
+    setFlippedMap((prev) => ({ ...prev, [cardId]: !prev[cardId] }));
   };
 
   const activeIndex = useMemo(() => {
     const currentCard = cards[currentIndex];
     if (!currentCard) return 0;
-
     const i = filteredCards.findIndex((c) => c.id === currentCard.id);
     return i >= 0 ? i : 0;
   }, [cards, currentIndex, filteredCards]);
 
   const translateX =
-    -(activeIndex * fullCardWidth) + (windowWidth - cardWidth) / 2;
+    -activeIndex * (cardWidthPx + cardMargin) +
+    windowWidth / 2 -
+    cardWidthPx / 2;
 
-  const moveToFilteredIndex = (filteredIdx: number) => {
-    if (filteredIdx < 0 || filteredIdx >= filteredCards.length) return;
-    const nextCard = filteredCards[filteredIdx];
+  const moveToFilteredIndex = (idx: number) => {
+    if (idx < 0 || idx >= filteredCards.length) return;
+    const nextCard = filteredCards[idx];
     const newIndex = cards.findIndex((c) => c.id === nextCard.id);
     setCurrentIndex?.(newIndex);
   };
@@ -106,13 +98,10 @@ const CardCarousel = ({
     }
   }, [filteredCards, cards, setCurrentIndex]);
 
-  const handleMoveRight = () => {
-    moveToFilteredIndex(activeIndex + 1);
-  };
+  const handleMoveLeft = () => moveToFilteredIndex(activeIndex - 1);
+  const handleMoveRight = () => moveToFilteredIndex(activeIndex + 1);
 
-  const handleMoveLeft = () => {
-    moveToFilteredIndex(activeIndex - 1);
-  };
+  const sizeClass = windowWidth < 390 ? "w-[80vw] h-[50vw]" : "w-80 h-50";
 
   return (
     <div className="relative w-full py-6">
@@ -122,8 +111,7 @@ const CardCarousel = ({
       >
         {filteredCards.map((card, i) => {
           const distance = Math.abs(i - activeIndex);
-          let scale = i === activeIndex ? 1 : 0.9;
-          if (i !== activeIndex && windowWidth < 640) scale = 0.8;
+          const scale = i === activeIndex ? activeCardScale : sideScale;
           const translateY = i === activeIndex ? 0 : distance * 8;
           const flipped = flippedMap[card.id] ?? false;
 
@@ -132,7 +120,7 @@ const CardCarousel = ({
               key={card.id}
               className="flex-shrink-0 relative"
               style={{
-                width: cardWidth,
+                width: cardWidthPx,
                 margin: `0 ${cardMargin / 2}px`,
                 transform: `scale(${scale}) translateY(${translateY}px)`,
                 transition: "transform 0.5s ease",
@@ -158,7 +146,7 @@ const CardCarousel = ({
                 cardBgColor={cardColors[card.id] || "bg-white"}
                 showHint={displayCurrentHint && i === activeIndex}
                 isActive={i === activeIndex}
-                customSizeClassName="w-80 h-50"
+                customSizeClassName={sizeClass}
               />
 
               {i === activeIndex && activeIndex < filteredCards.length - 1 && (
