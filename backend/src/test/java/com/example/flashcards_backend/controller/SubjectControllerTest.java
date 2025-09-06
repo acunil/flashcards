@@ -7,6 +7,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
+import org.springframework.test.web.servlet.request.RequestPostProcessor;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -14,15 +15,16 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 class SubjectControllerTest extends AbstractIntegrationTest {
 
+    private RequestPostProcessor jwt;
+
     @Autowired
     private SubjectRepository subjectRepository;
 
     Subject subjectOne;
 
     @BeforeEach
-    void seedSubjects() {
-        // Clear any existing data (optional if @Transactional is used)
-        subjectRepository.deleteAll();
+    void setUp() {
+        jwt = jwtForTestUser();
 
         subjectOne = Subject.builder()
                 .name("Subject 1")
@@ -38,7 +40,7 @@ class SubjectControllerTest extends AbstractIntegrationTest {
 
     @Test
     void getAllForUserSubjects() throws Exception {
-        mockMvc.perform(get("/subjects").with(jwtForTestUser()))
+        mockMvc.perform(get("/subjects").with(jwt))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$[0].name").value("Subject 1"))
@@ -54,7 +56,7 @@ class SubjectControllerTest extends AbstractIntegrationTest {
                 """;
 
         mockMvc.perform(post("/subjects")
-                        .with(jwtForTestUser())
+                        .with(jwt)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(requestJson))
                 .andExpect(status().isCreated())
@@ -65,14 +67,14 @@ class SubjectControllerTest extends AbstractIntegrationTest {
     @Test
     void getSubjectById() throws Exception {
         mockMvc.perform(get("/subjects/" + subjectOne.getId())
-                        .with(jwtForTestUser()))
+                        .with(jwt))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.name").value("Subject 1"));
     }
 
     @Test
     void getSubjectById_NotFound() throws Exception {
-        mockMvc.perform(get("/subjects/999").with(jwtForTestUser()))
+        mockMvc.perform(get("/subjects/999").with(jwt))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.error").value("Subject not found with id: 999"));
     }
@@ -90,7 +92,7 @@ class SubjectControllerTest extends AbstractIntegrationTest {
                 """;
 
         mockMvc.perform(put("/subjects/" + subjectOne.getId())
-                        .with(jwtForTestUser())
+                        .with(jwt)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(content))
                 .andExpect(status().isOk());
@@ -104,7 +106,7 @@ class SubjectControllerTest extends AbstractIntegrationTest {
     @Test
     void deleteSubject() throws Exception {
         mockMvc.perform(delete("/subjects/" + subjectOne.getId())
-                        .with(jwtForTestUser()))
+                        .with(jwt))
                 .andExpect(status().isNoContent());
         assertThat(subjectRepository.findById(1L)).isEmpty();
     }
