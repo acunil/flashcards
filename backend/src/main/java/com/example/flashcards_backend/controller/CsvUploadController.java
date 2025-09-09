@@ -28,29 +28,27 @@ import java.util.Objects;
 @Slf4j
 public class CsvUploadController {
     public static final String CSV_UPLOAD_FORMAT = """
-        CSV file to upload. Format: front,back,hint_front,hint_back,decks. Headers required. ; = separator for decks.
-        \s
-        Example:
-        \s
-        front,back,hint_front,hint_back,decks
-        die Katze,cat,Animals,,sounds like cat;German Basics
-        das Haus,house,Buildings,,;German Basics
-    """;
+                CSV file to upload. Format: front,back,hint_front,hint_back,decks. Headers required. ; = separator for decks.
+                \s
+                Example:
+                \s
+                front,back,hint_front,hint_back,decks
+                die Katze,cat,Animals,,sounds like cat;German Basics
+                das Haus,house,Buildings,,;German Basics
+            """;
 
     private final CsvUploadServiceImpl csvUploadService;
     private final CurrentUserService currentUserService;
 
     @Operation(summary = "Upload CSV file for card import",
-               description = "Uploads a CSV file containing flashcards and processes it for import.")
-    @ApiResponses(value = {
-        @ApiResponse(responseCode = "200", description = "CSV file processed successfully",
+            description = "Uploads a CSV file containing flashcards and processes it for import.")
+    @ApiResponse(responseCode = "200", description = "CSV file processed successfully",
             content = @Content(mediaType = "application/json",
-                schema = @Schema(implementation = CsvUploadResponseDto.class))),
-        @ApiResponse(responseCode = "400", description = "Bad request, no file provided",
-            content = @Content(mediaType = "application/json")),
-        @ApiResponse(responseCode = "500", description = "Internal server error, could not process CSV",
+                    schema = @Schema(implementation = CsvUploadResponseDto.class)))
+    @ApiResponse(responseCode = "400", description = "Bad request, no file provided",
             content = @Content(mediaType = "application/json"))
-    })
+    @ApiResponse(responseCode = "500", description = "Internal server error, could not process CSV",
+            content = @Content(mediaType = "application/json"))
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, path = "/{subjectId}")
     public ResponseEntity<CsvUploadResponseDto> uploadCsv(
             @Parameter(
@@ -61,7 +59,7 @@ public class CsvUploadController {
             @RequestParam MultipartFile file,
             @PathVariable("subjectId") Long subjectId,
             @AuthenticationPrincipal Jwt jwt
-            ) {
+    ) {
         currentUserService.getCurrentUser(jwt);
         log.info("CSV upload for subject {}", subjectId);
         if (Objects.isNull(file) || file.isEmpty()) {

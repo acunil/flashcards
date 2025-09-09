@@ -94,4 +94,29 @@ public interface CardRepository extends JpaRepository<Card, Long> {
     )
     List<Card> findByDeckId(Long deckId);
 
+    @Query("""
+            SELECT c.front AS front,
+                   c.back AS back,
+                   c.hintFront AS hintFront,
+                   c.hintBack AS hintBack,
+                   d.name AS decks
+            FROM Card c
+            LEFT JOIN c.decks d
+            WHERE c.subject.id = :subjectId
+            """)
+    List<CardExportProjection> findExportDataBySubjectId(@Param("subjectId") Long subjectId);
+
+    @Query("""
+            SELECT c.front AS front,
+                   c.back AS back,
+                   c.hintFront AS hintFront,
+                   c.hintBack AS hintBack,
+                   d.name AS decks
+            FROM Card c
+            LEFT JOIN c.decks d
+            WHERE d.id = :deckId
+            GROUP BY c.id
+            """)
+    List<CardExportProjection> findExportDataByDeckId(@Param("deckId") Long deckId);
+
 }
