@@ -1,11 +1,12 @@
 package com.example.flashcards_backend.service;
 
-import com.example.flashcards_backend.exception.DeckNotFoundException;
-import com.example.flashcards_backend.exception.SubjectNotFoundException;
-
-import java.io.IOException;
+import org.springframework.http.ResponseEntity;
 
 public interface CsvExportService {
-    byte[] exportSubjectCards(Long subjectId) throws SubjectNotFoundException, IOException;
-    byte[] exportDeckCards(Long deckId) throws DeckNotFoundException, IOException;
+    ResponseEntity<byte[]> exportCards(CardSource cardSource, Long id);
+
+    enum CardSource {
+        SUBJECT, DECK
+    }
+
 }
