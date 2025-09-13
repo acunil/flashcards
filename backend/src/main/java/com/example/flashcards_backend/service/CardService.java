@@ -14,7 +14,6 @@ import lombok.AllArgsConstructor;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.logging.log4j.util.Strings;
-import org.springframework.dao.DataAccessException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -60,17 +59,16 @@ public class CardService {
       log.info("Card already exists with id: {}", exists.get().getId());
       return mapCardToCreateCardResponse(exists.get(), true);
     }
+    Subject subject = subjectService.findById(request.subjectId());
     Card cardToCreate =
         Card.builder()
             .front(request.front())
             .back(request.back())
             .hintFront(request.hintFront())
             .hintBack(request.hintBack())
+            .subject(subject)
+            .user(subject.getUser())
             .build();
-    Subject subject = subjectService.findById(request.subjectId());
-    cardToCreate.setSubject(subject);
-    cardToCreate.setUser(subject.getUser());
-    log.info("Saving new card with id");
     Card saved = cardRepository.saveAndFlush(cardToCreate);
     log.info("Saved card with id {}", saved.getId());
     addDecksIfPresent(request, saved);
@@ -118,7 +116,7 @@ public class CardService {
   }
 
   @Transactional
-  public void updateCard(Long id, CardRequest request) {
+  public CardResponse updateCard(Long id, CardRequest request) {
     // Completely replace the card's front and back text and set its decks to those of the request.
     log.info("Updating card {}", id);
     Card card = fetchCardById(id);
@@ -139,11 +137,7 @@ public class CardService {
     }
     cardRepository.saveAndFlush(card);
     log.info("Card {} successfully updated", id);
-  }
-
-  @Transactional
-  public void rateCard(Long cardId, int rating) throws CardNotFoundException, DataAccessException {
-    cardHistoryService.recordRating(cardId, rating);
+    return CardResponse.fromEntity(card);
   }
 
   @Transactional

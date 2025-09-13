@@ -148,7 +148,8 @@ class CardServiceTest {
 
   @Test
   void createCards_emptyListThrows() {
-    assertThatThrownBy(() -> cardService.createCards(List.of()))
+    List<CardRequest> empty = List.of();
+    assertThatThrownBy(() -> cardService.createCards(empty))
         .isInstanceOf(IllegalArgumentException.class)
         .hasMessageContaining("No card requests provided");
   }
@@ -406,22 +407,6 @@ class CardServiceTest {
         .containsExactlyInAnyOrder(deck1.getName(), deck2.getName());
 
     verifyNoMoreInteractions(cardDeckService);
-  }
-
-  @Test
-  void rate_Card_existingCard_callsCardHistoryService() {
-    when(cardRepository.findById(10L)).thenReturn(Optional.of(new Card()));
-    cardService.rateCard(10L, 3);
-    verify(cardHistoryService).recordRating(10L, 3);
-  }
-
-  @Test
-  void rate_Card_missingCard_throwsException() {
-    doThrow(new CardNotFoundException(99L)).when(cardHistoryService).recordRating(99L, 4);
-    assertThatThrownBy(() -> cardService.rateCard(99L, 4))
-        .isInstanceOf(CardNotFoundException.class)
-        .extracting("message")
-        .isEqualTo("Card not found with id: 99");
   }
 
   @Test

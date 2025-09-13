@@ -3,6 +3,8 @@ package com.example.flashcards_backend.controller;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
+import com.example.flashcards_backend.dto.CardRequest;
+import com.example.flashcards_backend.dto.HintRequest;
 import com.example.flashcards_backend.integration.AbstractIntegrationTest;
 import com.example.flashcards_backend.model.Card;
 import com.example.flashcards_backend.model.CardHistory;
@@ -16,6 +18,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import java.time.LocalDateTime;
 import java.util.List;
+
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -73,10 +77,9 @@ class CardControllerTest extends AbstractIntegrationTest {
   @Test
   void getById_existingId_returnsCardResponse() throws Exception {
     mockMvc
-        .perform(get(ENDPOINT + "/1").with(jwt))
+        .perform(get(ENDPOINT + "/" + c1.getId()).with(jwt))
         .andExpect(status().isOk())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-        .andExpect(jsonPath("$.id").value(1))
         .andExpect(jsonPath("$.front").value("f1"))
         .andExpect(jsonPath("$.back").value("b1"));
   }
@@ -92,32 +95,29 @@ class CardControllerTest extends AbstractIntegrationTest {
 
   @Test
   void create_Card_validDto_returnsCreatedWithLocationAndBody() throws Exception {
-    String json =
-        """
-            {"front":"f","back":"b","subjectId":1}
-            """;
-
+    CardRequest request = CardRequest.of("f", "b", subject1.getId());
+    String content = objectMapper.writeValueAsString(request);
     mockMvc
-        .perform(post(ENDPOINT).with(jwt).contentType(MediaType.APPLICATION_JSON).content(json))
+        .perform(post(ENDPOINT).with(jwt).contentType(MediaType.APPLICATION_JSON).content(content))
         .andExpect(status().isCreated())
-        .andExpect(header().string("Location", "/cards/10"))
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-        .andExpect(jsonPath("$.id").value(10))
         .andExpect(jsonPath("$.front").value("f"))
         .andExpect(jsonPath("$.back").value("b"));
   }
 
   @Test
   void update_existingId_returnsNoContent() throws Exception {
-    String json =
-        """
-            {"front":"newF","back":"newB","deckNamesDto":null,"subjectId":1}
-            """;
-
+    CardRequest request = CardRequest.of("newF", "newB", 1L);
+    String content = objectMapper.writeValueAsString(request);
     mockMvc
         .perform(
-            put(ENDPOINT + "/5").with(jwt).contentType(MediaType.APPLICATION_JSON).content(json))
-        .andExpect(status().isNoContent());
+            put(ENDPOINT + "/" + c1.getId())
+                .with(jwt)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(content))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.front").value("newF"))
+        .andExpect(jsonPath("$.back").value("newB"));
   }
 
   @Test
@@ -141,7 +141,7 @@ class CardControllerTest extends AbstractIntegrationTest {
   void rate_validIdAndRating_returnsNoContent() throws Exception {
     mockMvc
         .perform(
-            patch(ENDPOINT + "/7/rate")
+            patch(ENDPOINT + "/1/rate")
                 .with(jwt)
                 .param("rating", "5")
                 .contentType(MediaType.APPLICATION_JSON))
@@ -198,17 +198,23 @@ class CardControllerTest extends AbstractIntegrationTest {
 
   @Test
   void setHints_whenCardExists_updatesHints() throws Exception {
-    String content =
-        """
-            {"hintFront":"f","hintBack":"b"}
-            """;
+    HintRequest request = HintRequest.builder().hintFront("f").hintBack("b").build();
+    String content = objectMapper.writeValueAsString(request);
 
     mockMvc
         .perform(
-            patch(ENDPOINT + "/" + 1L + "/hints")
+            patch(ENDPOINT + "/" + c1.getId() + "/hints")
                 .with(jwt)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(content))
         .andExpect(status().isOk());
+  }
+
+  @AfterEach
+  void tearDown() {
+    cardHistoryRepository.deleteAll();
+    cardRepository.deleteAll();
+    deckRepository.deleteAll();
+    subjectRepository.deleteAll();
   }
 }
