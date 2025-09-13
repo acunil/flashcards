@@ -1,82 +1,81 @@
 package com.example.flashcards_backend.controller;
 
-import com.example.flashcards_backend.dto.CardRequest;
-import com.example.flashcards_backend.dto.CardResponse;
-import com.example.flashcards_backend.dto.CreateCardResponse;
-import com.example.flashcards_backend.dto.HintRequest;
-import com.example.flashcards_backend.exception.CardNotFoundException;
+import com.example.flashcards_backend.integration.AbstractIntegrationTest;
 import com.example.flashcards_backend.model.Card;
 import com.example.flashcards_backend.model.CardHistory;
+import com.example.flashcards_backend.model.Deck;
 import com.example.flashcards_backend.model.Subject;
-import com.example.flashcards_backend.service.CardHistoryService;
-import com.example.flashcards_backend.service.CardService;
-import com.example.flashcards_backend.service.CurrentUserService;
+import com.example.flashcards_backend.repository.CardHistoryRepository;
+import com.example.flashcards_backend.repository.CardRepository;
+import com.example.flashcards_backend.repository.DeckRepository;
+import com.example.flashcards_backend.repository.SubjectRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.dao.DataAccessException;
 import org.springframework.http.MediaType;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.request.RequestPostProcessor;
 
-import static org.mockito.Mockito.*;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
-
-import java.sql.SQLException;
 import java.time.LocalDateTime;
 import java.util.List;
 
-@WebMvcTest(CardController.class)
-@AutoConfigureMockMvc(addFilters = false)
-class CardControllerTest {
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+
+class CardControllerTest extends AbstractIntegrationTest {
 
     public static final String ENDPOINT = "/cards";
 
-    @MockitoBean
-    private CardService cardService;
-
-    @MockitoBean
-    private CardHistoryService cardHistoryService;
-
-    @MockitoBean
-    private CurrentUserService currentUserService;
+  private RequestPostProcessor jwt;
 
     @Autowired
     private MockMvc mockMvc;
+
+  @Autowired private SubjectRepository subjectRepository;
+
+  @Autowired private DeckRepository deckRepository;
+
+  @Autowired private CardRepository cardRepository;
+  @Autowired private CardHistoryRepository cardHistoryRepository;
 
     @Autowired
     private ObjectMapper objectMapper;
 
     private Card c1;
     private Card c2;
+    private Subject subject1;
+    private Deck deck;
+    private CardHistory cardHistory1;
 
     @BeforeEach
     void setUp() {
-        Subject subject1 = Subject.builder().id(1L).name("Subject 1").build();
-        CardHistory history1 = CardHistory.builder()
-            .id(1L)
-            .avgRating(2.0)
-            .viewCount(10)
-            .lastViewed(LocalDateTime.parse("2023-10-01T12:00:00"))
-            .lastRating(3)
-            .build();
-        c1 = Card.builder().id(1L).front("f1").back("b1").subject(subject1).cardHistory(history1).build();
-        c2 = Card.builder().id(2L).front("f2").back("b2").subject(subject1).cardHistory(history1).build();
-
-        objectMapper.registerModule(new JavaTimeModule());
+      jwt = jwtForTestUser();
+        subject1 = Subject.builder().name("Subject 1").user(testUser).build();
+        subjectRepository.saveAndFlush(subject1);
+        deck = Deck.builder().name("Deck 1").subject(subject1).user(subject1.getUser()).build();
+        deckRepository.saveAndFlush(deck);
+        c1 = Card.builder().front("f1").back("b1").subject(subject1).user(testUser).build();
+      c2 = Card.builder().front("f2").back("b2").subject(subject1).user(testUser).build();
+      cardRepository.saveAndFlush(c1);
+      cardRepository.saveAndFlush(c2);
+      cardHistory1 = CardHistory.builder()
+          .avgRating(2.0)
+          .viewCount(10)
+          .lastViewed(LocalDateTime.parse("2023-10-01T12:00:00"))
+          .lastRating(3)
+          .card(c1)
+          .user(testUser)
+          .build();
+      cardHistoryRepository.saveAndFlush(cardHistory1);
+      objectMapper.registerModule(new JavaTimeModule());
     }
 
 
     @Test
     void getById_existingId_returnsCardResponse() throws Exception {
-        when(cardService.getCardResponseById(1L)).thenReturn(CardResponse.fromEntity(c1));
-
-        mockMvc.perform(get(ENDPOINT + "/1"))
+        mockMvc.perform(get(ENDPOINT + "/1").with(jwt))
             .andExpect(status().isOk())
             .andExpect(content().contentType(MediaType.APPLICATION_JSON))
             .andExpect(jsonPath("$.id").value(1))
@@ -86,10 +85,7 @@ class CardControllerTest {
 
     @Test
     void getById_missingId_returnsNotFound() throws Exception {
-        doThrow( new CardNotFoundException(99L))
-            .when(cardService).getCardResponseById(99L);
-
-        mockMvc.perform(get(ENDPOINT + "/99"))
+        mockMvc.perform(get(ENDPOINT + "/99").with(jwt))
             .andExpect(status().isNotFound())
             .andExpect(content().contentType( MediaType.APPLICATION_JSON))
             .andExpect(jsonPath("$.error").value("Card not found with id: 99"));
@@ -97,14 +93,11 @@ class CardControllerTest {
 
     @Test
     void create_Card_validDto_returnsCreatedWithLocationAndBody() throws Exception {
-        when(cardService.createCard(any(CardRequest.class)))
-            .thenReturn(CreateCardResponse.builder().front("f").back("b").id(10L).build());
-
         String json = """
             {"front":"f","back":"b","subjectId":1}
             """;
 
-        mockMvc.perform(post(ENDPOINT)
+        mockMvc.perform(post(ENDPOINT).with(jwt)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(json))
             .andExpect(status().isCreated())
@@ -121,24 +114,19 @@ class CardControllerTest {
             {"front":"newF","back":"newB","deckNamesDto":null,"subjectId":1}
             """;
 
-        mockMvc.perform(put(ENDPOINT + "/5")
+        mockMvc.perform(put(ENDPOINT + "/5").with(jwt)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(json))
             .andExpect(status().isNoContent());
-
-        verify(cardService).updateCard(5L, CardRequest.of("newF", "newB", 1L));
     }
 
     @Test
     void update_missingId_returnsNotFound() throws Exception {
-        doThrow(new CardNotFoundException(7L))
-            .when(cardService).updateCard(anyLong(), any(CardRequest.class));
-
         String requestJson = """
             {"front":"newF","back":"newB","deckNamesDto":null,"subjectId":1}
             """;
 
-        mockMvc.perform(put(ENDPOINT + "/7")
+        mockMvc.perform(put(ENDPOINT + "/7").with(jwt)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(requestJson))
             .andExpect(status().isNotFound())
@@ -147,18 +135,15 @@ class CardControllerTest {
 
     @Test
     void rate_validIdAndRating_returnsNoContent() throws Exception {
-        mockMvc.perform(patch(ENDPOINT + "/7/rate")
+        mockMvc.perform(patch(ENDPOINT + "/7/rate").with(jwt)
                 .param("rating", "5")
                 .contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isNoContent());
-        verify(cardHistoryService).recordRating(7L, 5);
     }
 
     @Test
     void rate_missingCard_returnsNotFoundWithMessage() throws Exception {
-        doThrow(new CardNotFoundException(55L))
-            .when(cardHistoryService).recordRating(55L, 2);
-        mockMvc.perform(patch(ENDPOINT + "/55/rate")
+        mockMvc.perform(patch(ENDPOINT + "/55/rate").with(jwt)
                 .param("rating", "2")
                 .contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isNotFound())
@@ -167,11 +152,7 @@ class CardControllerTest {
 
     @Test
     void rate_databaseError_returnsInternalServerError() throws Exception {
-        SQLException e = new SQLException("Test SQL error");
-        DataAccessException dataAccessException = new DataAccessException("Test Database error", e) {};
-        doThrow(dataAccessException)
-            .when(cardHistoryService).recordRating(7L, 5);
-        mockMvc.perform(patch(ENDPOINT + "/7/rate")
+        mockMvc.perform(patch(ENDPOINT + "/7/rate").with(jwt)
                 .param("rating", "5")
                 .contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isInternalServerError())
@@ -182,48 +163,30 @@ class CardControllerTest {
     @Test
     void deleteCards_WhenIdsExist_ShouldReturnNoContent() throws Exception {
         List<Long> ids = List.of(1L, 2L);
-        doNothing().when(cardService).deleteCards(ids);
-
-        mockMvc.perform(delete(ENDPOINT)
+        mockMvc.perform(delete(ENDPOINT).with(jwt)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(ids)))
                 .andExpect(status().isNoContent());
-
-        verify(cardService, times(1)).deleteCards(ids);
-        verifyNoInteractions(cardHistoryService);
     }
 
     @Test
     void deleteCards_WhenCardNotFound_ShouldReturnNotFound() throws Exception {
         List<Long> ids = List.of(1L, 999L);
-        doThrow(new CardNotFoundException(999L)).when(cardService).deleteCards(ids);
-
-        mockMvc.perform(delete(ENDPOINT)
+        mockMvc.perform(delete(ENDPOINT).with(jwt)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(ids)))
                 .andExpect(status().isNotFound());
-
-        verify(cardService, times(1)).deleteCards(ids);
-        verifyNoInteractions(cardHistoryService);
     }
 
     @Test
     void setHints_whenCardExists_updatesHints() throws Exception {
-        var hintRequest = HintRequest.builder()
-                .hintFront("f")
-                .hintBack("b")
-                .build();
-        when(cardService.setHints(hintRequest, 1L)).thenReturn(CardResponse.fromEntity(c1));
-
         String content = """
             {"hintFront":"f","hintBack":"b"}
             """;
 
-        mockMvc.perform(patch(ENDPOINT + "/" + 1L + "/hints")
+        mockMvc.perform(patch(ENDPOINT + "/" + 1L + "/hints").with(jwt)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(content))
                 .andExpect(status().isOk());
-        verify(cardService, times(1)).setHints(hintRequest, 1L);
-
     }
 }
