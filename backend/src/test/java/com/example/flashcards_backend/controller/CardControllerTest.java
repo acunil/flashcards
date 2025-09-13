@@ -48,29 +48,26 @@ class CardControllerTest extends AbstractIntegrationTest {
   private Card c1;
   private Card c2;
   private Subject subject1;
-  private Deck deck;
-  private CardHistory cardHistory1;
 
   @BeforeEach
   void setUp() {
     jwt = jwtForTestUser();
     subject1 = Subject.builder().name("Subject 1").user(testUser).build();
     subjectRepository.saveAndFlush(subject1);
-    deck = Deck.builder().name("Deck 1").subject(subject1).user(subject1.getUser()).build();
+    Deck deck = Deck.builder().name("Deck 1").subject(subject1).user(subject1.getUser()).build();
     deckRepository.saveAndFlush(deck);
     c1 = Card.builder().front("f1").back("b1").subject(subject1).user(testUser).build();
     c2 = Card.builder().front("f2").back("b2").subject(subject1).user(testUser).build();
     cardRepository.saveAndFlush(c1);
     cardRepository.saveAndFlush(c2);
-    cardHistory1 =
-        CardHistory.builder()
-            .avgRating(2.0)
-            .viewCount(10)
-            .lastViewed(LocalDateTime.parse("2023-10-01T12:00:00"))
-            .lastRating(3)
-            .card(c1)
-            .user(testUser)
-            .build();
+    CardHistory cardHistory1 = CardHistory.builder()
+        .avgRating(2.0)
+        .viewCount(10)
+        .lastViewed(LocalDateTime.parse("2023-10-01T12:00:00"))
+        .lastRating(3)
+        .card(c1)
+        .user(testUser)
+        .build();
     cardHistoryRepository.saveAndFlush(cardHistory1);
     objectMapper.registerModule(new JavaTimeModule());
   }
@@ -178,7 +175,7 @@ class CardControllerTest extends AbstractIntegrationTest {
 
   @Test
   void deleteCards_WhenIdsExist_ShouldReturnNoContent() throws Exception {
-    List<Long> ids = List.of(1L, 2L);
+    List<Long> ids = List.of(c1.getId(), c2.getId());
     mockMvc
         .perform(
             delete(ENDPOINT)

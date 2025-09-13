@@ -9,6 +9,7 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -28,10 +29,11 @@ public class UserStatsController {
             content = @Content(schema = @Schema(implementation = UserStatsResponse.class), mediaType = "application/json"))
     @ApiResponse(responseCode = "404", description = "User not found", content = @Content)
     @GetMapping
-    public UserStatsResponse getForUser(
+    public ResponseEntity<UserStatsResponse> getForUser(
             @AuthenticationPrincipal Jwt jwt
     ) {
         User user = currentUserService.getCurrentUser(jwt);
-        return service.getForUserId(user.getId());
+      UserStatsResponse response = service.getForUserId(user.getId());
+      return ResponseEntity.ok(response);
     }
 }
