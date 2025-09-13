@@ -9,5 +9,4 @@ import java.lang.annotation.Target;
 @NotNull
 @Length(min = 1, max = 100, message = "Card content must be between 1 and 100 characters")
 @Target(ElementType.TYPE_USE)
-public @interface CardContent {
-}
+public @interface CardContent {}

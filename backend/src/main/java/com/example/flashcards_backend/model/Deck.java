@@ -15,15 +15,15 @@ import lombok.extern.slf4j.Slf4j;
 @SuperBuilder
 public class Deck extends BaseEntity {
 
-    @Column(unique = true, length = 40, nullable = false)
-    @Size(min = 1, max = 40, message = "Deck name must be between 1 and 40 characters")
-    private String name;
+  @Column(unique = true, length = 40, nullable = false)
+  @Size(min = 1, max = 40, message = "Deck name must be between 1 and 40 characters")
+  private String name;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "subject_id", nullable = false)
-    private Subject subject;
+  @ManyToOne(fetch = FetchType.LAZY)
+  @JoinColumn(name = "subject_id", nullable = false)
+  private Subject subject;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "user_id", nullable = false)
-    private User user;
+  @ManyToOne(fetch = FetchType.LAZY, optional = false)
+  @JoinColumn(name = "user_id", nullable = false)
+  private User user;
 }
