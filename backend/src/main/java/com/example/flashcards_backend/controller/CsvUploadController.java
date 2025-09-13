@@ -1,6 +1,7 @@
 package com.example.flashcards_backend.controller;
 
 import com.example.flashcards_backend.dto.CsvUploadResponseDto;
+import com.example.flashcards_backend.exception.InvalidCsvFormatException;
 import com.example.flashcards_backend.service.CsvUploadServiceImpl;
 import com.example.flashcards_backend.service.CurrentUserService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -26,7 +27,8 @@ import java.util.Objects;
 @RequestMapping("/csv")
 @Slf4j
 public class CsvUploadController {
-    public static final String CSV_UPLOAD_FORMAT = """
+  public static final String CSV_UPLOAD_FORMAT =
+      """
                 CSV file to upload. Format: front,back,hint_front,hint_back,decks. Headers required. ; = separator for decks.
                 \s
                 Example:
@@ -36,42 +38,53 @@ public class CsvUploadController {
                 das Haus,house,front hint,back hint,Buildings;German Basics
             """;
 
-    private final CsvUploadServiceImpl csvUploadService;
-    private final CurrentUserService currentUserService;
+  private final CsvUploadServiceImpl csvUploadService;
+  private final CurrentUserService currentUserService;
 
-    @Operation(summary = "Upload CSV file for card import",
-            description = "Uploads a CSV file containing flashcards and processes it for import.")
-    @ApiResponse(responseCode = "200", description = "CSV file processed successfully",
-            content = @Content(mediaType = "application/json",
-                    schema = @Schema(implementation = CsvUploadResponseDto.class)))
-    @ApiResponse(responseCode = "400", description = "Bad request, no file provided",
-            content = @Content(mediaType = "application/json"))
-    @ApiResponse(responseCode = "500", description = "Internal server error, could not process CSV",
-            content = @Content(mediaType = "application/json"))
-    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, path = "/{subjectId}")
-    public ResponseEntity<CsvUploadResponseDto> uploadCsv(
-            @Parameter(
-                    description = CSV_UPLOAD_FORMAT,
-                    required = true,
-                    content = @Content(mediaType = "text/csv")
-            )
-            @RequestParam MultipartFile file,
-            @PathVariable("subjectId") Long subjectId,
-            @AuthenticationPrincipal Jwt jwt
-    ) {
-        currentUserService.getCurrentUser(jwt);
-        log.info("CSV upload for subject {}", subjectId);
-        if (Objects.isNull(file) || file.isEmpty()) {
-            log.error("CSV upload failed: no file provided");
-            return ResponseEntity.badRequest().build();
-        }
-
-        try (InputStream is = file.getInputStream()) {
-            CsvUploadResponseDto response = csvUploadService.uploadCsv(is, subjectId);
-            return ResponseEntity.ok(response);
-        } catch (Exception e) {
-            log.error("Error importing CSV", e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-        }
+  @Operation(
+      summary = "Upload CSV file for card import",
+      description = "Uploads a CSV file containing flashcards and processes it for import.")
+  @ApiResponse(
+      responseCode = "200",
+      description = "CSV file processed successfully",
+      content =
+          @Content(
+              mediaType = "application/json",
+              schema = @Schema(implementation = CsvUploadResponseDto.class)))
+  @ApiResponse(
+      responseCode = "400",
+      description = "Bad request, no file provided",
+      content = @Content(mediaType = "application/json"))
+  @ApiResponse(
+      responseCode = "500",
+      description = "Internal server error, could not process CSV",
+      content = @Content(mediaType = "application/json"))
+  @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, path = "/{subjectId}")
+  public ResponseEntity<CsvUploadResponseDto> uploadCsv(
+      @Parameter(
+              description = CSV_UPLOAD_FORMAT,
+              required = true,
+              content = @Content(mediaType = "text/csv"))
+          @RequestParam
+          MultipartFile file,
+      @PathVariable("subjectId") Long subjectId,
+      @AuthenticationPrincipal Jwt jwt) {
+    currentUserService.getCurrentUser(jwt);
+    log.info("CSV upload for subject {}", subjectId);
+    if (Objects.isNull(file) || file.isEmpty()) {
+      log.error("CSV upload failed: no file provided");
+      return ResponseEntity.badRequest().build();
     }
+
+    try (InputStream is = file.getInputStream()) {
+      CsvUploadResponseDto response = csvUploadService.uploadCsv(is, subjectId);
+      return ResponseEntity.ok(response);
+    } catch (InvalidCsvFormatException e) {
+      log.error("CSV upload failed: invalid format", e);
+      return ResponseEntity.badRequest().build();
+    } catch (Exception e) {
+      log.error("Error importing CSV", e);
+      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+    }
+  }
 }

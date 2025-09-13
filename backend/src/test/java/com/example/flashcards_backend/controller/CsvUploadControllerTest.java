@@ -47,7 +47,7 @@ class CsvUploadControllerTest extends AbstractIntegrationTest {
   }
 
   @Test
-  void uploadCsv_serviceThrows_returnsInternalServerErrorAndLogsError() throws Exception {
+  void uploadCsv_invalidFileFormat_returnsBadRequest() throws Exception {
     MockMultipartFile file =
         new MockMultipartFile("file", "test.csv", "text/csv", "invalid,format,file".getBytes());
     mockMvc
@@ -56,7 +56,7 @@ class CsvUploadControllerTest extends AbstractIntegrationTest {
                 .file(file)
                 .with(jwt)
                 .contentType(MediaType.MULTIPART_FORM_DATA))
-        .andExpect(status().isInternalServerError());
+        .andExpect(status().isBadRequest());
   }
 
   @Test
@@ -70,18 +70,20 @@ class CsvUploadControllerTest extends AbstractIntegrationTest {
         """;
     MockMultipartFile file =
         new MockMultipartFile("file", "test.csv", "text/csv", csvContents.getBytes());
-    ResultActions response = mockMvc
-        .perform(
-            multipart(PATH + "/" + subjectOne.getId())
-                .file(file)
-                .with(jwt)
-                .contentType(MediaType.MULTIPART_FORM_DATA))
-        .andExpect(status().isOk())
-        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-        .andExpect(jsonPath("$.saved").isArray())
-        .andExpect(jsonPath("$.duplicates").isArray());
+    ResultActions response =
+        mockMvc
+            .perform(
+                multipart(PATH + "/" + subjectOne.getId())
+                    .file(file)
+                    .with(jwt)
+                    .contentType(MediaType.MULTIPART_FORM_DATA))
+            .andExpect(status().isOk())
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+            .andExpect(jsonPath("$.saved").isArray())
+            .andExpect(jsonPath("$.duplicates").isArray());
     String responseBody = response.andReturn().getResponse().getContentAsString();
-    CsvUploadResponseDto responseDto = objectMapper.readValue(responseBody, CsvUploadResponseDto.class);
+    CsvUploadResponseDto responseDto =
+        objectMapper.readValue(responseBody, CsvUploadResponseDto.class);
     assertThat(responseDto.saved()).hasSize(3);
     assertThat(responseDto.duplicates()).isEmpty();
     assertThat(responseDto.saved())
@@ -90,19 +92,27 @@ class CsvUploadControllerTest extends AbstractIntegrationTest {
     assertThat(responseDto.saved())
         .extracting("back")
         .containsExactlyInAnyOrder("b", "d", "withHintB");
-    Optional<CardResponse> withHintF = responseDto.saved().stream().filter(cardResponse -> cardResponse.front().equals("withHintF")).findFirst();
+    Optional<CardResponse> withHintF =
+        responseDto.saved().stream()
+            .filter(cardResponse -> cardResponse.front().equals("withHintF"))
+            .findFirst();
     assertThat(withHintF).isPresent();
     assertThat(withHintF.get().decks()).hasSize(2);
     assertThat(withHintF.get().hintFront()).isEqualTo("h1");
     assertThat(withHintF.get().hintBack()).isEqualTo("h2");
 
-    Optional<CardResponse> a = responseDto.saved().stream().filter(cardResponse -> cardResponse.front().equals("a")).findFirst();
+    Optional<CardResponse> a =
+        responseDto.saved().stream()
+            .filter(cardResponse -> cardResponse.front().equals("a"))
+            .findFirst();
     assertThat(a).isPresent();
     assertThat(a.get().decks()).isEmpty();
-    Optional<CardResponse> c = responseDto.saved().stream().filter(cardResponse -> cardResponse.front().equals("c")).findFirst();
+    Optional<CardResponse> c =
+        responseDto.saved().stream()
+            .filter(cardResponse -> cardResponse.front().equals("c"))
+            .findFirst();
     assertThat(c).isPresent();
     assertThat(c.get().decks()).singleElement().extracting("name").isEqualTo("d1");
-
   }
 
   @AfterEach

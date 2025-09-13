@@ -12,13 +12,14 @@ import java.util.UUID;
 
 public interface CardRepository extends JpaRepository<Card, Long> {
 
-    @Modifying
-    @Query("DELETE FROM Card c WHERE c.id IN :ids")
-    void deleteByIds(List<Long> ids);
+  @Modifying
+  @Query("DELETE FROM Card c WHERE c.id IN :ids")
+  void deleteByIds(List<Long> ids);
 
-    Optional<Card> findBySubjectIdAndFrontAndBack(Long subjectId, String front, String back);
+  Optional<Card> findBySubjectIdAndFrontAndBack(Long subjectId, String front, String back);
 
-    @Query("""
+  @Query(
+      """
             SELECT
                 c.id AS cardId,
                 c.front AS front,
@@ -41,60 +42,62 @@ public interface CardRepository extends JpaRepository<Card, Long> {
               AND (:cardId IS NULL OR c.id = :cardId)
             ORDER BY c.id
             """)
-    List<CardDeckRowProjection> findCardDeckRows(@Param("subjectId") Long subjectId, @Param("cardId") Long cardId);
+  List<CardDeckRowProjection> findCardDeckRows(
+      @Param("subjectId") Long subjectId, @Param("cardId") Long cardId);
 
-    default List<CardDeckRowProjection> findCardDeckRowsBySubjectId(Long subjectId) {
-        return findCardDeckRows(subjectId, null);
-    }
+  default List<CardDeckRowProjection> findCardDeckRowsBySubjectId(Long subjectId) {
+    return findCardDeckRows(subjectId, null);
+  }
 
-    default List<CardDeckRowProjection> findCardDeckRowsByCardId(Long cardId) {
-        return findCardDeckRows(null, cardId);
-    }
+  default List<CardDeckRowProjection> findCardDeckRowsByCardId(Long cardId) {
+    return findCardDeckRows(null, cardId);
+  }
 
-    @Query("""
+  @Query(
+      """
             SELECT COUNT(c)
             FROM Card c
             WHERE c.user.id = :userId
             """)
-    long countByUserId(@Param("userId") UUID userId);
+  long countByUserId(@Param("userId") UUID userId);
 
-    Optional<Card> findTopByCardHistories_User_IdOrderByCardHistories_AvgRatingDesc(UUID userId);
+  Optional<Card> findTopByCardHistories_User_IdOrderByCardHistories_AvgRatingDesc(UUID userId);
 
-    default Optional<Card> findHardestByUserId(UUID userId) {
-        return findTopByCardHistories_User_IdOrderByCardHistories_AvgRatingDesc(userId);
-    }
+  default Optional<Card> findHardestByUserId(UUID userId) {
+    return findTopByCardHistories_User_IdOrderByCardHistories_AvgRatingDesc(userId);
+  }
 
-    Optional<Card> findTopByCardHistories_User_IdOrderByCardHistories_ViewCountDesc(UUID userId);
+  Optional<Card> findTopByCardHistories_User_IdOrderByCardHistories_ViewCountDesc(UUID userId);
 
-    default Optional<Card> findMostViewedByUserId(UUID userId) {
-        return findTopByCardHistories_User_IdOrderByCardHistories_ViewCountDesc(userId);
-    }
+  default Optional<Card> findMostViewedByUserId(UUID userId) {
+    return findTopByCardHistories_User_IdOrderByCardHistories_ViewCountDesc(userId);
+  }
 
-    @Modifying
-    @Query(value = "DELETE FROM card_deck WHERE card_id IN :cardIds", nativeQuery = true)
-    void deleteDeckAssociationsByCardIds(@Param("cardIds") List<Long> cardIds);
+  @Modifying
+  @Query(value = "DELETE FROM card_deck WHERE card_id IN :cardIds", nativeQuery = true)
+  void deleteDeckAssociationsByCardIds(@Param("cardIds") List<Long> cardIds);
 
-    boolean existsByFrontAndBackAndSubjectId(String front, String back, Long subjectId);
+  boolean existsByFrontAndBackAndSubjectId(String front, String back, Long subjectId);
 
-    @Query("""
+  @Query(
+      """
             SELECT COUNT(c)
             FROM Card c
             LEFT JOIN CardHistory ch ON ch.card = c
             WHERE c.user.id = :userId
               AND (ch IS NULL OR ch.lastViewed IS NULL)
             """)
-    Long countByLastViewedIsNullOrZeroAndUserId(@Param("userId") UUID userId);
+  Long countByLastViewedIsNullOrZeroAndUserId(@Param("userId") UUID userId);
 
-    default Long countUnviewedByUserId(UUID userId) {
-        return countByLastViewedIsNullOrZeroAndUserId(userId);
-    }
+  default Long countUnviewedByUserId(UUID userId) {
+    return countByLastViewedIsNullOrZeroAndUserId(userId);
+  }
 
-    @Query(
-            "SELECT c FROM Card c LEFT JOIN c.decks d WHERE d.id = :deckId"
-    )
-    List<Card> findByDeckId(Long deckId);
+  @Query("SELECT c FROM Card c LEFT JOIN c.decks d WHERE d.id = :deckId")
+  List<Card> findByDeckId(Long deckId);
 
-    @Query("""
+  @Query(
+      """
             SELECT c.front AS front,
                    c.back AS back,
                    c.hintFront AS hintFront,
@@ -104,9 +107,10 @@ public interface CardRepository extends JpaRepository<Card, Long> {
             LEFT JOIN c.decks d
             WHERE c.subject.id = :subjectId
             """)
-    List<CardExportProjection> findExportDataBySubjectId(@Param("subjectId") Long subjectId);
+  List<CardExportProjection> findExportDataBySubjectId(@Param("subjectId") Long subjectId);
 
-    @Query("""
+  @Query(
+      """
             SELECT c.front AS front,
                    c.back AS back,
                    c.hintFront AS hintFront,
@@ -117,6 +121,5 @@ public interface CardRepository extends JpaRepository<Card, Long> {
             WHERE d.id = :deckId
             GROUP BY c.id
             """)
-    List<CardExportProjection> findExportDataByDeckId(@Param("deckId") Long deckId);
-
+  List<CardExportProjection> findExportDataByDeckId(@Param("deckId") Long deckId);
 }
