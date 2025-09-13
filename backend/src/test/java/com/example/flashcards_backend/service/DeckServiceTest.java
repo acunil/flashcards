@@ -110,7 +110,7 @@ class DeckServiceTest {
         assertThatThrownBy(() ->
             deckService.renameDeck(1L, newName))
             .isInstanceOf(DuplicateDeckNameException.class)
-            .hasMessageContaining("Deck name must be unique: " + newName);
+            .hasMessageContaining("A deck with the name '" + newName + "' already exists in subject Subject 1");
     }
 
 }

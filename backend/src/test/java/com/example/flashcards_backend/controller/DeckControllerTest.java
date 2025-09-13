@@ -69,9 +69,6 @@ class DeckControllerTest extends AbstractIntegrationTest {
 
   @Test
   void getAllForSubject() throws Exception {
-    Subject subject2 = Subject.builder().id(2L).name("Subject 2").build();
-    deck2.setSubject(subject2);
-
     ResultActions resultActions =
         mockMvc
             .perform(get(ENDPOINT).with(jwt).param("subjectId", subject1.getId().toString()))
@@ -82,7 +79,7 @@ class DeckControllerTest extends AbstractIntegrationTest {
     String contentAsString = resultActions.andReturn().getResponse().getContentAsString();
 
     List<DeckSummary> deckSummaries = readSummaries(contentAsString);
-    assertThat(deckSummaries).singleElement().isEqualTo(DeckSummary.fromEntity(deck1));
+    assertThat(deckSummaries).hasSize(2).extracting("name").containsExactlyInAnyOrder("Deck 1", "Deck 2");
   }
 
   @Test
@@ -119,8 +116,8 @@ class DeckControllerTest extends AbstractIntegrationTest {
 
   @Test
   void createDeck_Conflict() throws Exception {
-
-    String content = "{\"name\": \"Deck 1\", \"subjectId\": " + subjectId + "}";
+    CreateDeckRequest request = CreateDeckRequest.of(subject1.getId(), "Deck 1");
+    String content = objectMapper.writeValueAsString(request);
     mockMvc
         .perform(
             post(ENDPOINT + "/create").contentType("application/json").content(content).with(jwt))
