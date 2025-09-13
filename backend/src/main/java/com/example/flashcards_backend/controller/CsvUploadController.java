@@ -8,7 +8,6 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -33,8 +32,8 @@ public class CsvUploadController {
                 Example:
                 \s
                 front,back,hint_front,hint_back,decks
-                die Katze,cat,Animals,,sounds like cat;German Basics
-                das Haus,house,Buildings,,;German Basics
+                die Katze,cat,sounds like,,Animals;German Basics
+                das Haus,house,front hint,back hint,Buildings;German Basics
             """;
 
     private final CsvUploadServiceImpl csvUploadService;

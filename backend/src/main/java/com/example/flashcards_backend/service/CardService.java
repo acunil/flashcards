@@ -226,6 +226,8 @@ public class CardService {
         .id(card.getId())
         .front(card.getFront())
         .back(card.getBack())
+        .hintFront(card.getHintFront())
+        .hintBack(card.getHintBack())
         .decks(card.getDecks().stream().map(DeckSummary::fromEntity).toList())
         .alreadyExisted(alreadyExisted)
         .build();
