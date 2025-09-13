@@ -75,10 +75,10 @@ class RestExceptionHandlerTest {
 
     @Test
     void handleDuplicateDeckNameException() {
-        DuplicateDeckNameException ex = new DuplicateDeckNameException("Duplicate deck");
+        DuplicateDeckNameException ex = new DuplicateDeckNameException("Duplicate deck", "My Subject");
         ResponseEntity<Map<String, String>> response = handler.handleDuplicateDeckNameException(ex);
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CONFLICT);
         assertThat(response.getHeaders().getContentType()).isEqualTo(MediaType.APPLICATION_JSON);
-        assertThat(response.getBody()).containsEntry("error", "A deck with the name 'Duplicate deck' already exists");
+        assertThat(response.getBody()).containsEntry("error", "A deck with the name 'Duplicate deck' already exists in subject My Subject");
     }
 }

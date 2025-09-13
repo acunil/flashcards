@@ -1,5 +1,9 @@
 package com.example.flashcards_backend.service;
 
+import static java.util.Objects.isNull;
+import static java.util.stream.Collectors.toList;
+import static java.util.stream.Collectors.toSet;
+
 import com.example.flashcards_backend.dto.CreateDeckRequest;
 import com.example.flashcards_backend.exception.DeckNotFoundException;
 import com.example.flashcards_backend.exception.DuplicateDeckNameException;
@@ -9,19 +13,13 @@ import com.example.flashcards_backend.model.Subject;
 import com.example.flashcards_backend.repository.CardRepository;
 import com.example.flashcards_backend.repository.DeckRepository;
 import jakarta.transaction.Transactional;
-import lombok.AllArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.dao.DataIntegrityViolationException;
-import org.springframework.stereotype.Service;
-
-import static java.util.Objects.isNull;
-import static java.util.stream.Collectors.toList;
-import static java.util.stream.Collectors.toSet;
-
 import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
+import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
 
 @Slf4j
 @Service
@@ -59,30 +57,25 @@ public class CardDeckService {
 
     @Transactional
     public Deck createDeck(CreateDeckRequest request) {
-        log.info("Creating deck '{}'", request.name());
-        Subject subject = Subject.builder().id(request.subjectId()).build();
-        Deck deck = Deck.builder()
+      log.info("Creating deck '{}'", request.name());
+      Subject subject = subjectService.findById(request.subjectId());
+      if (deckRepository.existsByNameAndSubject(request.name(), subject)) {
+        throw new DuplicateDeckNameException(request.name(), subject.getName());
+      }
+      Deck deck = Deck.builder()
                 .name(request.name().trim())
                 .subject(subject)
+                .user(subject.getUser())
                 .build();
-        try {
-            deck = deckRepository.saveAndFlush(deck);
-        } catch (DataIntegrityViolationException e) {
-            log.error(e.getMessage(), e);
-            throw new DuplicateDeckNameException(
-                    "A deck with the name '"
-                            + request.name()
-                            + "' already exists in subject "
-                            + subject.getName());
-        }
+      deck = deckRepository.saveAndFlush(deck);
 
-        if (!isNull(request.cardIds()) && !request.cardIds().isEmpty()) {
-            Set<Card> cards = getCards(request);
-            Deck finalDeck = deck;
-            cards.forEach(card -> card.addDeck(finalDeck));
-        }
+      if (!isNull(request.cardIds()) && !request.cardIds().isEmpty()) {
+          Set<Card> cards = getCards(request);
+          Deck finalDeck = deck;
+          cards.forEach(card -> card.addDeck(finalDeck));
+      }
 
-        return deck;
+      return deck;
     }
 
     @Transactional

@@ -44,7 +44,7 @@ public class DeckService {
         log.info("Renaming deck with id {} to {}", id, name);
         Deck deck = getDeckById(id);
         if (deckRepository.existsByNameAndSubject(name.trim(), deck.getSubject())) {
-            throw new DuplicateDeckNameException("Deck name must be unique: " + name);
+            throw new DuplicateDeckNameException(name, deck.getSubject().getName());
         }
         deck.setName(name.trim());
         return deck;
