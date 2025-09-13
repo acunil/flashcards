@@ -3,14 +3,13 @@ package com.example.flashcards_backend.model;
 import com.example.flashcards_backend.annotations.CardContent;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
+import java.util.HashSet;
+import java.util.Objects;
+import java.util.Set;
 import lombok.*;
 import lombok.extern.slf4j.Slf4j;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.validator.constraints.Length;
-
-import java.util.HashSet;
-import java.util.Objects;
-import java.util.Set;
 
 @Slf4j
 @Entity
