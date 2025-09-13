@@ -6,12 +6,10 @@ import java.util.List;
 
 @Builder
 public record CreateCardResponse(
-        Long id,
-        String front,
-        String back,
-        String hintFront,
-        String hintBack,
-        List<DeckSummary> decks,
-        Boolean alreadyExisted
-) {
-}
+    Long id,
+    String front,
+    String back,
+    String hintFront,
+    String hintBack,
+    List<DeckSummary> decks,
+    Boolean alreadyExisted) {}
