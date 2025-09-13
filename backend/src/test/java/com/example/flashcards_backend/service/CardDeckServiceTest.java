@@ -1,5 +1,10 @@
 package com.example.flashcards_backend.service;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.anySet;
+import static org.mockito.Mockito.*;
+
 import com.example.flashcards_backend.dto.CreateDeckRequest;
 import com.example.flashcards_backend.exception.DeckNotFoundException;
 import com.example.flashcards_backend.exception.DuplicateDeckNameException;
@@ -9,19 +14,13 @@ import com.example.flashcards_backend.model.Subject;
 import com.example.flashcards_backend.model.User;
 import com.example.flashcards_backend.repository.CardRepository;
 import com.example.flashcards_backend.repository.DeckRepository;
+import java.util.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.anySet;
-import static org.mockito.Mockito.*;
-
-import java.util.*;
 
 @ExtendWith(SpringExtension.class)
 class CardDeckServiceTest {

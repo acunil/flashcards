@@ -79,7 +79,10 @@ class DeckControllerTest extends AbstractIntegrationTest {
     String contentAsString = resultActions.andReturn().getResponse().getContentAsString();
 
     List<DeckSummary> deckSummaries = readSummaries(contentAsString);
-    assertThat(deckSummaries).hasSize(2).extracting("name").containsExactlyInAnyOrder("Deck 1", "Deck 2");
+    assertThat(deckSummaries)
+        .hasSize(2)
+        .extracting("name")
+        .containsExactlyInAnyOrder("Deck 1", "Deck 2");
   }
 
   @Test
@@ -101,11 +104,15 @@ class DeckControllerTest extends AbstractIntegrationTest {
 
   @Test
   void createDeck() throws Exception {
-    CreateDeckRequest request = CreateDeckRequest.of(subject1.getId(), "New Deck", card1.getId(), card2.getId());
+    CreateDeckRequest request =
+        CreateDeckRequest.of(subject1.getId(), "New Deck", card1.getId(), card2.getId());
     String content = objectMapper.writeValueAsString(request);
     mockMvc
         .perform(
-            post(ENDPOINT + "/create").contentType(MediaType.APPLICATION_JSON).content(content).with(jwt))
+            post(ENDPOINT + "/create")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(content)
+                .with(jwt))
         .andExpect(status().isCreated())
         .andExpect(jsonPath("$.id").isNumber())
         .andExpect(jsonPath("$.name").value("New Deck"));
