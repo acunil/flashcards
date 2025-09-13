@@ -1,14 +1,13 @@
 package com.example.flashcards_backend.model;
 
 import jakarta.persistence.*;
+import java.util.HashSet;
+import java.util.Set;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.SuperBuilder;
-
-import java.util.HashSet;
-import java.util.Set;
 
 @Entity
 @Table(name = "subject")
@@ -18,36 +17,35 @@ import java.util.Set;
 @Setter
 public class Subject extends BaseEntity {
 
-    @Column(nullable = false, unique = true)
-    private String name;
+  @Column(nullable = false, unique = true)
+  private String name;
 
-    @Column(name = "front_label")
-    private String frontLabel;
+  @Column(name = "front_label")
+  private String frontLabel;
 
-    @Column(name = "back_label")
-    private String backLabel;
+  @Column(name = "back_label")
+  private String backLabel;
 
-    @Enumerated(EnumType.STRING)
-    @Column(name = "default_side")
-    private Side defaultSide;
+  @Enumerated(EnumType.STRING)
+  @Column(name = "default_side")
+  private Side defaultSide;
 
-    @Column(name = "display_deck_names")
-    private Boolean displayDeckNames;
+  @Column(name = "display_deck_names")
+  private Boolean displayDeckNames;
 
+  @OneToMany(mappedBy = "subject", cascade = CascadeType.ALL, orphanRemoval = true)
+  private Set<Deck> decks = new HashSet<>();
 
-    @OneToMany(mappedBy = "subject", cascade = CascadeType.ALL, orphanRemoval = true)
-    private Set<Deck> decks = new HashSet<>();
+  @OneToMany(mappedBy = "subject", cascade = CascadeType.ALL, orphanRemoval = true)
+  private Set<Card> cards = new HashSet<>();
 
-    @OneToMany(mappedBy = "subject", cascade = CascadeType.ALL, orphanRemoval = true)
-    private Set<Card> cards = new HashSet<>();
+  @ManyToOne(fetch = FetchType.LAZY, optional = false)
+  @JoinColumn(name = "user_id", nullable = false)
+  private User user;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "user_id", nullable = false)
-    private User user;
-
-    public enum Side {
-        FRONT,
-        BACK,
-        ANY
-    }
+  public enum Side {
+    FRONT,
+    BACK,
+    ANY
+  }
 }
