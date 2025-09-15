@@ -20,6 +20,7 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .cors(cors -> cors.configurationSource(corsConfigurationSource())) // use CorsConfigurationSource
                 .authorizeHttpRequests(authz -> authz
+                        .requestMatchers("/health").permitAll()
                         // allow swagger + API docs without authentication
                         .requestMatchers(
                                 "/swagger-ui.html",
