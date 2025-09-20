@@ -1,11 +1,10 @@
 package com.example.flashcards_backend.repository;
 
-import java.util.List;
-
-public interface CardExportProjection {
+public interface CardExportRowProjection {
+    Long getCardId();
     String getFront();
     String getBack();
     String getHintFront();
     String getHintBack();
-    List<String> getDecks();
+    String getDeck();
 }

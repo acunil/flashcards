@@ -8,7 +8,8 @@ import com.example.flashcards_backend.exception.DeckNotFoundException;
 import com.example.flashcards_backend.exception.SubjectNotFoundException;
 import com.example.flashcards_backend.model.Deck;
 import com.example.flashcards_backend.model.Subject;
-import com.example.flashcards_backend.repository.CardExportProjection;
+import com.example.flashcards_backend.repository.CardExportRowProjection;
+import com.example.flashcards_backend.repository.CardExportRowProjectionImpl;
 import com.example.flashcards_backend.repository.CardRepository;
 import java.io.IOException;
 import java.util.List;
@@ -31,23 +32,24 @@ class CsvExportServiceTest {
 
   Subject subject;
   Deck deck;
-  CardExportProjection card1;
-  CardExportProjection card2;
+  CardExportRowProjection cardRow1;
+  CardExportRowProjection cardRow2;
+  CardExportRowProjection cardRow3;
 
   @BeforeEach
   void setUp() {
     csvExportService = new CsvExportServiceImpl(cardRepository, subjectService, deckService);
     subject = Subject.builder().id(1L).name("Subject 1").build();
     deck = Deck.builder().id(1L).name("Deck 1").subject(subject).build();
-    card1 =
-        cardExportProjection("Front 1", "Back 1", "Hint Front 1", "Hint Back 1", List.of("Deck 1"));
-    card2 = cardExportProjection("Front 2", "Back 2", null, null, List.of("Deck 1", "Deck 2"));
+    cardRow1 = new CardExportRowProjectionImpl(1L, "Front 1", "Back 1", "Hint Front 1", "Hint Back 1", "Deck 1");
+    cardRow2 = new CardExportRowProjectionImpl(1L, "Front 1", "Back 1", "Hint Front 1", "Hint Back 1", "Deck 2");
+    cardRow3 = new CardExportRowProjectionImpl(2L, "Front 2", "Back 2", null, null, "Deck 1");
   }
 
   @Test
   void exportCards_fromDeck_createsCsvWithCards_andDecksOnlyListsSearchedDeck() throws IOException {
     when(deckService.getDeckById(1L)).thenReturn(deck);
-    when(cardRepository.findExportDataByDeckId(1L)).thenReturn(List.of(card1, card2));
+    when(cardRepository.findExportRowsByDeckId(1L)).thenReturn(List.of(cardRow1, cardRow3));
 
     byte[] bytes = csvExportService.exportCards(CsvExportService.CardSource.DECK, 1L);
     assertThat(bytes).isNotEmpty();
@@ -66,7 +68,7 @@ class CsvExportServiceTest {
   @Test
   void exportCards_fromSubject_createsCsvWithCards() throws IOException {
     when(subjectService.findById(1L)).thenReturn(subject);
-    when(cardRepository.findExportDataBySubjectId(1L)).thenReturn(List.of(card1, card2));
+    when(cardRepository.findExportRowsBySubjectId(1L)).thenReturn(List.of(cardRow1, cardRow2, cardRow3));
 
     byte[] bytes = csvExportService.exportCards(CsvExportService.CardSource.SUBJECT, 1L);
     assertThat(bytes).isNotEmpty();
@@ -74,8 +76,8 @@ class CsvExportServiceTest {
     String expectedContents =
         """
         front,back,hint_front,hint_back,decks
-        Front 1,Back 1,Hint Front 1,Hint Back 1,Deck 1
-        Front 2,Back 2,,,Deck 1;Deck 2
+        Front 1,Back 1,Hint Front 1,Hint Back 1,Deck 1;Deck 2
+        Front 2,Back 2,,,Deck 1
         """
             .trim();
 
@@ -100,33 +102,4 @@ class CsvExportServiceTest {
         .isEqualTo("Deck not found with id: 1");
   }
 
-  CardExportProjection cardExportProjection(
-      String front, String back, String hintFront, String hintBack, List<String> decks) {
-    return new CardExportProjection() {
-      @Override
-      public String getFront() {
-        return front;
-      }
-
-      @Override
-      public String getBack() {
-        return back;
-      }
-
-      @Override
-      public String getHintBack() {
-        return hintBack;
-      }
-
-      @Override
-      public String getHintFront() {
-        return hintFront;
-      }
-
-      @Override
-      public List<String> getDecks() {
-        return decks;
-      }
-    };
-  }
 }

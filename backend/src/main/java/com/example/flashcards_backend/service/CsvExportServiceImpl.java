@@ -2,16 +2,18 @@ package com.example.flashcards_backend.service;
 
 import com.example.flashcards_backend.exception.DeckNotFoundException;
 import com.example.flashcards_backend.exception.SubjectNotFoundException;
+import com.example.flashcards_backend.model.CardExport;
 import com.example.flashcards_backend.model.Deck;
 import com.example.flashcards_backend.model.Subject;
-import com.example.flashcards_backend.repository.CardExportProjection;
+import com.example.flashcards_backend.repository.CardExportRowProjection;
 import com.example.flashcards_backend.repository.CardRepository;
-import com.example.flashcards_backend.repository.DeckRepository;
-import com.example.flashcards_backend.repository.SubjectRepository;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.csv.CSVFormat;
@@ -50,27 +52,32 @@ public class CsvExportServiceImpl implements CsvExportService {
     Subject subject = getSubject(subjectId);
 
     log.info("Exporting all cards for subject '{}'", subject.getName());
-    List<CardExportProjection> cards = cardRepository.findExportDataBySubjectId(subjectId);
+    List<CardExportRowProjection> rawRows = cardRepository.findExportRowsBySubjectId(subjectId);
 
-    logCardsFound(cards);
-    return generateCsvFromCardProjections(cards);
+    List<CardExport> exports = groupCardExports(rawRows);
+
+    logCardsFound(exports);
+    return generateCsvFromCardExports(exports);
   }
+
 
   private byte[] generateCsvForDeck(Long deckId) throws DeckNotFoundException, IOException {
     Deck deck = getDeck(deckId);
 
     log.info("Exporting all cards for deck '{}'", deck.getName());
-    List<CardExportProjection> cards = cardRepository.findExportDataByDeckId(deckId);
+    List<CardExportRowProjection> cards = cardRepository.findExportRowsByDeckId(deckId);
 
-    logCardsFound(cards);
-    return generateCsvFromCardProjections(cards, deck);
+    List<CardExport> exports = groupCardExports(cards);
+
+    logCardsFound(exports);
+    return generateCsvFromCardExports(exports, deck);
   }
 
-  private byte[] generateCsvFromCardProjections(List<CardExportProjection> cards) throws IOException {
-    return generateCsvFromCardProjections(cards, null);
+  private byte[] generateCsvFromCardExports(List<CardExport> cards) throws IOException {
+    return generateCsvFromCardExports(cards, null);
   }
 
-  private byte[] generateCsvFromCardProjections(List<CardExportProjection> cards, Deck deck)
+  private byte[] generateCsvFromCardExports(List<CardExport> cards, Deck deck)
       throws IOException {
     StringWriter out = new StringWriter();
     CSVFormat format =
@@ -80,17 +87,38 @@ public class CsvExportServiceImpl implements CsvExportService {
             .get();
 
     try (CSVPrinter printer = new CSVPrinter(out, format)) {
-      for (CardExportProjection card : cards) {
+      for (CardExport card : cards) {
         String decksJoined =
             deck != null
                 ? deck.getName()
-                : String.join(String.valueOf(DECK_SEPARATOR), card.getDecks());
+                : String.join(String.valueOf(DECK_SEPARATOR), card.deckNames());
         printer.printRecord(
-            card.getFront(), card.getBack(), card.getHintFront(), card.getHintBack(), decksJoined);
+            card.front(), card.back(), card.hintFront(), card.hintBack(), decksJoined);
       }
     }
 
     return out.toString().getBytes(StandardCharsets.UTF_8);
+  }
+
+  private static List<CardExport> groupCardExports(List<CardExportRowProjection> rawRows) {
+    Map<Long, List<CardExportRowProjection>> grouped = rawRows.stream()
+        .collect(Collectors.groupingBy(CardExportRowProjection::getCardId));
+
+    return grouped.values().stream()
+        .map(group -> new CardExport(
+            group.getFirst().getCardId(),
+            group.getFirst().getFront(),
+            group.getFirst().getBack(),
+            group.getFirst().getHintFront(),
+            group.getFirst().getHintBack(),
+            group.stream()
+                .map(CardExportRowProjection::getDeck)
+                .filter(Objects::nonNull)
+                .distinct()
+                .sorted()
+                .toList()
+        ))
+        .toList();
   }
 
   private Subject getSubject(Long subjectId) {
@@ -101,7 +129,7 @@ public class CsvExportServiceImpl implements CsvExportService {
     return deckService.getDeckById(deckId);
   }
 
-  private static void logCardsFound(List<CardExportProjection> cards) {
+  private static void logCardsFound(List<CardExport> cards) {
     log.info("{} cards found", cards.size());
   }
 }

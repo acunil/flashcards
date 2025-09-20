@@ -1,14 +1,13 @@
 package com.example.flashcards_backend.repository;
 
 import com.example.flashcards_backend.model.Card;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
-
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
 
 public interface CardRepository extends JpaRepository<Card, Long> {
 
@@ -98,28 +97,30 @@ public interface CardRepository extends JpaRepository<Card, Long> {
 
   @Query(
       """
-            SELECT c.front AS front,
+            SELECT c.id AS cardId,
+                   c.front AS front,
                    c.back AS back,
                    c.hintFront AS hintFront,
                    c.hintBack AS hintBack,
-                   d.name AS decks
+                   d.name AS deck
             FROM Card c
             LEFT JOIN c.decks d
             WHERE c.subject.id = :subjectId
             """)
-  List<CardExportProjection> findExportDataBySubjectId(@Param("subjectId") Long subjectId);
+  List<CardExportRowProjection> findExportRowsBySubjectId(@Param("subjectId") Long subjectId);
 
   @Query(
       """
-            SELECT c.front AS front,
+            SELECT c.id AS cardId,
+                   c.front AS front,
                    c.back AS back,
                    c.hintFront AS hintFront,
                    c.hintBack AS hintBack,
-                   d.name AS decks
+                   d.name AS deck
             FROM Card c
             LEFT JOIN c.decks d
             WHERE d.id = :deckId
             GROUP BY c.id
             """)
-  List<CardExportProjection> findExportDataByDeckId(@Param("deckId") Long deckId);
+  List<CardExportRowProjection> findExportRowsByDeckId(@Param("deckId") Long deckId);
 }
