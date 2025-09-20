@@ -1,9 +1,9 @@
 package com.example.flashcards_backend.service;
 
-import org.springframework.http.ResponseEntity;
+import java.io.IOException;
 
 public interface CsvExportService {
-    ResponseEntity<byte[]> exportCards(CardSource cardSource, Long id);
+    byte[] exportCards(CardSource cardSource, Long id) throws IOException;
 
     enum CardSource {
         SUBJECT, DECK

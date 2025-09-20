@@ -12,9 +12,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
@@ -33,18 +30,18 @@ public class CsvExportServiceImpl implements CsvExportService {
     private final SubjectRepository subjectRepository;
     private final DeckRepository deckRepository;
 
-    public ResponseEntity<byte[]> exportCards(CardSource cardSource, Long id) {
+    public byte[] exportCards(CardSource cardSource, Long id) throws IOException, SubjectNotFoundException, DeckNotFoundException {
         try {
             return switch (cardSource) {
-                case SUBJECT -> createCsvResponse(CardSource.SUBJECT, id, generateCsvForSubject(id));
-                case DECK -> createCsvResponse(CardSource.DECK, id, generateCsvForDeck(id));
+                case SUBJECT -> generateCsvForSubject(id);
+                case DECK -> generateCsvForDeck(id);
             };
         } catch (IOException e) {
             log.error("Error generating CSV", e);
-            return ResponseEntity.badRequest().body(e.getMessage().getBytes());
+            throw e;
         } catch (SubjectNotFoundException | DeckNotFoundException e) {
-            log.error("Entity not found", e);
-            return ResponseEntity.notFound().build();
+            log.error("Source not found", e);
+            throw e;
         }
     }
 
@@ -66,20 +63,6 @@ public class CsvExportServiceImpl implements CsvExportService {
 
         log.info("{} cards found", cards.size());
         return generateCsvFromCardProjections(cards);
-    }
-
-    private ResponseEntity<byte[]> createCsvResponse(CardSource source, Long id, byte[] csv) {
-        String sourceName = switch (source) {
-            case SUBJECT -> getSubject(id).getName();
-            case DECK -> getDeck(id).getName();
-        };
-        String filename = source.name().toLowerCase() + "_" + sourceName + ".csv";
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.parseMediaType("text/csv"));
-        headers.set(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + filename + "\"");
-        return ResponseEntity.ok()
-                .headers(headers)
-                .body(csv);
     }
 
     private byte[] generateCsvFromCardProjections(List<CardExportProjection> cards) throws IOException {
