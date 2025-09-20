@@ -8,16 +8,15 @@ import com.example.flashcards_backend.repository.CardExportProjection;
 import com.example.flashcards_backend.repository.CardRepository;
 import com.example.flashcards_backend.repository.DeckRepository;
 import com.example.flashcards_backend.repository.SubjectRepository;
+import java.io.IOException;
+import java.io.StringWriter;
+import java.nio.charset.StandardCharsets;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
 import org.springframework.stereotype.Service;
-
-import java.io.IOException;
-import java.io.StringWriter;
-import java.nio.charset.StandardCharsets;
-import java.util.List;
 
 @Service
 @Slf4j
@@ -53,7 +52,7 @@ public class CsvExportServiceImpl implements CsvExportService {
     log.info("Exporting all cards for subject '{}'", subject.getName());
     List<CardExportProjection> cards = cardRepository.findExportDataBySubjectId(subjectId);
 
-    log.info("{} cards found", cards.size());
+    logCardsFound(cards);
     return generateCsvFromCardProjections(cards);
   }
 
@@ -63,11 +62,15 @@ public class CsvExportServiceImpl implements CsvExportService {
     log.info("Exporting all cards for deck '{}'", deck.getName());
     List<CardExportProjection> cards = cardRepository.findExportDataByDeckId(deckId);
 
-    log.info("{} cards found", cards.size());
-    return generateCsvFromCardProjections(cards);
+    logCardsFound(cards);
+    return generateCsvFromCardProjections(cards, deck);
   }
 
-  private byte[] generateCsvFromCardProjections(List<CardExportProjection> cards)
+  private byte[] generateCsvFromCardProjections(List<CardExportProjection> cards) throws IOException {
+    return generateCsvFromCardProjections(cards, null);
+  }
+
+  private byte[] generateCsvFromCardProjections(List<CardExportProjection> cards, Deck deck)
       throws IOException {
     StringWriter out = new StringWriter();
     CSVFormat format =
@@ -78,7 +81,10 @@ public class CsvExportServiceImpl implements CsvExportService {
 
     try (CSVPrinter printer = new CSVPrinter(out, format)) {
       for (CardExportProjection card : cards) {
-        String decksJoined = String.join(String.valueOf(DECK_SEPARATOR), card.getDecks());
+        String decksJoined =
+            deck != null
+                ? deck.getName()
+                : String.join(String.valueOf(DECK_SEPARATOR), card.getDecks());
         printer.printRecord(
             card.getFront(), card.getBack(), card.getHintFront(), card.getHintBack(), decksJoined);
       }
@@ -95,5 +101,9 @@ public class CsvExportServiceImpl implements CsvExportService {
 
   private Deck getDeck(Long deckId) {
     return deckRepository.findById(deckId).orElseThrow(() -> new DeckNotFoundException(deckId));
+  }
+
+  private static void logCardsFound(List<CardExportProjection> cards) {
+    log.info("{} cards found", cards.size());
   }
 }
