@@ -26,8 +26,8 @@ public class CsvExportServiceImpl implements CsvExportService {
   private static final char DECK_SEPARATOR = ';';
 
   private final CardRepository cardRepository;
-  private final SubjectRepository subjectRepository;
-  private final DeckRepository deckRepository;
+  private final SubjectService subjectService;
+  private final DeckService deckService;
 
   public byte[] exportCards(CardSource cardSource, Long id)
       throws IOException, SubjectNotFoundException, DeckNotFoundException {
@@ -94,13 +94,11 @@ public class CsvExportServiceImpl implements CsvExportService {
   }
 
   private Subject getSubject(Long subjectId) {
-    return subjectRepository
-        .findById(subjectId)
-        .orElseThrow(() -> new SubjectNotFoundException(subjectId));
+    return subjectService.findById(subjectId);
   }
 
   private Deck getDeck(Long deckId) {
-    return deckRepository.findById(deckId).orElseThrow(() -> new DeckNotFoundException(deckId));
+    return deckService.getDeckById(deckId);
   }
 
   private static void logCardsFound(List<CardExportProjection> cards) {

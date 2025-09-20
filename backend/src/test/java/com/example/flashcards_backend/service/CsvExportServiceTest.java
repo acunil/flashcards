@@ -1,19 +1,16 @@
 package com.example.flashcards_backend.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.when;
 
-import com.example.flashcards_backend.exception.SubjectNotFoundException;
 import com.example.flashcards_backend.model.Deck;
 import com.example.flashcards_backend.model.Subject;
 import com.example.flashcards_backend.repository.CardExportProjection;
 import com.example.flashcards_backend.repository.CardRepository;
-import com.example.flashcards_backend.repository.DeckRepository;
-import com.example.flashcards_backend.repository.SubjectRepository;
+
 import java.io.IOException;
 import java.util.List;
-import java.util.Optional;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -25,9 +22,9 @@ class CsvExportServiceTest {
 
   @Mock private CardRepository cardRepository;
 
-  @Mock private SubjectRepository subjectRepository;
+  @Mock private SubjectService subjectService;
 
-  @Mock private DeckRepository deckRepository;
+  @Mock private DeckService deckService;
 
   private CsvExportService csvExportService;
 
@@ -38,7 +35,7 @@ class CsvExportServiceTest {
 
   @BeforeEach
   void setUp() {
-    csvExportService = new CsvExportServiceImpl(cardRepository, subjectRepository, deckRepository);
+    csvExportService = new CsvExportServiceImpl(cardRepository, subjectService, deckService);
     subject = Subject.builder().id(1L).name("Subject 1").build();
     deck = Deck.builder().id(1L).name("Deck 1").subject(subject).build();
     card1 =
@@ -48,7 +45,7 @@ class CsvExportServiceTest {
 
   @Test
   void exportCards_fromDeck_createsCsvWithCards_andDecksOnlyListsSearchedDeck() throws IOException {
-    when(deckRepository.findById(1L)).thenReturn(Optional.of(deck));
+    when(deckService.getDeckById(1L)).thenReturn(deck);
     when(cardRepository.findExportDataByDeckId(1L)).thenReturn(List.of(card1, card2));
 
     byte[] bytes = csvExportService.exportCards(CsvExportService.CardSource.DECK, 1L);
@@ -67,7 +64,7 @@ class CsvExportServiceTest {
 
   @Test
   void exportCards_fromSubject_createsCsvWithCards() throws IOException {
-    when(subjectRepository.findById(1L)).thenReturn(Optional.of(subject));
+    when(subjectService.findById(1L)).thenReturn(subject);
     when(cardRepository.findExportDataBySubjectId(1L)).thenReturn(List.of(card1, card2));
 
     byte[] bytes = csvExportService.exportCards(CsvExportService.CardSource.SUBJECT, 1L);
