@@ -9,6 +9,9 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import java.io.InputStream;
+import java.util.Objects;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -19,17 +22,22 @@ import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.InputStream;
-import java.util.Objects;
-
 @AllArgsConstructor
+@Tag(
+    name = "CSV Upload Controller",
+    description = "Endpoints for uploading CSV files to import flashcards.")
 @RestController(value = "csvUploadController")
 @RequestMapping("/csv")
 @Slf4j
 public class CsvUploadController {
   public static final String CSV_UPLOAD_FORMAT =
       """
-                CSV file to upload. Format: front,back,hint_front,hint_back,decks. Headers required. ; = separator for decks.
+                CSV file to upload. Format:\r
+                front,back,hint_front,hint_back,decks
+                \s
+                All headers are required.\r
+                front and back are mandatory, other fields can be empty.\r
+                ; = separator for decks.\r
                 \s
                 Example:
                 \s

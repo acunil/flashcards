@@ -2,116 +2,134 @@ package com.example.flashcards_backend.service;
 
 import com.example.flashcards_backend.exception.DeckNotFoundException;
 import com.example.flashcards_backend.exception.SubjectNotFoundException;
+import com.example.flashcards_backend.model.CardExport;
 import com.example.flashcards_backend.model.Deck;
 import com.example.flashcards_backend.model.Subject;
-import com.example.flashcards_backend.repository.CardExportProjection;
+import com.example.flashcards_backend.repository.CardExportRowProjection;
 import com.example.flashcards_backend.repository.CardRepository;
-import com.example.flashcards_backend.repository.DeckRepository;
-import com.example.flashcards_backend.repository.SubjectRepository;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.csv.CSVFormat;
-import org.apache.commons.csv.CSVPrinter;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Service;
-
 import java.io.IOException;
 import java.io.StringWriter;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.stream.Collectors;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.csv.CSVFormat;
+import org.apache.commons.csv.CSVPrinter;
+import org.springframework.stereotype.Service;
 
 @Service
 @Slf4j
 @RequiredArgsConstructor
 public class CsvExportServiceImpl implements CsvExportService {
 
-    private static final char DECK_SEPARATOR = ';';
+  private static final char DECK_SEPARATOR = ';';
 
-    private final CardRepository cardRepository;
-    private final SubjectRepository subjectRepository;
-    private final DeckRepository deckRepository;
+  private final CardRepository cardRepository;
+  private final SubjectService subjectService;
+  private final DeckService deckService;
 
-    public ResponseEntity<byte[]> exportCards(CardSource cardSource, Long id) {
-        try {
-            return switch (cardSource) {
-                case SUBJECT -> createCsvResponse(CardSource.SUBJECT, id, generateCsvForSubject(id));
-                case DECK -> createCsvResponse(CardSource.DECK, id, generateCsvForDeck(id));
-            };
-        } catch (IOException e) {
-            log.error("Error generating CSV", e);
-            return ResponseEntity.badRequest().body(e.getMessage().getBytes());
-        } catch (SubjectNotFoundException | DeckNotFoundException e) {
-            log.error("Entity not found", e);
-            return ResponseEntity.notFound().build();
-        }
+  public byte[] exportCards(CardSource cardSource, Long id)
+      throws IOException, SubjectNotFoundException, DeckNotFoundException {
+    try {
+      return switch (cardSource) {
+        case SUBJECT -> generateCsvForSubject(id);
+        case DECK -> generateCsvForDeck(id);
+      };
+    } catch (IOException e) {
+      log.error("Error generating CSV", e);
+      throw e;
+    } catch (SubjectNotFoundException | DeckNotFoundException e) {
+      log.error("Source not found", e);
+      throw e;
+    }
+  }
+
+  private byte[] generateCsvForSubject(Long subjectId)
+      throws SubjectNotFoundException, IOException {
+    Subject subject = getSubject(subjectId);
+
+    log.info("Exporting all cards for subject '{}'", subject.getName());
+    List<CardExportRowProjection> rawRows = cardRepository.findExportRowsBySubjectId(subjectId);
+
+    List<CardExport> exports = groupCardExports(rawRows);
+
+    logCardsFound(exports);
+    return generateCsvFromCardExports(exports);
+  }
+
+
+  private byte[] generateCsvForDeck(Long deckId) throws DeckNotFoundException, IOException {
+    Deck deck = getDeck(deckId);
+
+    log.info("Exporting all cards for deck '{}'", deck.getName());
+    List<CardExportRowProjection> cards = cardRepository.findExportRowsByDeckId(deckId);
+
+    List<CardExport> exports = groupCardExports(cards);
+
+    logCardsFound(exports);
+    return generateCsvFromCardExports(exports, deck);
+  }
+
+  private byte[] generateCsvFromCardExports(List<CardExport> cards) throws IOException {
+    return generateCsvFromCardExports(cards, null);
+  }
+
+  private byte[] generateCsvFromCardExports(List<CardExport> cards, Deck deck)
+      throws IOException {
+    StringWriter out = new StringWriter();
+    CSVFormat format =
+        CSVFormat.DEFAULT
+            .builder()
+            .setHeader("front", "back", "hint_front", "hint_back", "decks")
+            .get();
+
+    try (CSVPrinter printer = new CSVPrinter(out, format)) {
+      for (CardExport card : cards) {
+        String decksJoined =
+            deck != null
+                ? deck.getName()
+                : String.join(String.valueOf(DECK_SEPARATOR), card.deckNames());
+        printer.printRecord(
+            card.front(), card.back(), card.hintFront(), card.hintBack(), decksJoined);
+      }
     }
 
-    private byte[] generateCsvForSubject(Long subjectId) throws SubjectNotFoundException, IOException {
-        Subject subject = getSubject(subjectId);
+    return out.toString().getBytes(StandardCharsets.UTF_8);
+  }
 
-        log.info("Exporting all cards for subject '{}'", subject.getName());
-        List<CardExportProjection> cards = cardRepository.findExportDataBySubjectId(subjectId);
+  private static List<CardExport> groupCardExports(List<CardExportRowProjection> rawRows) {
+    Map<Long, List<CardExportRowProjection>> grouped = rawRows.stream()
+        .collect(Collectors.groupingBy(CardExportRowProjection::getCardId));
 
-        log.info("{} cards found", cards.size());
-        return generateCsvFromCardProjections(cards);
-    }
+    return grouped.values().stream()
+        .map(group -> new CardExport(
+            group.getFirst().getCardId(),
+            group.getFirst().getFront(),
+            group.getFirst().getBack(),
+            group.getFirst().getHintFront(),
+            group.getFirst().getHintBack(),
+            group.stream()
+                .map(CardExportRowProjection::getDeck)
+                .filter(Objects::nonNull)
+                .distinct()
+                .sorted()
+                .toList()
+        ))
+        .toList();
+  }
 
-    private byte[] generateCsvForDeck(Long deckId) throws DeckNotFoundException, IOException {
-        Deck deck = getDeck(deckId);
+  private Subject getSubject(Long subjectId) {
+    return subjectService.findById(subjectId);
+  }
 
-        log.info("Exporting all cards for deck '{}'", deck.getName());
-        List<CardExportProjection> cards = cardRepository.findExportDataByDeckId(deckId);
+  private Deck getDeck(Long deckId) {
+    return deckService.getDeckById(deckId);
+  }
 
-        log.info("{} cards found", cards.size());
-        return generateCsvFromCardProjections(cards);
-    }
-
-    private ResponseEntity<byte[]> createCsvResponse(CardSource source, Long id, byte[] csv) {
-        String sourceName = switch (source) {
-            case SUBJECT -> getSubject(id).getName();
-            case DECK -> getDeck(id).getName();
-        };
-        String filename = source.name().toLowerCase() + "_" + sourceName + ".csv";
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.parseMediaType("text/csv"));
-        headers.set(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + filename + "\"");
-        return ResponseEntity.ok()
-                .headers(headers)
-                .body(csv);
-    }
-
-    private byte[] generateCsvFromCardProjections(List<CardExportProjection> cards) throws IOException {
-        StringWriter out = new StringWriter();
-        CSVFormat format = CSVFormat.DEFAULT.builder()
-                .setHeader("front", "back", "hint_front", "hint_back", "decks")
-                .get();
-
-        try (CSVPrinter printer = new CSVPrinter(out, format)) {
-            for (CardExportProjection card : cards) {
-                String decksJoined = String.join(String.valueOf(DECK_SEPARATOR), card.getDecks());
-                printer.printRecord(
-                        card.getFront(),
-                        card.getBack(),
-                        card.getHintFront(),
-                        card.getHintBack(),
-                        decksJoined
-                );
-            }
-        }
-
-        return out.toString().getBytes(StandardCharsets.UTF_8);
-    }
-
-    private Subject getSubject(Long subjectId) {
-        return subjectRepository.findById(subjectId)
-                .orElseThrow(() -> new SubjectNotFoundException(subjectId));
-    }
-
-    private Deck getDeck(Long deckId) {
-        return deckRepository.findById(deckId)
-                .orElseThrow(() -> new DeckNotFoundException(deckId));
-    }
-
+  private static void logCardsFound(List<CardExport> cards) {
+    log.info("{} cards found", cards.size());
+  }
 }
