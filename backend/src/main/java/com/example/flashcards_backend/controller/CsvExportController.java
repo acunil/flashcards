@@ -22,7 +22,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.io.IOException;
 
-@Tag(name = "CSV Export", description = "Export cards to importable csv format")
+@Tag(name = "CSV Export Controller", description = "Export cards to importable csv format")
 @AllArgsConstructor
 @RestController(value = "csvExportController")
 @ApiResponse(responseCode = "200", description = "Successful operation")

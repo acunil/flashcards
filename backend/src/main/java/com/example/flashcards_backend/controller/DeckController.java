@@ -12,6 +12,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import java.net.URI;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -24,6 +25,9 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 @Slf4j
+@Tag(
+    name = "Deck Controller",
+    description = "Endpoints for managing decks, including creation, retrieval, updating, and deletion.")
 @RestController
 @RequestMapping("/decks")
 @Validated

@@ -7,29 +7,35 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
-
+@Tag(
+    name = "User Controller",
+    description = "Endpoints for managing users, including retrieval of user information.")
 @RestController
 @RequestMapping("/users")
 @RequiredArgsConstructor
 public class UserController {
 
-    private final UserService userService;
+  private final UserService userService;
 
-    @Operation(summary = "Get all users", description = "Returns all users as DTOs.")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Successful operation",
-                    content = @Content(mediaType = "application/json",
-                            schema = @Schema(implementation = UserDto.class)
-                    ))
-    })
-    @GetMapping
-    public ResponseEntity<List<UserDto>> getAll() {
-        return ResponseEntity.ok(userService.findAll());
-    }
-
+  @Operation(summary = "Get all users", description = "Returns all users as DTOs.")
+  @ApiResponses(
+      value = {
+        @ApiResponse(
+            responseCode = "200",
+            description = "Successful operation",
+            content =
+                @Content(
+                    mediaType = "application/json",
+                    schema = @Schema(implementation = UserDto.class)))
+      })
+  @GetMapping
+  public ResponseEntity<List<UserDto>> getAll() {
+    return ResponseEntity.ok(userService.findAll());
+  }
 }
