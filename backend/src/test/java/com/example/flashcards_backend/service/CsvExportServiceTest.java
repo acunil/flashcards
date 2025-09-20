@@ -1,16 +1,17 @@
 package com.example.flashcards_backend.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
 import static org.mockito.Mockito.when;
 
+import com.example.flashcards_backend.exception.DeckNotFoundException;
+import com.example.flashcards_backend.exception.SubjectNotFoundException;
 import com.example.flashcards_backend.model.Deck;
 import com.example.flashcards_backend.model.Subject;
 import com.example.flashcards_backend.repository.CardExportProjection;
 import com.example.flashcards_backend.repository.CardRepository;
-
 import java.io.IOException;
 import java.util.List;
-
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -81,13 +82,23 @@ class CsvExportServiceTest {
     assertThat(csvContent).isEqualTo(expectedContents);
   }
 
-//  @Test
-//  void exportCards_fromSubject_notFound_throwsException() throws IOException {
-//    when(subjectRepository.findById(1L)).thenReturn(Optional.empty());
-//    assertThatThrownBy(csvExportService.exportCards(CsvExportService.CardSource.SUBJECT, 1L))
-//        .isInstanceOf(SubjectNotFoundException.class)
-//        .hasMessageContaining("Subject with id 1 not found");
-//  }
+  @Test
+  void exportCards_fromSubject_notFound_throwsException() {
+    when(subjectService.findById(1L)).thenThrow(new SubjectNotFoundException(1L));
+    assertThatThrownBy(() -> csvExportService.exportCards(CsvExportService.CardSource.SUBJECT, 1L))
+        .isInstanceOf(SubjectNotFoundException.class)
+        .extracting("message")
+        .isEqualTo("Subject not found with id: 1");
+  }
+
+  @Test
+  void exportCards_fromDeck_notFound_throwsException() {
+    when(deckService.getDeckById(1L)).thenThrow(new DeckNotFoundException(1L));
+    assertThatThrownBy(() -> csvExportService.exportCards(CsvExportService.CardSource.DECK, 1L))
+        .isInstanceOf(DeckNotFoundException.class)
+        .extracting("message")
+        .isEqualTo("Deck not found with id: 1");
+  }
 
   CardExportProjection cardExportProjection(
       String front, String back, String hintFront, String hintBack, List<String> decks) {
