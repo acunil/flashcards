@@ -11,44 +11,31 @@ import com.example.flashcards_backend.integration.AbstractIntegrationTest;
 import com.example.flashcards_backend.model.Card;
 import com.example.flashcards_backend.model.CardHistory;
 import com.example.flashcards_backend.model.Deck;
-import com.example.flashcards_backend.model.Subject;
 import com.example.flashcards_backend.repository.CardHistoryRepository;
 import com.example.flashcards_backend.repository.CardRepository;
 import com.example.flashcards_backend.repository.DeckRepository;
-import com.example.flashcards_backend.repository.SubjectRepository;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import java.time.LocalDateTime;
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
-import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
-import org.springframework.test.web.servlet.request.RequestPostProcessor;
 
 class CardControllerTest extends AbstractIntegrationTest {
 
   public static final String ENDPOINT = "/cards";
   public static final String PAST_TIMESTAMP = "2023-10-01T12:00:00";
 
-  private RequestPostProcessor jwt;
-
-  @Autowired private MockMvc mockMvc;
-  @Autowired private SubjectRepository subjectRepository;
   @Autowired private DeckRepository deckRepository;
   @Autowired private CardRepository cardRepository;
   @Autowired private CardHistoryRepository cardHistoryRepository;
 
   private Card c1;
   private Card c2;
-  private Subject subject1;
 
   @BeforeEach
   void setUp() {
-    jwt = jwtForTestUser();
-    subject1 = Subject.builder().name("Subject 1").user(testUser).build();
-    subjectRepository.saveAndFlush(subject1);
     Deck deck = Deck.builder().name("Deck 1").subject(subject1).user(subject1.getUser()).build();
     deckRepository.saveAndFlush(deck);
     c1 = Card.builder().front("f1").back("b1").subject(subject1).user(testUser).build();
@@ -65,7 +52,6 @@ class CardControllerTest extends AbstractIntegrationTest {
             .build();
     cardHistory1.setCard(c1);
     cardHistoryRepository.saveAndFlush(cardHistory1);
-    objectMapper.registerModule(new JavaTimeModule());
   }
 
   @Test

@@ -7,36 +7,24 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import com.example.flashcards_backend.integration.AbstractIntegrationTest;
 import com.example.flashcards_backend.model.Card;
 import com.example.flashcards_backend.model.CardHistory;
-import com.example.flashcards_backend.model.Subject;
 import com.example.flashcards_backend.repository.CardHistoryRepository;
 import com.example.flashcards_backend.repository.CardRepository;
-import com.example.flashcards_backend.repository.SubjectRepository;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.test.web.servlet.request.RequestPostProcessor;
 
 class UserStatsControllerTest extends AbstractIntegrationTest {
 
-  private RequestPostProcessor jwt;
-
   @Autowired private CardRepository cardRepository;
-  @Autowired private SubjectRepository subjectRepository;
   @Autowired private CardHistoryRepository cardHistoryRepository;
-  @Autowired private ObjectMapper objectMapper;
-
-  Subject subject;
 
   @BeforeEach
   void setUp() {
     jwt = jwtForTestUser();
-    subject = Subject.builder().name("Subject 1").user(testUser).build();
-    subjectRepository.saveAndFlush(subject);
     Card card1 =
-        Card.builder().subject(subject).front("front1").back("back1").user(testUser).build();
+        Card.builder().subject(subject1).front("front1").back("back1").user(testUser).build();
     Card card2 =
-        Card.builder().subject(subject).front("front2").back("back2").user(testUser).build();
+        Card.builder().subject(subject1).front("front2").back("back2").user(testUser).build();
     cardRepository.saveAndFlush(card1);
     cardRepository.saveAndFlush(card2);
     CardHistory ch1 =
