@@ -39,26 +39,6 @@ mvn test
 This will execute all the unit tests and integration tests defined in the project.
 
 
-## CSV Upload
-The application supports uploading CSV files to create or update flashcards. 
-
-To upload a CSV file, you can use the `/csv/{subjectId}` endpoint with a POST request. The request should include the CSV file in the body.
-
-`subjectId` must be of an existing subject.
-
-The CSV file should have the following format: `front,back,decks`
-
-Where `front` is the text displayed on the front of the flashcard and `back` is the text displayed on the back. `hint_front` and `hint_back` are optional,
-and `decks` is a semicolon-separated list of deck names, also optional. All headers must be present, even if the entries are empty.
-
-#### Example CSV Content
-``` csv
-front,back,hint_front,hint_back,decks
-die Katze,cat,Animals,,sounds like cat;German Basics
-das Haus,house,Buildings,,;German Basics
-```
-
-
 ## Database Configuration
 The application uses Spring Data JPA for database interactions. It is currently configured to connect to a Neon database by default, which is a PostgreSQL-compatible database.
 
