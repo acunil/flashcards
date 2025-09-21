@@ -2,7 +2,7 @@ package com.example.flashcards_backend.service;
 
 import com.example.flashcards_backend.exception.DeckNotFoundException;
 import com.example.flashcards_backend.exception.SubjectNotFoundException;
-import com.example.flashcards_backend.model.CardExport;
+import com.example.flashcards_backend.dto.CardExport;
 import com.example.flashcards_backend.model.Deck;
 import com.example.flashcards_backend.model.Subject;
 import com.example.flashcards_backend.repository.CardExportRowProjection;

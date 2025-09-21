@@ -142,7 +142,10 @@ public class CardController {
   @ApiResponse(
       responseCode = "204",
       description = "Card rated",
-      content = @Content(mediaType = "application/json"))
+      content =
+          @Content(
+              mediaType = "application/json",
+              schema = @Schema(implementation = RateCardResponse.class)))
   @ApiResponse(
       responseCode = "404",
       description = "Card not found",
@@ -152,14 +155,13 @@ public class CardController {
       description = "Database error",
       content = @Content(mediaType = "application/json"))
   @PatchMapping("/{id}/rate")
-  public ResponseEntity<Void> rate(
+  public ResponseEntity<RateCardResponse> rate(
       @PathVariable Long id,
       @RequestParam @Min(1) @Max(5) int rating,
       @AuthenticationPrincipal Jwt jwt) {
-    currentUserService.getCurrentUser(jwt);
-    cardHistoryService.recordRating(id, rating); // throws CardNotFoundException if missing
-    // throws DataAccessException if database error occurs
-    return ResponseEntity.noContent().build();
+    User currentUser = currentUserService.getCurrentUser(jwt);
+    RateCardResponse rateCardResponse = cardHistoryService.recordRating(id, rating, currentUser);
+    return ResponseEntity.ok(rateCardResponse);
   }
 
   @Operation(summary = "Delete cards", description = "Deletes cards by their IDs.")
@@ -180,14 +182,14 @@ public class CardController {
   }
 
   @Operation(summary = "Update card hints", description = "Updates card hints by card ID.")
-        @ApiResponse(
-            responseCode = "200",
-            description = "Hints saved",
-            content = @Content(mediaType = "application/json"))
-        @ApiResponse(
-            responseCode = "404",
-            description = "Card not found",
-            content = @Content(mediaType = "application/json"))
+  @ApiResponse(
+      responseCode = "200",
+      description = "Hints saved",
+      content = @Content(mediaType = "application/json"))
+  @ApiResponse(
+      responseCode = "404",
+      description = "Card not found",
+      content = @Content(mediaType = "application/json"))
   @PatchMapping(value = "/{id}/hints")
   public ResponseEntity<CardResponse> updateCardHints(
       @RequestBody HintRequest request, @PathVariable Long id, @AuthenticationPrincipal Jwt jwt) {
