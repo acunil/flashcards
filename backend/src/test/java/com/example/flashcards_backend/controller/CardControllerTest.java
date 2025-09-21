@@ -16,7 +16,6 @@ import com.example.flashcards_backend.repository.CardHistoryRepository;
 import com.example.flashcards_backend.repository.CardRepository;
 import com.example.flashcards_backend.repository.DeckRepository;
 import com.example.flashcards_backend.repository.SubjectRepository;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -36,15 +35,10 @@ class CardControllerTest extends AbstractIntegrationTest {
   private RequestPostProcessor jwt;
 
   @Autowired private MockMvc mockMvc;
-
   @Autowired private SubjectRepository subjectRepository;
-
   @Autowired private DeckRepository deckRepository;
-
   @Autowired private CardRepository cardRepository;
   @Autowired private CardHistoryRepository cardHistoryRepository;
-
-  @Autowired private ObjectMapper objectMapper;
 
   private Card c1;
   private Card c2;
