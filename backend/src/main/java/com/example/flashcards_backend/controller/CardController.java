@@ -160,7 +160,7 @@ public class CardController {
       @RequestParam @Min(1) @Max(5) int rating,
       @AuthenticationPrincipal Jwt jwt) {
     User currentUser = currentUserService.getCurrentUser(jwt);
-    RateCardResponse rateCardResponse = cardHistoryService.recordRating(id, rating, currentUser);
+    RateCardResponse rateCardResponse = cardHistoryService.recordRatingForUser(id, rating, currentUser);
     return ResponseEntity.ok(rateCardResponse);
   }
 

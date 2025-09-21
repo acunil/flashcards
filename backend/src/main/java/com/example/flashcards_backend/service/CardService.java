@@ -26,7 +26,6 @@ public class CardService {
   private final CardDeckService cardDeckService;
   private final SubjectService subjectService;
 
-  /* GET methods */
   protected List<CardResponse> getAllCardResponsesFromSubject(Long subjectId) {
     List<CardDeckRowProjection> rows = cardRepository.findCardDeckRowsBySubjectId(subjectId);
     return mapRowsToResponses(rows);
@@ -143,7 +142,7 @@ public class CardService {
   @Transactional
   public void deleteCards(List<Long> ids) throws CardNotFoundException {
     log.info("Deleting {} cards", ids.size());
-    if (ids == null || ids.isEmpty()) {
+    if (ids.isEmpty()) {
       return;
     }
 

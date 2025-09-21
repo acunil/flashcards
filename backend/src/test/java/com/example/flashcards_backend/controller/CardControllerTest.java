@@ -1,10 +1,12 @@
 package com.example.flashcards_backend.controller;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 import com.example.flashcards_backend.dto.CardRequest;
 import com.example.flashcards_backend.dto.HintRequest;
+import com.example.flashcards_backend.dto.RateCardResponse;
 import com.example.flashcards_backend.integration.AbstractIntegrationTest;
 import com.example.flashcards_backend.model.Card;
 import com.example.flashcards_backend.model.CardHistory;
@@ -18,19 +20,18 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import java.time.LocalDateTime;
 import java.util.List;
-
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.RequestPostProcessor;
 
 class CardControllerTest extends AbstractIntegrationTest {
 
   public static final String ENDPOINT = "/cards";
+  public static final String PAST_TIMESTAMP = "2023-10-01T12:00:00";
 
   private RequestPostProcessor jwt;
 
@@ -60,14 +61,15 @@ class CardControllerTest extends AbstractIntegrationTest {
     c2 = Card.builder().front("f2").back("b2").subject(subject1).user(testUser).build();
     cardRepository.saveAndFlush(c1);
     cardRepository.saveAndFlush(c2);
-    CardHistory cardHistory1 = CardHistory.builder()
-        .avgRating(2.0)
-        .viewCount(10)
-        .lastViewed(LocalDateTime.parse("2023-10-01T12:00:00"))
-        .lastRating(3)
-        .card(c1)
-        .user(testUser)
-        .build();
+    CardHistory cardHistory1 =
+        CardHistory.builder()
+            .avgRating(2.0)
+            .viewCount(2)
+            .lastViewed(LocalDateTime.parse(PAST_TIMESTAMP))
+            .lastRating(3)
+            .user(testUser)
+            .build();
+    cardHistory1.setCard(c1);
     cardHistoryRepository.saveAndFlush(cardHistory1);
     objectMapper.registerModule(new JavaTimeModule());
   }
@@ -135,19 +137,46 @@ class CardControllerTest extends AbstractIntegrationTest {
         .andExpect(jsonPath("$.error").value("Card not found with id: 0"));
   }
 
-  @Disabled("Will not pass on m2. Requires Postgres due to stored procedure. Disabled until that is facilitated.")
   @Test
-  void rate_validIdAndRating_returnsNoContent() throws Exception {
-    mockMvc
-        .perform(
-            patch(ENDPOINT + "/" + c1.getId() + "/rate")
-                .with(jwt)
-                .param("rating", "5")
-                .contentType(MediaType.APPLICATION_JSON))
-        .andExpect(status().isNoContent());
+  void rate_validIdAndRating_updatesCardRating() throws Exception {
+    MvcResult mvcResult =
+        mockMvc
+            .perform(
+                patch(ENDPOINT + "/" + c1.getId() + "/rate")
+                    .with(jwt)
+                    .param("rating", "5")
+                    .contentType(MediaType.APPLICATION_JSON))
+            .andExpect(status().isOk())
+            .andReturn();
+    RateCardResponse rateCardResponse =
+        objectMapper.readValue(
+            mvcResult.getResponse().getContentAsString(), RateCardResponse.class);
+    assertThat(rateCardResponse.lastRating()).isEqualTo(5);
+    assertThat(rateCardResponse.viewCount()).isEqualTo(3);
+    assertThat(rateCardResponse.avgRating()).isEqualTo(3.0);
+    assertThat(rateCardResponse.lastViewed()).isNotNull().doesNotContain(PAST_TIMESTAMP);
   }
 
-  @Disabled("Will not pass on m2. Requires Postgres due to stored procedure. Disabled until that is facilitated.")
+  @Test
+  void rate_validIdAndRating_noExistingHistory_createsCardHistory() throws Exception {
+    MvcResult mvcResult =
+        mockMvc
+            .perform(
+                patch(ENDPOINT + "/" + c2.getId() + "/rate")
+                    .with(jwt)
+                    .param("rating", "4")
+                    .contentType(MediaType.APPLICATION_JSON))
+            .andExpect(status().isOk())
+            .andReturn();
+    RateCardResponse rateCardResponse =
+        objectMapper.readValue(
+            mvcResult.getResponse().getContentAsString(), RateCardResponse.class);
+    assertThat(rateCardResponse.lastRating()).isEqualTo(4);
+    assertThat(rateCardResponse.viewCount()).isEqualTo(1);
+    assertThat(rateCardResponse.avgRating()).isEqualTo(4.0);
+    assertThat(rateCardResponse.lastViewed()).isNotNull();
+  }
+
   @Test
   void rate_missingCard_returnsNotFoundWithMessage() throws Exception {
     mockMvc
@@ -160,17 +189,32 @@ class CardControllerTest extends AbstractIntegrationTest {
         .andExpect(jsonPath("$.error").value("Card not found with id: 0"));
   }
 
-  @Disabled("Will not pass on m2. Requires Postgres due to stored procedure. Disabled until that is facilitated.")
   @Test
-  void rate_databaseError_returnsInternalServerError() throws Exception {
+  void rate_invalidRatingLow_returnsBadRequest() throws Exception {
     mockMvc
         .perform(
-            patch(ENDPOINT + "/7/rate")
+            patch(ENDPOINT + "/" + c1.getId() + "/rate")
                 .with(jwt)
-                .param("rating", "5")
+                .param("rating", "0")
                 .contentType(MediaType.APPLICATION_JSON))
-        .andExpect(status().isInternalServerError())
-        .andExpect(jsonPath("$.error").value("Data access error occurred: Test Database error"));
+        .andExpect(status().isBadRequest())
+        .andExpect(
+            jsonPath("$.error")
+                .value("Validation error: rate.rating: must be greater than or equal to 1"));
+  }
+
+  @Test
+  void rate_invalidRatingHigh_returnsBadRequest() throws Exception {
+    mockMvc
+        .perform(
+            patch(ENDPOINT + "/" + c1.getId() + "/rate")
+                .with(jwt)
+                .param("rating", "6")
+                .contentType(MediaType.APPLICATION_JSON))
+        .andExpect(status().isBadRequest())
+        .andExpect(
+            jsonPath("$.error")
+                .value("Validation error: rate.rating: must be less than or equal to 5"));
   }
 
   @Test
@@ -208,14 +252,8 @@ class CardControllerTest extends AbstractIntegrationTest {
                 .with(jwt)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(content))
-        .andExpect(status().isOk());
-  }
-
-  @AfterEach
-  void tearDown() {
-    cardHistoryRepository.deleteAll();
-    cardRepository.deleteAll();
-    deckRepository.deleteAll();
-    subjectRepository.deleteAll();
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.hintFront").value("f"))
+        .andExpect(jsonPath("$.hintBack").value("b"));
   }
 }
