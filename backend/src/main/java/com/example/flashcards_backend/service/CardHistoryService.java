@@ -46,29 +46,27 @@ public class CardHistoryService {
 
   @Transactional
   public RateCardResponse recordRatingForUser(Long cardId, int rating, User user) {
+    log.info("Recording rating {} for card with id {} for user {}", rating, cardId, user.getId());
     Card card = getCard(cardId);
     CardHistory ch = getOrCreateCardHistoryForUser(user, card);
     ch.setLastRating(rating);
     ch.setViewCount(ch.getViewCount() + 1);
-    ch.setAvgRating(
-        (ch.getAvgRating() * (ch.getViewCount() - 1) + rating)
-            / ch.getViewCount());
+    ch.setAvgRating((ch.getAvgRating() * (ch.getViewCount() - 1) + rating) / ch.getViewCount());
     ch.setLastViewed(LocalDateTime.now());
     cardHistoryRepository.save(ch);
     return RateCardResponse.fromHistory(ch);
   }
 
   private static CardHistory getOrCreateCardHistoryForUser(User user, Card card) {
+    log.info(
+        "Getting or creating card history for user {} and card {}", user.getId(), card.getId());
     return card.getCardHistories().stream()
-        .filter(ch -> ch.getUser() == user)
+        .filter(ch -> ch.getUser().getId() == user.getId())
         .findFirst()
         .orElseGet(
             () -> {
-              var ch =
-                  CardHistory.builder()
-                      .user(user)
-                      .viewCount(0)
-                      .build();
+              log.info("No existing history found, creating new one");
+              var ch = CardHistory.builder().user(user).viewCount(0).build();
               ch.setCard(card);
               return ch;
             });
@@ -81,6 +79,7 @@ public class CardHistoryService {
   }
 
   private Card getCard(Long cardId) {
+    log.info("Fetching card with id {}", cardId);
     return cardRepository.findById(cardId).orElseThrow(() -> new CardNotFoundException(cardId));
   }
 
