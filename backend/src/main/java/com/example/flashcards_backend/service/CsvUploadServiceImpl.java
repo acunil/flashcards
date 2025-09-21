@@ -7,7 +7,6 @@ import com.example.flashcards_backend.exception.InvalidCsvFormatException;
 import com.example.flashcards_backend.exception.SubjectNotFoundException;
 import com.example.flashcards_backend.model.Subject;
 import com.example.flashcards_backend.repository.CardRepository;
-import com.example.flashcards_backend.repository.SubjectRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -33,7 +32,7 @@ public class CsvUploadServiceImpl implements CsvUploadService {
   public static final String HINT_FRONT = "hint_front";
   public static final String HINT_BACK = "hint_back";
   private final CardRepository cardRepository;
-  private final SubjectRepository subjectRepository;
+  private final SubjectService subjectService;
   private final CardService cardService;
 
   @Transactional
@@ -118,10 +117,8 @@ public class CsvUploadServiceImpl implements CsvUploadService {
         .toList();
   }
 
-  private Subject fetchSubject(Long subjectId) throws SubjectNotFoundException {
-    return subjectRepository
-        .findByIdWithUser(subjectId)
-        .orElseThrow(() -> new SubjectNotFoundException(subjectId));
+  private Subject fetchSubject(Long subjectId) {
+    return subjectService.findById(subjectId);
   }
 
   private List<CSVRecord> parseAllRecords(Reader reader) throws IOException {
