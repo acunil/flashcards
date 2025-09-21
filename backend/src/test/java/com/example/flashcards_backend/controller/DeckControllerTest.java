@@ -11,10 +11,8 @@ import com.example.flashcards_backend.dto.DeckSummary;
 import com.example.flashcards_backend.integration.AbstractIntegrationTest;
 import com.example.flashcards_backend.model.Card;
 import com.example.flashcards_backend.model.Deck;
-import com.example.flashcards_backend.model.Subject;
 import com.example.flashcards_backend.repository.CardRepository;
 import com.example.flashcards_backend.repository.DeckRepository;
-import com.example.flashcards_backend.repository.SubjectRepository;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -26,15 +24,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
-import org.springframework.test.web.servlet.request.RequestPostProcessor;
 
 class DeckControllerTest extends AbstractIntegrationTest {
 
   public static final String ENDPOINT = "/decks";
 
-  private RequestPostProcessor jwt;
-
-  @Autowired private SubjectRepository subjectRepository;
 
   @Autowired private DeckRepository deckRepository;
 
@@ -46,21 +40,15 @@ class DeckControllerTest extends AbstractIntegrationTest {
 
   private Deck deck1;
   private Deck deck2;
-  private Subject subject1;
-  private String subjectId;
   private Card card1;
   private Card card2;
 
   @BeforeEach
   void setUp() {
-    jwt = jwtForTestUser();
-    subject1 = Subject.builder().name("Subject 1").user(testUser).build();
-    subjectRepository.saveAndFlush(subject1);
     deck1 = Deck.builder().name("Deck 1").subject(subject1).user(testUser).build();
     deck2 = Deck.builder().name("Deck 2").subject(subject1).user(testUser).build();
     deckRepository.save(deck1);
     deckRepository.save(deck2);
-    subjectId = subject1.getId().toString();
     card1 = Card.builder().front("Front 1").back("Back 1").subject(subject1).user(testUser).build();
     card2 = Card.builder().front("Front 2").back("Back 2").subject(subject1).user(testUser).build();
     cardRepository.saveAndFlush(card1);
@@ -198,7 +186,7 @@ class DeckControllerTest extends AbstractIntegrationTest {
                     .with(jwt)
                     .content(content)
                     .contentType("application/json")
-                    .param("subjectId", subjectId))
+                    .param("subjectId", subject1.getId().toString()))
             .andExpect(status().isOk())
             .andReturn()
             .getResponse()

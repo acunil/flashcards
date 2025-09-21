@@ -1,5 +1,6 @@
 package com.example.flashcards_backend.controller;
 
+import com.example.flashcards_backend.dto.SubjectRequest;
 import com.example.flashcards_backend.integration.AbstractIntegrationTest;
 import com.example.flashcards_backend.model.Subject;
 import com.example.flashcards_backend.repository.SubjectRepository;
@@ -7,7 +8,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
-import org.springframework.test.web.servlet.request.RequestPostProcessor;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.containsString;
@@ -16,19 +16,10 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 class SubjectControllerTest extends AbstractIntegrationTest {
 
-  private RequestPostProcessor jwt;
-
   @Autowired private SubjectRepository subjectRepository;
-
-  Subject subjectOne;
 
   @BeforeEach
   void setUp() {
-    jwt = jwtForTestUser();
-
-    subjectOne = Subject.builder().name("Subject 1").user(testUser).build();
-    subjectRepository.save(subjectOne);
-
     subjectRepository.save(Subject.builder().name("Subject 2").user(testUser).build());
   }
 
@@ -44,13 +35,8 @@ class SubjectControllerTest extends AbstractIntegrationTest {
 
   @Test
   void createSubject() throws Exception {
-    String requestJson =
-        """
-                {
-                  "name": "New Subject"
-                }
-                """;
-
+    SubjectRequest request = SubjectRequest.builder().name("New Subject").build();
+    String requestJson = objectMapper.writeValueAsString(request);
     mockMvc
         .perform(
             post("/subjects")
@@ -65,7 +51,7 @@ class SubjectControllerTest extends AbstractIntegrationTest {
   @Test
   void getSubjectById() throws Exception {
     mockMvc
-        .perform(get("/subjects/" + subjectOne.getId()).with(jwt))
+        .perform(get("/subjects/" + subject1.getId()).with(jwt))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.name").value("Subject 1"));
   }
@@ -80,35 +66,34 @@ class SubjectControllerTest extends AbstractIntegrationTest {
 
   @Test
   void updateSubject() throws Exception {
-    String content =
-        """
-                {
-                  "name": "NewName",
-                  "backLabel": "NewBack",
-                  "frontLabel": "NewFront",
-                  "displayDeckNames": true,
-                  "defaultSide": "BACK"
-                }
-                """;
+    SubjectRequest request = SubjectRequest.builder().name("New Name")
+        .backLabel("New Back")
+        .frontLabel("New Front")
+        .displayDeckNames(true)
+        .defaultSide(Subject.Side.BACK)
+        .cardOrder(Subject.CardOrder.OLDEST)
+        .build();
+    String content = objectMapper.writeValueAsString(request);
 
     mockMvc
         .perform(
-            put("/subjects/" + subjectOne.getId())
+            put("/subjects/" + subject1.getId())
                 .with(jwt)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(content))
         .andExpect(status().isOk());
-    assertThat(subjectOne.getName()).isEqualTo("NewName");
-    assertThat(subjectOne.getBackLabel()).isEqualTo("NewBack");
-    assertThat(subjectOne.getFrontLabel()).isEqualTo("NewFront");
-    assertThat(subjectOne.getDisplayDeckNames()).isTrue();
-    assertThat(subjectOne.getDefaultSide()).isEqualTo(Subject.Side.BACK);
+    assertThat(subject1.getName()).isEqualTo("New Name");
+    assertThat(subject1.getBackLabel()).isEqualTo("New Back");
+    assertThat(subject1.getFrontLabel()).isEqualTo("New Front");
+    assertThat(subject1.getDisplayDeckNames()).isTrue();
+    assertThat(subject1.getDefaultSide()).isEqualTo(Subject.Side.BACK);
+    assertThat(subject1.getCardOrder()).isEqualTo(Subject.CardOrder.OLDEST);
   }
 
   @Test
   void deleteSubject() throws Exception {
     mockMvc
-        .perform(delete("/subjects/" + subjectOne.getId()).with(jwt))
+        .perform(delete("/subjects/" + subject1.getId()).with(jwt))
         .andExpect(status().isNoContent());
     assertThat(subjectRepository.findById(1L)).isEmpty();
   }

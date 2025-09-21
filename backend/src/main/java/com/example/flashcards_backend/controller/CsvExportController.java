@@ -58,7 +58,7 @@ public class CsvExportController {
     /* HELPER METHOD */
   private ResponseEntity<byte[]> createCsvResponse(CardSource source, Long id, byte[] csv) {
     String sourceName = switch (source) {
-      case SUBJECT -> subjectService.findById(id).getName();
+      case SUBJECT -> subjectService.findDtoById(id).name();
       case DECK -> deckService.getDeckById(id).getName();
     };
     String filename = source.name().toLowerCase() + "_" + sourceName + ".csv";

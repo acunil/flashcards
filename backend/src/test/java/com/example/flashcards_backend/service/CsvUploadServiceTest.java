@@ -6,7 +6,6 @@ import com.example.flashcards_backend.model.Deck;
 import com.example.flashcards_backend.model.Subject;
 import com.example.flashcards_backend.model.User;
 import com.example.flashcards_backend.repository.CardRepository;
-import com.example.flashcards_backend.repository.SubjectRepository;
 import nl.altindag.log.LogCaptor;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -18,7 +17,6 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 
@@ -33,7 +31,7 @@ class CsvUploadServiceTest {
     private CardRepository cardRepository;
 
     @Mock
-    private SubjectRepository subjectRepository;
+    private SubjectService subjectService;
 
     @Mock
     private CardService cardService;
@@ -56,7 +54,7 @@ class CsvUploadServiceTest {
 
     @Test
     void uploadCsv_filtersInvalidPartitionsDuplicatesAndSavesValid() throws Exception {
-        when(subjectRepository.findByIdWithUserAndSubjects(1L)).thenReturn(Optional.of(subject));
+        when(subjectService.findById(1L)).thenReturn(subject);
 
         String csv = """
                 front,back,hint_front,hint_back,decks
@@ -126,7 +124,7 @@ class CsvUploadServiceTest {
 
     @Test
     void uploadCsv_ioExceptionIsLoggedAndRethrown() throws Exception {
-        when(subjectRepository.findByIdWithUserAndSubjects(1L)).thenReturn(Optional.of(subject));
+        when(subjectService.findById(1L)).thenReturn(subject);
         try (InputStream badStream = new InputStream() {
             @Override
             public int read() throws IOException {

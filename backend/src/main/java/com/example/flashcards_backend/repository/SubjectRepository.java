@@ -14,8 +14,8 @@ import java.util.UUID;
 public interface SubjectRepository extends JpaRepository<Subject, Long> {
   List<Subject> findByUserId(UUID userId);
 
-  @Query("select s from Subject s join fetch s.user u left join fetch u.subjects where s.id = :id")
-  Optional<Subject> findByIdWithUserAndSubjects(@Param("id") Long id);
+  @Query("select s from Subject s join fetch s.user where s.id = :id")
+  Optional<Subject> findByIdWithUser(@Param("id") Long id);
 
   Optional<Subject> findByName(String name);
 }

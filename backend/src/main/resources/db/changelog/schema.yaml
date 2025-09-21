@@ -97,6 +97,17 @@ databaseChangeLog:
             columns:
               - column:
                   name: user_id
+  - changeSet:
+      id: 002_add_card_order_to_subject
+      author: lucian
+      changes:
+        - addColumn:
+            tableName: subject
+            columns:
+              - column:
+                  name: card_order
+                  type: varchar(20)
+                  defaultValue: "NEWEST"
 
   # --- DECKS ---
   - changeSet:

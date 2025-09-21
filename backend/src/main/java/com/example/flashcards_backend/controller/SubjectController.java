@@ -43,10 +43,7 @@ public class SubjectController {
   @GetMapping
   public ResponseEntity<List<SubjectDto>> getAllForUser(@AuthenticationPrincipal Jwt jwt) {
     User currentUser = currentUserService.getCurrentUser(jwt);
-    return ResponseEntity.ok(
-        subjectService.findByUserId(currentUser.getId()).stream()
-            .map(SubjectDto::fromEntity)
-            .toList());
+    return ResponseEntity.ok(subjectService.findForUser(currentUser));
   }
 
   @Operation(summary = "Get subject by ID", description = "Returns a subject by its ID.")
@@ -62,7 +59,8 @@ public class SubjectController {
   public ResponseEntity<SubjectDto> getById(
       @PathVariable Long id, @AuthenticationPrincipal Jwt jwt) {
     currentUserService.getCurrentUser(jwt);
-    return ResponseEntity.ok(SubjectDto.fromEntity(subjectService.findById(id)));
+    SubjectDto subjectDto = subjectService.findDtoById(id);
+    return ResponseEntity.ok(subjectDto);
   }
 
   @Operation(summary = "Create a new subject", description = "Creates a new subject.")
@@ -78,7 +76,7 @@ public class SubjectController {
   public ResponseEntity<SubjectDto> create(
       @RequestBody SubjectRequest subjectRequest, @AuthenticationPrincipal Jwt jwt) {
     User currentUser = currentUserService.getCurrentUser(jwt);
-    Subject subject = subjectService.create(subjectRequest, currentUser.getId());
+    Subject subject = subjectService.create(subjectRequest, currentUser);
     return ResponseEntity.created(URI.create(REQUEST_MAPPING + subject.getId()))
         .body(SubjectDto.fromEntity(subject));
   }
@@ -98,7 +96,8 @@ public class SubjectController {
       @RequestBody SubjectRequest subjectRequest,
       @AuthenticationPrincipal Jwt jwt) {
     currentUserService.getCurrentUser(jwt);
-    return ResponseEntity.ok(SubjectDto.fromEntity(subjectService.update(id, subjectRequest)));
+    SubjectDto updated = subjectService.update(id, subjectRequest);
+    return ResponseEntity.ok(updated);
   }
 
   @Operation(summary = "Delete subject", description = "Deletes a subject by ID.")
