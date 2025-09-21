@@ -78,7 +78,7 @@ public class SubjectController {
   public ResponseEntity<SubjectDto> create(
       @RequestBody SubjectRequest subjectRequest, @AuthenticationPrincipal Jwt jwt) {
     User currentUser = currentUserService.getCurrentUser(jwt);
-    Subject subject = subjectService.create(subjectRequest, currentUser.getId());
+    Subject subject = subjectService.create(subjectRequest, currentUser);
     return ResponseEntity.created(URI.create(REQUEST_MAPPING + subject.getId()))
         .body(SubjectDto.fromEntity(subject));
   }

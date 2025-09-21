@@ -5,7 +5,6 @@ import com.example.flashcards_backend.exception.SubjectNotFoundException;
 import com.example.flashcards_backend.model.Subject;
 import com.example.flashcards_backend.model.User;
 import com.example.flashcards_backend.repository.SubjectRepository;
-import com.example.flashcards_backend.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -31,9 +30,6 @@ class SubjectServiceTest {
 
     @Mock
     private SubjectRepository subjectRepository;
-
-    @Mock
-    private UserRepository userRepository;
 
     @InjectMocks
     private SubjectService service;
@@ -87,15 +83,13 @@ class SubjectServiceTest {
 
     @Test
     void create() {
-        when(userRepository.findById(USER_ID)).thenReturn(Optional.of(new User()));
-
         SubjectRequest request = SubjectRequest.builder()
                 .name("New Subject")
                 .build();
         Subject entity = request.toEntity();
         when(subjectRepository.save(any(Subject.class))).thenReturn(entity);
 
-        Subject result = service.create(request, USER_ID);
+    Subject result = service.create(request, new User());
 
         assertThat(result.getName()).isEqualTo("New Subject");
 

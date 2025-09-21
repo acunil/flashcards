@@ -33,6 +33,10 @@ public class Subject extends BaseEntity {
   @Column(name = "display_deck_names")
   private Boolean displayDeckNames;
 
+  @Column(name = "card_order")
+  @Enumerated(EnumType.STRING)
+  private CardOrder cardOrder;
+
   @OneToMany(mappedBy = "subject", cascade = CascadeType.ALL, orphanRemoval = true)
   private Set<Deck> decks = new HashSet<>();
 
@@ -43,9 +47,17 @@ public class Subject extends BaseEntity {
   @JoinColumn(name = "user_id", nullable = false)
   private User user;
 
+  @SuppressWarnings("unused")
   public enum Side {
     FRONT,
     BACK,
     ANY
+  }
+
+  @SuppressWarnings("unused")
+  public enum CardOrder {
+    NEWEST,
+    OLDEST,
+    RANDOM
   }
 }

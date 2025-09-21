@@ -7,34 +7,21 @@ import lombok.*;
 
 @Builder
 public record SubjectDto(
-        Long id,
-        @NotEmpty
-        String name,
-        String frontLabel,
-        String backLabel,
-        @Valid
-        Subject.Side defaultSide,
-        Boolean displayDeckNames
-) {
-    public static SubjectDto fromEntity(Subject subject) {
-        return new SubjectDto(
-                subject.getId(),
-                subject.getName(),
-                subject.getFrontLabel(),
-                subject.getBackLabel(),
-                subject.getDefaultSide(),
-                subject.getDisplayDeckNames()
-        );
-    }
-
-    public Subject toEntity() {
-        return Subject.builder()
-                .id(id)
-                .name(name)
-                .frontLabel(frontLabel)
-                .backLabel(backLabel)
-                .defaultSide(defaultSide)
-                .displayDeckNames(displayDeckNames)
-                .build();
-    }
+    Long id,
+    @NotEmpty String name,
+    String frontLabel,
+    String backLabel,
+    @Valid Subject.Side defaultSide,
+    Boolean displayDeckNames,
+    @Valid Subject.CardOrder cardOrder) {
+  public static SubjectDto fromEntity(Subject subject) {
+    return new SubjectDto(
+        subject.getId(),
+        subject.getName(),
+        subject.getFrontLabel(),
+        subject.getBackLabel(),
+        subject.getDefaultSide(),
+        subject.getDisplayDeckNames(),
+        subject.getCardOrder());
+  }
 }
