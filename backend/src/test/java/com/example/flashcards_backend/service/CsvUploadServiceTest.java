@@ -56,7 +56,7 @@ class CsvUploadServiceTest {
 
     @Test
     void uploadCsv_filtersInvalidPartitionsDuplicatesAndSavesValid() throws Exception {
-        when(subjectRepository.findByIdWithUserAndSubjects(1L)).thenReturn(Optional.of(subject));
+        when(subjectRepository.findByIdWithUser(1L)).thenReturn(Optional.of(subject));
 
         String csv = """
                 front,back,hint_front,hint_back,decks
@@ -126,7 +126,7 @@ class CsvUploadServiceTest {
 
     @Test
     void uploadCsv_ioExceptionIsLoggedAndRethrown() throws Exception {
-        when(subjectRepository.findByIdWithUserAndSubjects(1L)).thenReturn(Optional.of(subject));
+        when(subjectRepository.findByIdWithUser(1L)).thenReturn(Optional.of(subject));
         try (InputStream badStream = new InputStream() {
             @Override
             public int read() throws IOException {

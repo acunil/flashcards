@@ -120,7 +120,7 @@ public class CsvUploadServiceImpl implements CsvUploadService {
 
   private Subject fetchSubject(Long subjectId) throws SubjectNotFoundException {
     return subjectRepository
-        .findByIdWithUserAndSubjects(subjectId)
+        .findByIdWithUser(subjectId)
         .orElseThrow(() -> new SubjectNotFoundException(subjectId));
   }
 
