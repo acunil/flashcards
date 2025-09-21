@@ -9,7 +9,6 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
@@ -45,16 +44,13 @@ public class CardController {
   @Operation(
       summary = "Get all cards",
       description = "Returns all cards, optionally with subject ID specified.")
-  @ApiResponses(
-      value = {
-        @ApiResponse(
-            responseCode = "200",
-            description = "Successful operation",
-            content =
-                @Content(
-                    mediaType = "application/json",
-                    schema = @Schema(implementation = CardResponse[].class)))
-      })
+  @ApiResponse(
+      responseCode = "200",
+      description = "Successful operation",
+      content =
+          @Content(
+              mediaType = "application/json",
+              schema = @Schema(implementation = CardResponse[].class)))
   @GetMapping
   public ResponseEntity<List<CardResponse>> getAllCardResponses(
       @RequestParam Long subjectId, @AuthenticationPrincipal Jwt jwt) {
@@ -69,20 +65,17 @@ public class CardController {
   }
 
   @Operation(summary = "Get card by ID", description = "Returns a card by its ID.")
-  @ApiResponses(
-      value = {
-        @ApiResponse(
-            responseCode = "200",
-            description = "Successful operation",
-            content =
-                @Content(
-                    mediaType = "application/json",
-                    schema = @Schema(implementation = CardResponse.class))),
-        @ApiResponse(
-            responseCode = "404",
-            description = "Card not found",
-            content = @Content(mediaType = "application/json"))
-      })
+  @ApiResponse(
+      responseCode = "200",
+      description = "Successful operation",
+      content =
+          @Content(
+              mediaType = "application/json",
+              schema = @Schema(implementation = CardResponse.class)))
+  @ApiResponse(
+      responseCode = "404",
+      description = "Card not found",
+      content = @Content(mediaType = "application/json"))
   @GetMapping("/{id}")
   public ResponseEntity<CardResponse> getById(
       @PathVariable Long id, @AuthenticationPrincipal Jwt jwt) {
@@ -92,16 +85,13 @@ public class CardController {
   }
 
   @Operation(summary = "Create a new card", description = "Creates a new card.")
-  @ApiResponses(
-      value = {
-        @ApiResponse(
-            responseCode = "201",
-            description = "Card created",
-            content =
-                @Content(
-                    mediaType = "application/json",
-                    schema = @Schema(implementation = CreateCardResponse.class)))
-      })
+  @ApiResponse(
+      responseCode = "201",
+      description = "Card created",
+      content =
+          @Content(
+              mediaType = "application/json",
+              schema = @Schema(implementation = CreateCardResponse.class)))
   @PostMapping
   public ResponseEntity<CreateCardResponse> createCard(
       @Valid @RequestBody CardRequest request, @AuthenticationPrincipal Jwt jwt) {
@@ -111,16 +101,13 @@ public class CardController {
   }
 
   @Operation(summary = "Create multiple new cards", description = "Creates multiple new cards.")
-  @ApiResponses(
-      value = {
-        @ApiResponse(
-            responseCode = "201",
-            description = "Cards created",
-            content =
-                @Content(
-                    mediaType = "application/json",
-                    schema = @Schema(implementation = CreateCardResponse[].class)))
-      })
+  @ApiResponse(
+      responseCode = "201",
+      description = "Cards created",
+      content =
+          @Content(
+              mediaType = "application/json",
+              schema = @Schema(implementation = CreateCardResponse[].class)))
   @PostMapping("/multiple")
   public ResponseEntity<List<CreateCardResponse>> createCards(
       @Valid @RequestBody List<CardRequest> requests, @AuthenticationPrincipal Jwt jwt) {
@@ -133,17 +120,14 @@ public class CardController {
       summary = "Update card",
       description =
           "Updates a card by its ID. Existing properties are entirely overwritten by those provided.")
-  @ApiResponses(
-      value = {
-        @ApiResponse(
-            responseCode = "204",
-            description = "Card updated",
-            content = @Content(mediaType = "application/json")),
-        @ApiResponse(
-            responseCode = "404",
-            description = "Card not found",
-            content = @Content(mediaType = "application/json"))
-      })
+  @ApiResponse(
+      responseCode = "204",
+      description = "Card updated",
+      content = @Content(mediaType = "application/json"))
+  @ApiResponse(
+      responseCode = "404",
+      description = "Card not found",
+      content = @Content(mediaType = "application/json"))
   @PutMapping("/{id}")
   public ResponseEntity<CardResponse> update(
       @PathVariable Long id,
@@ -155,44 +139,40 @@ public class CardController {
   }
 
   @Operation(summary = "Rate card", description = "Rates a card by its ID.")
-  @ApiResponses(
-      value = {
-        @ApiResponse(
-            responseCode = "204",
-            description = "Card rated",
-            content = @Content(mediaType = "application/json")),
-        @ApiResponse(
-            responseCode = "404",
-            description = "Card not found",
-            content = @Content(mediaType = "application/json")),
-        @ApiResponse(
-            responseCode = "500",
-            description = "Database error",
-            content = @Content(mediaType = "application/json"))
-      })
+  @ApiResponse(
+      responseCode = "204",
+      description = "Card rated",
+      content =
+          @Content(
+              mediaType = "application/json",
+              schema = @Schema(implementation = RateCardResponse.class)))
+  @ApiResponse(
+      responseCode = "404",
+      description = "Card not found",
+      content = @Content(mediaType = "application/json"))
+  @ApiResponse(
+      responseCode = "500",
+      description = "Database error",
+      content = @Content(mediaType = "application/json"))
   @PatchMapping("/{id}/rate")
-  public ResponseEntity<Void> rate(
+  public ResponseEntity<RateCardResponse> rate(
       @PathVariable Long id,
       @RequestParam @Min(1) @Max(5) int rating,
       @AuthenticationPrincipal Jwt jwt) {
-    currentUserService.getCurrentUser(jwt);
-    cardHistoryService.recordRating(id, rating); // throws CardNotFoundException if missing
-    // throws DataAccessException if database error occurs
-    return ResponseEntity.noContent().build();
+    User currentUser = currentUserService.getCurrentUser(jwt);
+    RateCardResponse rateCardResponse = cardHistoryService.recordRatingForUser(id, rating, currentUser);
+    return ResponseEntity.ok(rateCardResponse);
   }
 
   @Operation(summary = "Delete cards", description = "Deletes cards by their IDs.")
-  @ApiResponses(
-      value = {
-        @ApiResponse(
-            responseCode = "204",
-            description = "Card(s) deleted",
-            content = @Content(mediaType = "application/json")),
-        @ApiResponse(
-            responseCode = "404",
-            description = "Card not found",
-            content = @Content(mediaType = "application/json"))
-      })
+  @ApiResponse(
+      responseCode = "204",
+      description = "Card(s) deleted",
+      content = @Content(mediaType = "application/json"))
+  @ApiResponse(
+      responseCode = "404",
+      description = "Card not found",
+      content = @Content(mediaType = "application/json"))
   @DeleteMapping
   public ResponseEntity<Void> deleteCards(
       @RequestBody @NotEmpty List<Long> ids, @AuthenticationPrincipal Jwt jwt) {
@@ -202,17 +182,14 @@ public class CardController {
   }
 
   @Operation(summary = "Update card hints", description = "Updates card hints by card ID.")
-  @ApiResponses(
-      value = {
-        @ApiResponse(
-            responseCode = "200",
-            description = "Hints saved",
-            content = @Content(mediaType = "application/json")),
-        @ApiResponse(
-            responseCode = "404",
-            description = "Card not found",
-            content = @Content(mediaType = "application/json"))
-      })
+  @ApiResponse(
+      responseCode = "200",
+      description = "Hints saved",
+      content = @Content(mediaType = "application/json"))
+  @ApiResponse(
+      responseCode = "404",
+      description = "Card not found",
+      content = @Content(mediaType = "application/json"))
   @PatchMapping(value = "/{id}/hints")
   public ResponseEntity<CardResponse> updateCardHints(
       @RequestBody HintRequest request, @PathVariable Long id, @AuthenticationPrincipal Jwt jwt) {

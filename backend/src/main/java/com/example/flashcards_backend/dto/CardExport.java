@@ -1,4 +1,4 @@
-package com.example.flashcards_backend.model;
+package com.example.flashcards_backend.dto;
 
 import lombok.Builder;
 
