@@ -33,96 +33,81 @@ import static org.assertj.core.api.Assertions.assertThat;
 @Import(TestSecurityConfig.class)
 class CsvUploadIT {
 
-    public static final UUID ID = UUID.fromString("00000000-0000-0000-0000-000000000000");
-    private Long subjectId;
+  public static final UUID ID = UUID.fromString("00000000-0000-0000-0000-000000000000");
+  private Long subjectId;
 
-    @LocalServerPort
-    private int port;
+  @LocalServerPort private int port;
 
-    @Autowired
-    private TestRestTemplate restTemplate;
+  @Autowired private TestRestTemplate restTemplate;
 
-    @Autowired
-    private SubjectRepository subjectRepository;
+  @Autowired private SubjectRepository subjectRepository;
 
-    @Autowired
-    private UserRepository userRepository;
+  @Autowired private UserRepository userRepository;
 
-    @Autowired
-    private CardRepository cardRepository;
+  @Autowired private CardRepository cardRepository;
 
-    @Autowired
-    private DeckRepository deckRepository;
+  @Autowired private DeckRepository deckRepository;
 
-    @Autowired
-    private CurrentUserService currentUserService;
+  @Autowired private CurrentUserService currentUserService;
 
-    @BeforeEach
-    void setUp() {
-        clearDatabase();
-        // Create a test user
-        User testUser = User.builder()
-                .username("testuser")
-                .auth0Id("auth0|test-user-id")
-                .id(ID)
-                .build();
+  @BeforeEach
+  void setUp() {
+    clearDatabase();
+    // Create a test user
+    User testUser =
+        User.builder().username("testuser").auth0Id("auth0|test-user-id").id(ID).build();
+    userRepository.saveAndFlush(testUser);
 
-        Subject subject = Subject.builder()
-                .name("German")
-                .build();
+    Subject subject = Subject.builder().name("German").user(testUser).build();
+    subjectRepository.saveAndFlush(subject);
 
-        testUser.addSubject(subject);
+    Subject persistedSubject =
+        subjectRepository
+            .findByName(subject.getName())
+            .orElseThrow(
+                () -> new RuntimeException("Subject not found with name: " + subject.getName()));
 
-        // Save the user, cascades will persist subject
-        userRepository.saveAndFlush(testUser);
+    subjectId = persistedSubject.getId();
+  }
 
-        Subject persistedSubject = subjectRepository.findByName(subject.getName())
-                .orElseThrow(() -> new RuntimeException("Subject not found with name: " + subject.getName()));
+  @Test
+  void uploadCsv_fileOnClasspath_returns200() {
+    String uri =
+        UriComponentsBuilder.fromUriString("http://localhost")
+            .port(port)
+            .path("/csv/{id}")
+            .buildAndExpand(subjectId)
+            .toUriString();
+    ClassPathResource resource = new ClassPathResource("csv/vocab_upload_1.csv");
 
-        subjectId = persistedSubject.getId();
+    MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
+    body.add("file", resource);
 
-    }
+    ResponseEntity<CsvUploadResponseDto> response =
+        restTemplate.postForEntity(
+            uri, new HttpEntity<>(body, createMultipartHeaders()), CsvUploadResponseDto.class);
 
-    @Test
-    void uploadCsv_fileOnClasspath_returns200() {
-        String uri = UriComponentsBuilder
-                .fromUriString("http://localhost")
-                .port(port)
-                .path("/csv/{id}")
-                .buildAndExpand(subjectId)
-                .toUriString();
-        ClassPathResource resource = new ClassPathResource("csv/vocab_upload_1.csv");
+    assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+    assertThat(response.getBody()).isNotNull();
+    assertThat(response.getBody().saved()).isNotNull();
+  }
 
-        MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
-        body.add("file", resource);
+  @AfterEach
+  void tearDown() {
+    clearDatabase();
+  }
 
-        ResponseEntity<CsvUploadResponseDto> response = restTemplate.postForEntity(
-                uri,
-                new HttpEntity<>(body, createMultipartHeaders()),
-                CsvUploadResponseDto.class
-        );
+  private HttpHeaders createMultipartHeaders() {
+    HttpHeaders headers = new HttpHeaders();
+    headers.setContentType(MediaType.MULTIPART_FORM_DATA);
+    headers.setBearerAuth("test-token"); // will be accepted by TestSecurityConfig
+    return headers;
+  }
 
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-        assertThat(response.getBody()).isNotNull();
-        assertThat(response.getBody().saved()).isNotNull();
-    }
-
-    @AfterEach
-    void tearDown() {
-        clearDatabase();
-    }
-
-    private HttpHeaders createMultipartHeaders() {
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.MULTIPART_FORM_DATA);
-        headers.setBearerAuth("test-token"); // will be accepted by TestSecurityConfig
-        return headers;
-    }
-
-    void clearDatabase() {
-        cardRepository.deleteAll();
-        deckRepository.deleteAll();
-        subjectRepository.deleteAll();
-        userRepository.deleteAll();
-    }
+  void clearDatabase() {
+    cardRepository.deleteAll();
+    deckRepository.deleteAll();
+    subjectRepository.deleteAll();
+    userRepository.deleteAll();
+  }
 }
