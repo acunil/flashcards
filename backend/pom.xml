@@ -28,6 +28,7 @@
 	</scm>
 	<properties>
 		<java.version>24</java.version>
+        <sonar.organization>42smoking</sonar.organization>
 	</properties>
 	<dependencies>
 		<dependency>
