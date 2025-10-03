@@ -2,8 +2,6 @@ package com.example.flashcards_backend.model;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
-import java.util.HashSet;
-import java.util.Set;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -37,12 +35,6 @@ public class Subject extends BaseEntity {
   @Column(name = "card_order")
   @Enumerated(EnumType.STRING)
   private CardOrder cardOrder;
-
-  @OneToMany(mappedBy = "subject", cascade = CascadeType.ALL, orphanRemoval = true)
-  private Set<Deck> decks = new HashSet<>();
-
-  @OneToMany(mappedBy = "subject", cascade = CascadeType.ALL, orphanRemoval = true)
-  private Set<Card> cards = new HashSet<>();
 
   @ManyToOne(fetch = FetchType.LAZY, optional = false)
   @JoinColumn(name = "user_id", nullable = false)
