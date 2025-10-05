@@ -289,7 +289,9 @@ class CardServiceTest {
 
     when(subjectService.findById(SUBJECT_ID)).thenReturn(subject);
 
-    Set<Deck> decks = Set.of(deck1, deck2);
+    Set<Deck> decks = new HashSet<>();
+    decks.add(deck1);
+    decks.add(deck2);
     when(cardDeckService.getOrCreateDecksByNamesAndSubjectId(anySet(), anyLong()))
         .thenReturn(decks);
 
