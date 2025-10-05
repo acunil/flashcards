@@ -115,7 +115,7 @@ public class CardService {
   }
 
   @Transactional
-  public CardSummary updateCard(Long id, CardRequest request) {
+  public CardResponse updateCard(Long id, CardRequest request) {
     // Completely replace the card's front and back text and set its decks to those of the request.
     log.info("Updating card {}", id);
     Card card = fetchCardById(id);
@@ -136,7 +136,7 @@ public class CardService {
     }
     cardRepository.saveAndFlush(card);
     log.info("Card {} successfully updated", id);
-    return CardSummary.fromEntity(card);
+    return CardResponse.fromEntity(card);
   }
 
   @Transactional
@@ -166,12 +166,12 @@ public class CardService {
   }
 
   @Transactional
-  public CardSummary setHints(HintRequest request, Long id) {
+  public CardResponse setHints(HintRequest request, Long id) {
     log.info("Setting hints for card {}", id);
     Card card = fetchCardById(id);
     card.setHintFront(Strings.trimToNull(request.hintFront()));
     card.setHintBack(Strings.trimToNull(request.hintBack()));
-    return CardSummary.fromEntity(card);
+    return CardResponse.fromEntity(card);
   }
 
   /* Helpers */

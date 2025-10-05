@@ -129,13 +129,13 @@ public class CardController {
       description = "Card not found",
       content = @Content(mediaType = "application/json"))
   @PutMapping("/{id}")
-  public ResponseEntity<CardSummary> update(
+  public ResponseEntity<CardResponse> update(
       @PathVariable Long id,
       @Valid @RequestBody CardRequest request,
       @AuthenticationPrincipal Jwt jwt) {
     currentUserService.getCurrentUser(jwt);
-    CardSummary cardSummary = cardService.updateCard(id, request);
-    return ResponseEntity.ok(cardSummary);
+    CardResponse response = cardService.updateCard(id, request);
+    return ResponseEntity.ok(response);
   }
 
   @Operation(summary = "Rate card", description = "Rates a card by its ID.")
@@ -191,10 +191,10 @@ public class CardController {
       description = "Card not found",
       content = @Content(mediaType = "application/json"))
   @PatchMapping(value = "/{id}/hints")
-  public ResponseEntity<CardSummary> updateCardHints(
+  public ResponseEntity<CardResponse> updateCardHints(
       @RequestBody HintRequest request, @PathVariable Long id, @AuthenticationPrincipal Jwt jwt) {
     currentUserService.getCurrentUser(jwt);
-    CardSummary response = cardService.setHints(request, id);
+    CardResponse response = cardService.setHints(request, id);
     return ResponseEntity.ok(response);
   }
 }
