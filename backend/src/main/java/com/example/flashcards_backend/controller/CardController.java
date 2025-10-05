@@ -50,9 +50,9 @@ public class CardController {
       content =
           @Content(
               mediaType = "application/json",
-              schema = @Schema(implementation = CardResponse[].class)))
+              schema = @Schema(implementation = CardSummary[].class)))
   @GetMapping
-  public ResponseEntity<List<CardResponse>> getAllCardResponses(
+  public ResponseEntity<List<CardSummary>> getAllCardResponses(
       @RequestParam Long subjectId, @AuthenticationPrincipal Jwt jwt) {
     log.info("GET /cards: subjectId={}", subjectId);
     User user = currentUserService.getCurrentUser(jwt);
@@ -71,13 +71,13 @@ public class CardController {
       content =
           @Content(
               mediaType = "application/json",
-              schema = @Schema(implementation = CardResponse.class)))
+              schema = @Schema(implementation = CardSummary.class)))
   @ApiResponse(
       responseCode = "404",
       description = "Card not found",
       content = @Content(mediaType = "application/json"))
   @GetMapping("/{id}")
-  public ResponseEntity<CardResponse> getById(
+  public ResponseEntity<CardSummary> getById(
       @PathVariable Long id, @AuthenticationPrincipal Jwt jwt) {
     currentUserService.getCurrentUser(jwt);
     return ResponseEntity.ok(
@@ -129,13 +129,13 @@ public class CardController {
       description = "Card not found",
       content = @Content(mediaType = "application/json"))
   @PutMapping("/{id}")
-  public ResponseEntity<CardResponse> update(
+  public ResponseEntity<CardSummary> update(
       @PathVariable Long id,
       @Valid @RequestBody CardRequest request,
       @AuthenticationPrincipal Jwt jwt) {
     currentUserService.getCurrentUser(jwt);
-    CardResponse cardResponse = cardService.updateCard(id, request);
-    return ResponseEntity.ok(cardResponse);
+    CardSummary cardSummary = cardService.updateCard(id, request);
+    return ResponseEntity.ok(cardSummary);
   }
 
   @Operation(summary = "Rate card", description = "Rates a card by its ID.")
@@ -191,10 +191,10 @@ public class CardController {
       description = "Card not found",
       content = @Content(mediaType = "application/json"))
   @PatchMapping(value = "/{id}/hints")
-  public ResponseEntity<CardResponse> updateCardHints(
+  public ResponseEntity<CardSummary> updateCardHints(
       @RequestBody HintRequest request, @PathVariable Long id, @AuthenticationPrincipal Jwt jwt) {
     currentUserService.getCurrentUser(jwt);
-    CardResponse response = cardService.setHints(request, id);
+    CardSummary response = cardService.setHints(request, id);
     return ResponseEntity.ok(response);
   }
 }

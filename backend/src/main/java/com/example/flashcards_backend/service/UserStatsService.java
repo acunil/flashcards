@@ -1,6 +1,6 @@
 package com.example.flashcards_backend.service;
 
-import com.example.flashcards_backend.dto.CardResponse;
+import com.example.flashcards_backend.dto.CardSummary;
 import com.example.flashcards_backend.dto.UserStatsResponse;
 import com.example.flashcards_backend.model.Card;
 import com.example.flashcards_backend.repository.CardHistoryRepository;
@@ -33,8 +33,8 @@ public class UserStatsService {
 
         return UserStatsResponse.builder()
                 .totalCards(totalCards)
-                .hardestCard(hardestCard.map(CardResponse::fromEntity).orElse(null))
-                .mostViewedCard(mostViewedCard.map(CardResponse::fromEntity).orElse(null))
+                .hardestCard(hardestCard.map(CardSummary::fromEntity).orElse(null))
+                .mostViewedCard(mostViewedCard.map(CardSummary::fromEntity).orElse(null))
                 .totalCardViews(totalCardViews)
                 .totalLastRating1(countsForEachLastViewedRating.getOrDefault(1, 0L))
                 .totalLastRating2(countsForEachLastViewedRating.getOrDefault(2, 0L))

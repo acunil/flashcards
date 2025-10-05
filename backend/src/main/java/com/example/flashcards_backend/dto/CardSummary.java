@@ -3,6 +3,7 @@ package com.example.flashcards_backend.dto;
 import com.example.flashcards_backend.model.Card;
 import com.example.flashcards_backend.model.CardHistory;
 
+import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -13,7 +14,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Builder;
 
 @Builder
-public record CardResponse(
+public record CardSummary(
         @JsonProperty("id") Long id,
         @JsonProperty("front") String front,
         @JsonProperty("back") String back,
@@ -28,20 +29,24 @@ public record CardResponse(
 ) {
 
     @JsonCreator
-    public CardResponse {
+    public CardSummary {
         // canonical constructor; Jackson will call this
     }
 
-    public static CardResponse fromEntity(Card card) {
+    public static CardSummary fromEntity(Card card) {
         Set<DeckSummary> deckSummaries = card.getDecks().stream()
                 .map(DeckSummary::fromEntity)
                 .collect(Collectors.toSet());
 
-        CardHistory ch = card.getCardHistories().stream()
-                .findFirst()
-                .orElseGet(CardHistory::new);
+        // TODO fetch real CardHistory from DB
+      CardHistory ch = CardHistory.builder()
+              .avgRating(420.0)
+              .viewCount(420)
+              .lastViewed(LocalDateTime.now())
+              .lastRating(420)
+              .build();
 
-        return new CardResponse(
+        return new CardSummary(
                 card.getId(),
                 card.getFront(),
                 card.getBack(),
@@ -56,8 +61,8 @@ public record CardResponse(
         );
     }
 
-    public static CardResponse fromEntity(CardDeckRowProjection cd) {
-        return new CardResponse(
+    public static CardSummary fromEntity(CardDeckRowProjection cd) {
+        return new CardSummary(
                 cd.getCardId(),
                 cd.getFront(),
                 cd.getBack(),
@@ -72,8 +77,8 @@ public record CardResponse(
         );
     }
 
-    public static CardResponse fromEntity(CreateCardResponse ccr) {
-        return CardResponse.builder()
+    public static CardSummary fromEntity(CreateCardResponse ccr) {
+        return CardSummary.builder()
                 .id(ccr.id())
                 .front(ccr.front())
                 .back(ccr.back())

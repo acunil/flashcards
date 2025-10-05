@@ -11,7 +11,7 @@ import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
 
 import java.time.LocalDateTime;
 
-class CardResponseTest {
+class CardSummaryTest {
 
     @BeforeEach
     void setUp() {
@@ -22,11 +22,11 @@ class CardResponseTest {
 
     @Test
     void testCardResponseCreation() {
-        CardResponse cardResponse = new CardResponse( 1L, "Front Text", "Back Text", null, null, null, null, null, null, null, 1L);
+        CardSummary cardSummary = new CardSummary( 1L, "Front Text", "Back Text", null, null, null, null, null, null, null, 1L);
 
-        assertThat(cardResponse.id()).isEqualTo(1L);
-        assertThat(cardResponse.front()).isEqualTo("Front Text");
-        assertThat(cardResponse.back()).isEqualTo("Back Text");
+        assertThat(cardSummary.id()).isEqualTo(1L);
+        assertThat(cardSummary.front()).isEqualTo("Front Text");
+        assertThat(cardSummary.back()).isEqualTo("Back Text");
     }
 
     @Test
@@ -46,15 +46,15 @@ class CardResponseTest {
                 .build();
         cardHistory.setCard(card);
 
-        CardResponse cardResponse = CardResponse.fromEntity(card);
-        assertThat(cardResponse.id()).isEqualTo(2L);
-        assertThat(cardResponse.front()).isEqualTo("Card Front");
-        assertThat(cardResponse.back()).isEqualTo("Card Back");
-        assertThat(cardResponse.avgRating()).isEqualTo(3.5);
-        assertThat(cardResponse.viewCount()).isEqualTo(10);
-        assertThat(cardResponse.lastViewed()).isEqualTo(now.toString());
-        assertThat(cardResponse.lastRating()).isEqualTo(4);
-        assertThat(cardResponse.subjectId()).isEqualTo(1L);
+        CardSummary cardSummary = CardSummary.fromEntity(card);
+        assertThat(cardSummary.id()).isEqualTo(2L);
+        assertThat(cardSummary.front()).isEqualTo("Card Front");
+        assertThat(cardSummary.back()).isEqualTo("Card Back");
+        assertThat(cardSummary.avgRating()).isEqualTo(3.5);
+        assertThat(cardSummary.viewCount()).isEqualTo(10);
+        assertThat(cardSummary.lastViewed()).isEqualTo(now.toString());
+        assertThat(cardSummary.lastRating()).isEqualTo(4);
+        assertThat(cardSummary.subjectId()).isEqualTo(1L);
     }
 
 }

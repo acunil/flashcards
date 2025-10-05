@@ -5,4 +5,4 @@ import lombok.Builder;
 import java.util.List;
 
 @Builder
-public record CsvUploadResponseDto(List<CardResponse> saved, List<CardResponse> duplicates) {}
+public record CsvUploadResponseDto(List<CardSummary> saved, List<CardSummary> duplicates) {}

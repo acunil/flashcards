@@ -4,7 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-import com.example.flashcards_backend.dto.CardResponse;
+import com.example.flashcards_backend.dto.CardSummary;
 import com.example.flashcards_backend.dto.CsvUploadResponseDto;
 import com.example.flashcards_backend.integration.AbstractIntegrationTest;
 
@@ -74,7 +74,7 @@ class CsvUploadControllerTest extends AbstractIntegrationTest {
     assertThat(responseDto.saved())
         .extracting("back")
         .containsExactlyInAnyOrder("b", "d", "withHintB");
-    Optional<CardResponse> withHintF =
+    Optional<CardSummary> withHintF =
         responseDto.saved().stream()
             .filter(cardResponse -> cardResponse.front().equals("withHintF"))
             .findFirst();
@@ -83,13 +83,13 @@ class CsvUploadControllerTest extends AbstractIntegrationTest {
     assertThat(withHintF.get().hintFront()).isEqualTo("h1");
     assertThat(withHintF.get().hintBack()).isEqualTo("h2");
 
-    Optional<CardResponse> a =
+    Optional<CardSummary> a =
         responseDto.saved().stream()
             .filter(cardResponse -> cardResponse.front().equals("a"))
             .findFirst();
     assertThat(a).isPresent();
     assertThat(a.get().decks()).isEmpty();
-    Optional<CardResponse> c =
+    Optional<CardSummary> c =
         responseDto.saved().stream()
             .filter(cardResponse -> cardResponse.front().equals("c"))
             .findFirst();

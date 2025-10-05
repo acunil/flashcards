@@ -35,7 +35,7 @@ public interface CardRepository extends JpaRepository<Card, Long> {
                 s.id AS subjectId
             FROM Card c
             LEFT JOIN c.decks d
-            LEFT JOIN c.cardHistories ch
+            LEFT JOIN CardHistory ch ON ch.card = c
             LEFT JOIN c.subject s
             WHERE (:subjectId IS NULL OR s.id = :subjectId)
               AND (:cardId IS NULL OR c.id = :cardId)
@@ -60,17 +60,23 @@ public interface CardRepository extends JpaRepository<Card, Long> {
             """)
   long countByUserId(@Param("userId") UUID userId);
 
-  Optional<Card> findTopByCardHistories_User_IdOrderByCardHistories_AvgRatingDesc(UUID userId);
+  @Query("""
+       SELECT c
+       FROM Card c
+       JOIN CardHistory ch ON ch.card = c
+       WHERE ch.user.id = :userId
+       ORDER BY ch.avgRating DESC
+       """)
+  Optional<Card> findHardestByUserId(@Param("userId") UUID userId);
 
-  default Optional<Card> findHardestByUserId(UUID userId) {
-    return findTopByCardHistories_User_IdOrderByCardHistories_AvgRatingDesc(userId);
-  }
-
-  Optional<Card> findTopByCardHistories_User_IdOrderByCardHistories_ViewCountDesc(UUID userId);
-
-  default Optional<Card> findMostViewedByUserId(UUID userId) {
-    return findTopByCardHistories_User_IdOrderByCardHistories_ViewCountDesc(userId);
-  }
+  @Query("""
+       SELECT c
+       FROM Card c
+       JOIN CardHistory ch ON ch.card = c
+       WHERE ch.user.id = :userId
+       ORDER BY ch.viewCount DESC
+       """)
+  Optional<Card> findMostViewedByUserId(@Param("userId") UUID userId);
 
   @Modifying
   @Query(value = "DELETE FROM card_deck WHERE card_id IN :cardIds", nativeQuery = true)

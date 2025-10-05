@@ -1,7 +1,7 @@
 package com.example.flashcards_backend.service;
 
 import com.example.flashcards_backend.dto.CardRequest;
-import com.example.flashcards_backend.dto.CardResponse;
+import com.example.flashcards_backend.dto.CardSummary;
 import com.example.flashcards_backend.dto.CsvUploadResponseDto;
 import com.example.flashcards_backend.exception.InvalidCsvFormatException;
 import com.example.flashcards_backend.exception.SubjectNotFoundException;
@@ -66,7 +66,7 @@ public class CsvUploadServiceImpl implements CsvUploadService {
       Map<Boolean, List<CSVRecord>> recordsGroupedByDuplication =
           partitionByDuplicate(valid, subjectId);
 
-      List<CardResponse> duplicates = buildDuplicateResponses(recordsGroupedByDuplication);
+      List<CardSummary> duplicates = buildDuplicateResponses(recordsGroupedByDuplication);
       List<CardRequest> toSave = buildNewCardRequests(subjectId, recordsGroupedByDuplication);
       log.info(
           "Final report: Valid: {}, Invalid: {}, Duplicates: {}, To save: {}",
@@ -76,8 +76,8 @@ public class CsvUploadServiceImpl implements CsvUploadService {
           toSave.size());
 
       log.info("Saving {} cards", toSave.size());
-      List<CardResponse> saved =
-          cardService.createCards(toSave).stream().map(CardResponse::fromEntity).toList();
+      List<CardSummary> saved =
+          cardService.createCards(toSave).stream().map(CardSummary::fromEntity).toList();
       log.info("Cards saved");
 
       log.info("CSV upload complete. Building response.");
@@ -110,10 +110,10 @@ public class CsvUploadServiceImpl implements CsvUploadService {
     return toSave;
   }
 
-  private static List<CardResponse> buildDuplicateResponses(
+  private static List<CardSummary> buildDuplicateResponses(
       Map<Boolean, List<CSVRecord>> recordsGroupedByDuplication) {
     return recordsGroupedByDuplication.get(true).stream()
-        .map(r -> CardResponse.builder().front(r.get(FRONT)).back(r.get(BACK)).build())
+        .map(r -> CardSummary.builder().front(r.get(FRONT)).back(r.get(BACK)).build())
         .toList();
   }
 

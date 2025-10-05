@@ -5,8 +5,8 @@ import lombok.Builder;
 @Builder
 public record UserStatsResponse(
         Long totalCards,
-        CardResponse hardestCard,
-        CardResponse mostViewedCard,
+        CardSummary hardestCard,
+        CardSummary mostViewedCard,
         Long totalCardViews,
         Long totalLastRating1,
         Long totalLastRating2,

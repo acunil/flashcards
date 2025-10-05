@@ -53,12 +53,6 @@ public class Card {
     @NotNull
     private Subject subject;
 
-    @OneToMany(mappedBy = "card", cascade = CascadeType.REMOVE, orphanRemoval = true)
-    @EqualsAndHashCode.Exclude
-    @ToString.Exclude
-    @Singular
-    private final Set<CardHistory> cardHistories = new HashSet<>();
-
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
