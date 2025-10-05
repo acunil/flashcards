@@ -44,8 +44,9 @@ class CsvExportControllerTest extends AbstractIntegrationTest {
     deck2 = Deck.builder().name("Deck 2").subject(subject1).user(testUser).build();
     deckRepository.saveAllAndFlush(List.of(deck1, deck2));
     card1 = Card.builder().front("Front 1").back("Back 1").user(testUser).subject(subject1).build();
+    cardRepository.saveAndFlush(card1);
     card2 = Card.builder().front("Front 2").back("Back 2").user(testUser).subject(subject1).build();
-    cardRepository.saveAllAndFlush(List.of(card1, card2));
+    cardRepository.saveAndFlush(card2);
     card1.addDecks(Set.of(deck1, deck2));
     card2.addDecks(Set.of(deck1));
     cardRepository.saveAllAndFlush(List.of(card1, card2));

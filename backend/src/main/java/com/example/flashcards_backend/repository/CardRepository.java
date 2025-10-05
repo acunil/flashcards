@@ -62,7 +62,8 @@ public interface CardRepository extends JpaRepository<Card, Long> {
             """)
   long countByUserId(@Param("userId") UUID userId);
 
-  @Query("""
+  @Query(
+      """
        SELECT c
        FROM Card c
        JOIN CardHistory ch ON ch.card = c
@@ -75,7 +76,8 @@ public interface CardRepository extends JpaRepository<Card, Long> {
     return findHardestByUserIdInternal(userId, PageRequest.of(0, 1)).stream().findFirst();
   }
 
-  @Query("""
+  @Query(
+      """
        SELECT c
        FROM Card c
        JOIN CardHistory ch ON ch.card = c
@@ -122,6 +124,7 @@ public interface CardRepository extends JpaRepository<Card, Long> {
             FROM Card c
             LEFT JOIN c.decks d
             WHERE c.subject.id = :subjectId
+            ORDER BY c.id
             """)
   List<CardExportRowProjection> findExportRowsBySubjectId(@Param("subjectId") Long subjectId);
 
@@ -136,7 +139,8 @@ public interface CardRepository extends JpaRepository<Card, Long> {
             FROM Card c
             LEFT JOIN c.decks d
             WHERE d.id = :deckId
-            GROUP BY c.id
+            GROUP BY c.id, c.front, c.back, c.hintFront, c.hintBack, d.name
+            ORDER BY c.id
             """)
   List<CardExportRowProjection> findExportRowsByDeckId(@Param("deckId") Long deckId);
 }
