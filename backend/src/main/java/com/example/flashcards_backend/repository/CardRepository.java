@@ -4,6 +4,8 @@ import com.example.flashcards_backend.model.Card;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -67,7 +69,11 @@ public interface CardRepository extends JpaRepository<Card, Long> {
        WHERE ch.user.id = :userId
        ORDER BY ch.avgRating DESC
        """)
-  Optional<Card> findHardestByUserId(@Param("userId") UUID userId);
+  List<Card> findHardestByUserIdInternal(@Param("userId") UUID userId, Pageable pageable);
+
+  default Optional<Card> findHardestByUserId(UUID userId) {
+    return findHardestByUserIdInternal(userId, PageRequest.of(0, 1)).stream().findFirst();
+  }
 
   @Query("""
        SELECT c
@@ -76,7 +82,11 @@ public interface CardRepository extends JpaRepository<Card, Long> {
        WHERE ch.user.id = :userId
        ORDER BY ch.viewCount DESC
        """)
-  Optional<Card> findMostViewedByUserId(@Param("userId") UUID userId);
+  List<Card> findMostViewedByUserIdInternal(@Param("userId") UUID userId, Pageable pageable);
+
+  default Optional<Card> findMostViewedByUserId(UUID userId) {
+    return findMostViewedByUserIdInternal(userId, PageRequest.of(0, 1)).stream().findFirst();
+  }
 
   @Modifying
   @Query(value = "DELETE FROM card_deck WHERE card_id IN :cardIds", nativeQuery = true)
