@@ -46,7 +46,7 @@ class CardSummaryTest {
                 .build();
         cardHistory.setCard(card);
 
-        CardSummary cardSummary = CardSummary.fromEntity(card);
+        CardSummary cardSummary = CardSummary.fromEntity(card, cardHistory);
         assertThat(cardSummary.id()).isEqualTo(2L);
         assertThat(cardSummary.front()).isEqualTo("Card Front");
         assertThat(cardSummary.back()).isEqualTo("Card Back");
