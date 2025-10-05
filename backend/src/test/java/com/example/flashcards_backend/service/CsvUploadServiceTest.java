@@ -103,7 +103,7 @@ class CsvUploadServiceTest {
                 .allSatisfy(msg -> assertThat(msg).startsWith("Skipping invalid row:"));
 
         // Result DTO matches our mock
-        List<CardResponse> saved = result.saved();
+        List<CardSummary> saved = result.saved();
         assertThat(saved).singleElement().satisfies(card -> {
             assertThat(card.front()).isEqualTo("f3");
             assertThat(card.back()).isEqualTo("b3");
@@ -113,7 +113,7 @@ class CsvUploadServiceTest {
                     .containsExactlyInAnyOrder(DeckSummary.fromEntity(deck1), DeckSummary.fromEntity(deck2));
         });
         assertThat(result.duplicates())
-                .containsExactly(CardResponse.builder().front("f4").back("b4").build());
+                .containsExactly(CardSummary.builder().front("f4").back("b4").build());
 
         // CardService invoked once with the correct request list
         verify(cardService).createCards(argThat(reqs ->

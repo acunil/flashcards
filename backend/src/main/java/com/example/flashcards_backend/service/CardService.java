@@ -26,13 +26,13 @@ public class CardService {
   private final CardDeckService cardDeckService;
   private final SubjectService subjectService;
 
-  protected List<CardResponse> getAllCardResponsesFromSubject(Long subjectId) {
+  protected List<CardSummary> getAllCardResponsesFromSubject(Long subjectId) {
     List<CardDeckRowProjection> rows = cardRepository.findCardDeckRowsBySubjectId(subjectId);
     return mapRowsToResponses(rows);
   }
 
   @Transactional(readOnly = true)
-  public List<CardResponse> getAllCardResponsesForUserAndSubject(User user, Long subjectId) {
+  public List<CardSummary> getAllCardResponsesForUserAndSubject(User user, Long subjectId) {
     Subject subject = subjectService.findById(subjectId);
     if (!subject.getUser().equals(user)) {
       throw new IllegalArgumentException("User does not own subject");
@@ -41,7 +41,7 @@ public class CardService {
   }
 
   @Transactional(readOnly = true)
-  public CardResponse getCardResponseById(Long id) {
+  public CardSummary getCardResponseById(Long id) {
     log.info("Getting card response for id {}", id);
     List<CardDeckRowProjection> rows = cardRepository.findCardDeckRowsByCardId(id);
     if (rows.isEmpty()) {
@@ -204,13 +204,13 @@ public class CardService {
     return request.deckNames() == null ? Set.of() : request.deckNames();
   }
 
-  private List<CardResponse> mapRowsToResponses(List<CardDeckRowProjection> rows) {
+  private List<CardSummary> mapRowsToResponses(List<CardDeckRowProjection> rows) {
     log.info("Mapping {} projection rows to CardResponses", rows.size());
-    Map<Long, CardResponse> cardMap = new LinkedHashMap<>();
+    Map<Long, CardSummary> cardMap = new LinkedHashMap<>();
     for (CardDeckRowProjection row : rows) {
-      CardResponse existing = cardMap.get(row.getCardId());
+      CardSummary existing = cardMap.get(row.getCardId());
       if (existing == null) {
-        existing = CardResponse.fromEntity(row);
+        existing = CardSummary.fromEntity(row);
         cardMap.put(row.getCardId(), existing);
       }
       if (row.getDeckId() != null) {

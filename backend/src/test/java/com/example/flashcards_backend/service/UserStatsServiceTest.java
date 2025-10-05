@@ -1,8 +1,9 @@
 package com.example.flashcards_backend.service;
 
-import com.example.flashcards_backend.dto.CardResponse;
+import com.example.flashcards_backend.dto.CardSummary;
 import com.example.flashcards_backend.dto.UserStatsResponse;
 import com.example.flashcards_backend.model.Card;
+import com.example.flashcards_backend.model.CardHistory;
 import com.example.flashcards_backend.model.Subject;
 import com.example.flashcards_backend.model.User;
 import com.example.flashcards_backend.repository.CardHistoryRepository;
@@ -38,6 +39,8 @@ class UserStatsServiceTest {
     Card mostViewedCard;
     User user;
     Subject subject;
+    CardHistory hardestCardHistory;
+    CardHistory mostViewedCardHistory;
 
     @BeforeEach
     void setUp() {
@@ -59,6 +62,20 @@ class UserStatsServiceTest {
                 .back("Back 2")
                 .subject(subject)
                 .build();
+        hardestCardHistory = CardHistory.builder()
+                .card(hardestCard)
+                .avgRating(2.0)
+                .viewCount(5)
+                .lastViewed(null)
+                .lastRating(1)
+                .build();
+        mostViewedCardHistory = CardHistory.builder()
+                .card(mostViewedCard)
+                .avgRating(4.5)
+                .viewCount(50)
+                .lastViewed(null)
+                .lastRating(5)
+                .build();
     }
 
     @Test
@@ -77,11 +94,15 @@ class UserStatsServiceTest {
                 new Object[] { 0, 30L }
         );
         when(cardHistoryRepository.countByLastRatingForUser(USER_ID)).thenReturn(lastRatingCounts);
+        when(cardHistoryRepository.findByCardIdAndUserId(hardestCard.getId(), USER_ID))
+                .thenReturn(Optional.of(hardestCardHistory));
+        when(cardHistoryRepository.findByCardIdAndUserId(mostViewedCard.getId(), USER_ID))
+                .thenReturn(Optional.of(mostViewedCardHistory));
 
         UserStatsResponse response = service.getForUserId(USER_ID);
 
-        assertThat(response.hardestCard()).isEqualTo(CardResponse.fromEntity(hardestCard));
-        assertThat(response.mostViewedCard()).isEqualTo(CardResponse.fromEntity(mostViewedCard));
+        assertThat(response.hardestCard()).isEqualTo(CardSummary.fromEntity(hardestCard, hardestCardHistory));
+        assertThat(response.mostViewedCard()).isEqualTo(CardSummary.fromEntity(mostViewedCard, mostViewedCardHistory));
         assertThat(response.totalCards()).isEqualTo(100L);
         assertThat(response.totalCardViews()).isEqualTo(250L);
         assertThat(response.totalLastRating1()).isEqualTo(50L);

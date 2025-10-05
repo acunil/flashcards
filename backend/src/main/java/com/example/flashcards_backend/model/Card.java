@@ -17,7 +17,7 @@ import org.hibernate.validator.constraints.Length;
 @Setter
 @RequiredArgsConstructor
 @AllArgsConstructor
-@Builder(builderClassName = "CardBuilder", toBuilder = true)
+@Builder(toBuilder = true)
 @Table(name = "card", uniqueConstraints = @UniqueConstraint(columnNames = {"front", "back"}))
 public class Card {
     @Id
@@ -52,12 +52,6 @@ public class Card {
     @JoinColumn(name = "subject_id", nullable = false)
     @NotNull
     private Subject subject;
-
-    @OneToMany(mappedBy = "card", cascade = CascadeType.REMOVE, orphanRemoval = true)
-    @EqualsAndHashCode.Exclude
-    @ToString.Exclude
-    @Singular
-    private final Set<CardHistory> cardHistories = new HashSet<>();
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "user_id", nullable = false)
@@ -116,44 +110,6 @@ public class Card {
             deckNames.add(deck.getName());
         }
         return deckNames;
-    }
-
-    public void addCardHistory(CardHistory cardHistory) {
-        cardHistory.setCard(this);
-    }
-
-    @SuppressWarnings("unused")
-    public static class CardBuilder {
-        private Long id;
-        private String front;
-        private String back;
-        private String hintFront;
-        private String hintBack;
-        private Set<Deck> decks = new HashSet<>();
-        private Set<CardHistory> cardHistories = new HashSet<>();
-        private Subject subject;
-        private User user;
-
-        public CardBuilder cardHistory(CardHistory cardHistory) {
-            this.cardHistories.add(cardHistory);
-            return this;
-        }
-
-        public Card build() {
-            Card card = new Card();
-            card.id = this.id;
-            card.front = this.front;
-            card.back = this.back;
-            card.hintFront = this.hintFront;
-            card.hintBack = this.hintBack;
-            card.decks = this.decks;
-            card.subject = this.subject;
-            card.user = this.user;
-            for (CardHistory ch : this.cardHistories) {
-                card.addCardHistory(ch);
-            }
-            return card;
-        }
     }
 
     @Override

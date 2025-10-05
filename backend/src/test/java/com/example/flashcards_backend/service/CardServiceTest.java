@@ -5,7 +5,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.*;
 
 import com.example.flashcards_backend.dto.CardRequest;
-import com.example.flashcards_backend.dto.CardResponse;
+import com.example.flashcards_backend.dto.CardSummary;
 import com.example.flashcards_backend.dto.CreateCardResponse;
 import com.example.flashcards_backend.dto.HintRequest;
 import com.example.flashcards_backend.exception.CardNotFoundException;
@@ -206,7 +206,7 @@ class CardServiceTest {
     when(cardRepository.findCardDeckRowsByCardId(CARD_2_ID))
         .thenReturn(List.of(cardDeckRowProjection3));
 
-    CardResponse foundCard = cardService.getCardResponseById(CARD_1_ID);
+    CardSummary foundCard = cardService.getCardResponseById(CARD_1_ID);
     assertThat(foundCard.id()).isEqualTo(CARD_1_ID);
     assertThat(foundCard.front()).isEqualTo("Front 1");
     assertThat(foundCard.back()).isEqualTo("Back 1");
@@ -289,7 +289,9 @@ class CardServiceTest {
 
     when(subjectService.findById(SUBJECT_ID)).thenReturn(subject);
 
-    Set<Deck> decks = Set.of(deck1, deck2);
+    Set<Deck> decks = new HashSet<>();
+    decks.add(deck1);
+    decks.add(deck2);
     when(cardDeckService.getOrCreateDecksByNamesAndSubjectId(anySet(), anyLong()))
         .thenReturn(decks);
 
@@ -398,7 +400,7 @@ class CardServiceTest {
         CardRequest.of("Front 1", "Back 1", SUBJECT_ID, deck1.getName(), deck2.getName());
     cardService.updateCard(CARD_1_ID, request);
 
-    CardResponse updatedCard = cardService.getCardResponseById(CARD_1_ID);
+    CardSummary updatedCard = cardService.getCardResponseById(CARD_1_ID);
     assertThat(updatedCard.front()).isEqualTo("Front 1");
     assertThat(updatedCard.back()).isEqualTo("Back 1");
     assertThat(updatedCard.decks())

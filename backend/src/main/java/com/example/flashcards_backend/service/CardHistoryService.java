@@ -57,19 +57,26 @@ public class CardHistoryService {
     return RateCardResponse.fromHistory(ch);
   }
 
-  private static CardHistory getOrCreateCardHistoryForUser(User user, Card card) {
+  @Transactional
+  public void deleteByCardIds(List<Long> ids) {
+    log.info("Deleting card history for cards with ids {}", ids);
+    cardHistoryRepository.deleteByCardIds(ids);
+  }
+
+  /* HELPERS */
+
+  private CardHistory getOrCreateCardHistoryForUser(User user, Card card) {
     log.info(
         "Getting or creating card history for user {} and card {}", user.getId(), card.getId());
-    return card.getCardHistories().stream()
-        .filter(ch -> ch.getUser().getId() == user.getId())
-        .findFirst()
-        .orElseGet(
-            () -> {
-              log.info("No existing history found, creating new one");
-              var ch = CardHistory.builder().user(user).viewCount(0).build();
-              ch.setCard(card);
-              return ch;
-            });
+    var cardHistory = cardHistoryRepository.findByCardIdAndUserId(card.getId(), user.getId());
+    if (cardHistory.isPresent()) {
+      log.info("Existing history found");
+      return cardHistory.get();
+    }
+    log.info("No existing history found, creating new one");
+    var ch = CardHistory.builder().user(user).viewCount(0).build();
+    ch.setCard(card);
+    return ch;
   }
 
   private CardHistory getCardHistory(Long cardId, User user) {
@@ -81,11 +88,5 @@ public class CardHistoryService {
   private Card getCard(Long cardId) {
     log.info("Fetching card with id {}", cardId);
     return cardRepository.findById(cardId).orElseThrow(() -> new CardNotFoundException(cardId));
-  }
-
-  @Transactional
-  public void deleteByCardIds(List<Long> ids) {
-    log.info("Deleting card history for cards with ids {}", ids);
-    cardHistoryRepository.deleteByCardIds(ids);
   }
 }

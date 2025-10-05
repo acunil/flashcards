@@ -4,6 +4,8 @@ import com.example.flashcards_backend.model.Card;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -35,7 +37,7 @@ public interface CardRepository extends JpaRepository<Card, Long> {
                 s.id AS subjectId
             FROM Card c
             LEFT JOIN c.decks d
-            LEFT JOIN c.cardHistories ch
+            LEFT JOIN CardHistory ch ON ch.card = c
             LEFT JOIN c.subject s
             WHERE (:subjectId IS NULL OR s.id = :subjectId)
               AND (:cardId IS NULL OR c.id = :cardId)
@@ -60,16 +62,32 @@ public interface CardRepository extends JpaRepository<Card, Long> {
             """)
   long countByUserId(@Param("userId") UUID userId);
 
-  Optional<Card> findTopByCardHistories_User_IdOrderByCardHistories_AvgRatingDesc(UUID userId);
+  @Query(
+      """
+       SELECT c
+       FROM Card c
+       JOIN CardHistory ch ON ch.card = c
+       WHERE ch.user.id = :userId
+       ORDER BY ch.avgRating DESC
+       """)
+  List<Card> findHardestByUserIdInternal(@Param("userId") UUID userId, Pageable pageable);
 
   default Optional<Card> findHardestByUserId(UUID userId) {
-    return findTopByCardHistories_User_IdOrderByCardHistories_AvgRatingDesc(userId);
+    return findHardestByUserIdInternal(userId, PageRequest.of(0, 1)).stream().findFirst();
   }
 
-  Optional<Card> findTopByCardHistories_User_IdOrderByCardHistories_ViewCountDesc(UUID userId);
+  @Query(
+      """
+       SELECT c
+       FROM Card c
+       JOIN CardHistory ch ON ch.card = c
+       WHERE ch.user.id = :userId
+       ORDER BY ch.viewCount DESC
+       """)
+  List<Card> findMostViewedByUserIdInternal(@Param("userId") UUID userId, Pageable pageable);
 
   default Optional<Card> findMostViewedByUserId(UUID userId) {
-    return findTopByCardHistories_User_IdOrderByCardHistories_ViewCountDesc(userId);
+    return findMostViewedByUserIdInternal(userId, PageRequest.of(0, 1)).stream().findFirst();
   }
 
   @Modifying
@@ -106,6 +124,7 @@ public interface CardRepository extends JpaRepository<Card, Long> {
             FROM Card c
             LEFT JOIN c.decks d
             WHERE c.subject.id = :subjectId
+            ORDER BY c.id
             """)
   List<CardExportRowProjection> findExportRowsBySubjectId(@Param("subjectId") Long subjectId);
 
@@ -120,7 +139,8 @@ public interface CardRepository extends JpaRepository<Card, Long> {
             FROM Card c
             LEFT JOIN c.decks d
             WHERE d.id = :deckId
-            GROUP BY c.id
+            GROUP BY c.id, c.front, c.back, c.hintFront, c.hintBack, d.name
+            ORDER BY c.id
             """)
   List<CardExportRowProjection> findExportRowsByDeckId(@Param("deckId") Long deckId);
 }
